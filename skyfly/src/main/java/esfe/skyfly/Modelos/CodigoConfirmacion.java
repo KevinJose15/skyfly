@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
 
 @Entity
+@Table(name = "CodigoConfirmacion")
 public class CodigoConfirmacion {
 
     @Id
@@ -22,7 +23,7 @@ public class CodigoConfirmacion {
     private String codigo;
 
     private LocalDateTime fechaGeneracion = LocalDateTime.now();
-
+@Column(columnDefinition = "TINYINT(1)")
     private boolean usado = false;
 
     public CodigoConfirmacion() {}

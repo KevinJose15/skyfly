@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
 @Entity
+@Table(name = "usuario")
 public class Usuario {
     
     @Id
@@ -21,18 +22,15 @@ public class Usuario {
     @Email(message = "Debe proporcionar un correo válido")
     private String email;
 
-    private int status;
+    @Column(name = "status")
+    private Boolean  status;
 
     @Enumerated(EnumType.STRING)
     private Rol rol;
 
-    public Usuario() {
-    }
+    public Usuario() {}
 
-    public Usuario(Integer id, @NotBlank(message = "El nombre es requerido") String name,
-            @NotBlank(message = "La contraseña es requerida") String passwordHash,
-            @NotBlank(message = "El correo es requerido") @Email(message = "Debe proporcionar un correo válido") String email,
-            int status, Rol rol) {
+    public Usuario(Integer id, String name, String passwordHash, String email, Boolean status, Rol rol) {
         this.id = id;
         this.name = name;
         this.passwordHash = passwordHash;
@@ -73,11 +71,11 @@ public class Usuario {
         this.email = email;
     }
 
-    public int getStatus() {
+    public Boolean getStatus() {
         return status;
     }
 
-    public void setStatus(int status) {
+    public void setStatus(Boolean status) {
         this.status = status;
     }
 
@@ -88,18 +86,5 @@ public class Usuario {
     public void setRol(Rol rol) {
         this.rol = rol;
     }
-        public String getStrEstatus() {
-        String str = "";
-        switch (status) {
-            case 1:
-                str = "ACTIVO";
-                break;
-            case 0:
-                str = "INACTIVO";
-                break;
-            default:
-                str = "DESCONOCIDO";
-        }
-        return str;
-    }
+
 }

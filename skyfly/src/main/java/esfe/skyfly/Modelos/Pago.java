@@ -3,7 +3,7 @@ package esfe.skyfly.Modelos;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 public class Pago {
@@ -21,7 +21,8 @@ public class Pago {
     @NotNull(message = "El método de pago es requerido")
     private Integer metodoPagoId;
 
-    private LocalDate fechaPago = LocalDate.now();
+     @Column(name = "fechaPago")
+    private LocalDateTime fechaPago = LocalDateTime.now();
 
     @Column(length = 4)
     private String ultimos4Tarjeta;
@@ -39,10 +40,14 @@ public class Pago {
     @JoinColumn(name = "metodoPagoId", referencedColumnName = "metodoPagoId", insertable = false, updatable = false)
     private MetodoPago metodoPago;
 
-    public Pago() {}
+    public Pago() {
+    }
 
-    public Pago(Integer pagoId, Integer reservaId, BigDecimal monto, Integer metodoPagoId,
-                LocalDate fechaPago, String ultimos4Tarjeta, EstadoReserva estadoPago, String codigoAutorizacion) {
+    public Pago(Integer pagoId, @NotNull(message = "La reserva es requerida") Integer reservaId,
+            @NotNull(message = "El monto es requerido") BigDecimal monto,
+            @NotNull(message = "El método de pago es requerido") Integer metodoPagoId, LocalDateTime fechaPago,
+            String ultimos4Tarjeta, EstadoReserva estadoPago, String codigoAutorizacion, Reservas reserva,
+            MetodoPago metodoPago) {
         this.pagoId = pagoId;
         this.reservaId = reservaId;
         this.monto = monto;
@@ -51,6 +56,8 @@ public class Pago {
         this.ultimos4Tarjeta = ultimos4Tarjeta;
         this.estadoPago = estadoPago;
         this.codigoAutorizacion = codigoAutorizacion;
+        this.reserva = reserva;
+        this.metodoPago = metodoPago;
     }
 
     public Integer getPagoId() {
@@ -85,11 +92,11 @@ public class Pago {
         this.metodoPagoId = metodoPagoId;
     }
 
-    public LocalDate getFechaPago() {
+    public LocalDateTime getFechaPago() {
         return fechaPago;
     }
 
-    public void setFechaPago(LocalDate fechaPago) {
+    public void setFechaPago(LocalDateTime fechaPago) {
         this.fechaPago = fechaPago;
     }
 
@@ -132,4 +139,6 @@ public class Pago {
     public void setMetodoPago(MetodoPago metodoPago) {
         this.metodoPago = metodoPago;
     }
+    
+    
 }

@@ -3,6 +3,8 @@ package esfe.skyfly.Modelos;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
+
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
@@ -19,7 +21,7 @@ public class Paquete {
     private String descripcion;
 
     @Positive(message = "El precio debe ser positivo")
-    private double precio;
+    private BigDecimal precio;
 
     @Positive(message = "La duración debe ser positiva")
     private int duracionDias;
@@ -38,7 +40,7 @@ public class Paquete {
 
     public Paquete(Integer paqueteId, @NotBlank(message = "El nombre es requerido") String nombre,
             @NotBlank(message = "La descripción es requerida") String descripcion,
-            @Positive(message = "El precio debe ser positivo") double precio,
+            @Positive(message = "El precio debe ser positivo") BigDecimal precio,
             @Positive(message = "La duración debe ser positiva") int duracionDias, LocalDate fechaInicio,
             LocalDate fechaFin, int destinoId, Destino destino) {
         this.paqueteId = paqueteId;
@@ -76,11 +78,11 @@ public class Paquete {
         this.descripcion = descripcion;
     }
 
-    public double getPrecio() {
+    public BigDecimal getPrecio() {
         return precio;
     }
 
-    public void setPrecio(double precio) {
+    public void setPrecio(BigDecimal precio) {
         this.precio = precio;
     }
 
@@ -124,5 +126,7 @@ public class Paquete {
         this.destino = destino;
     }
 
+   
+    
     
 }

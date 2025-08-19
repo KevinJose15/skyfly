@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-SkyflyApplication<skyfly>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "esfe.skyfly.SkyflyApplication",
+            "projectName": "skyfly",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}

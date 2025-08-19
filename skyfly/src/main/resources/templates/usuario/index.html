@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/_mainLayout}">
+<head>
+    <title layout:fragment="title">Listado de Usuarios</title>
+</head>
+<body>
+<section layout:fragment="content">
+    <div th:if="${msg != null}">
+        <script>
+            swal({
+                title: "Confirmación",
+                text: '[[ ${msg} ]]',
+                icon: "success"
+            });
+        </script>
+    </div>
+    <div th:if="${error != null}">
+        <script>
+            swal({
+                title: "Error",
+                text: '[[ ${error} ]]',
+                icon: "error"
+            });
+        </script>
+    </div>
+
+    <h2>Listado de Usuarios</h2>
+
+    <div class="mb-3">
+        <a th:href="@{/usuarios/create}" class="btn btn-success">Nuevo Usuario</a>
+    </div>
+
+    <table class="table table-bordered">
+        <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Email</th>
+            <th>Rol</th>
+            <th>Estado</th>
+        </tr>
+        </thead>
+        <tbody>
+<tr th:each="usuario : ${usuarios.content}">
+    <td th:text="${usuario.name}">Nombre</td>
+    <td th:text="${usuario.email}">Email</td>
+    <td th:text="${usuario.rol}">Rol</td>
+    <td th:text="${usuario.status} ? 'Activo' : 'Inactivo'">Estado</td>
+    <td>
+        <a th:href="@{/usuarios/view/{id}(id=${usuario.id})}" class="btn btn-info btn-sm">Ver</a>
+        <a th:href="@{/usuarios/edit/{id}(id=${usuario.id})}" class="btn btn-warning btn-sm">Editar</a>
+        <a th:href="@{/usuarios/delete/{id}(id=${usuario.id})}" class="btn btn-danger btn-sm">Eliminar</a>
+
+    </td>
+</tr>
+
+<!-- Muestra "sin registros" cuando la página está vacía -->
+<tr th:if="${usuarios.totalElements == 0}">
+    <td colspan="5" class="text-center">No hay usuarios registrados.</td>
+</tr>
+</tbody>
+    </table>
+
+    <nav th:if="${pageNumbers}">
+        <ul class="pagination justify-content-center">
+            <li th:each="pageNum : ${pageNumbers}" class="page-item"
+                th:classappend="${pageNum == usuarios.number + 1} ? 'active'">
+                <a class="page-link" th:href="@{/usuarios(page=${pageNum}, size=${usuarios.size})}" th:text="${pageNum}"></a>
+            </li>
+        </ul>
+    </nav>
+</section>
+</body>
+</html>

@@ -7,7 +7,6 @@ import jakarta.validation.constraints.PositiveOrZero;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-import esfe.skyfly.Modelos.Reservas;
 
 @Entity
 @Table(name = "Factura")

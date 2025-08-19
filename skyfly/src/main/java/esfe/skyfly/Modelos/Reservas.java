@@ -2,7 +2,7 @@ package esfe.skyfly.Modelos;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 public class Reservas {
@@ -16,7 +16,7 @@ public class Reservas {
     @NotNull(message = "El paquete es requerido")
     private Integer paqueteId;
 
-    private LocalDate fechaReserva = LocalDate.now();
+    private LocalDateTime  fechaReserva = LocalDateTime.now();
 
     @Enumerated(EnumType.STRING)
     private EstadoReserva estado = EstadoReserva.PENDIENTE;
@@ -33,7 +33,7 @@ public class Reservas {
     }
 
     public Reservas(Integer reservaId, @NotNull(message = "El cliente es requerido") Integer clienteId,
-            @NotNull(message = "El paquete es requerido") Integer paqueteId, LocalDate fechaReserva,
+            @NotNull(message = "El paquete es requerido") Integer paqueteId, LocalDateTime fechaReserva,
             EstadoReserva estado, Cliente cliente, Paquete paquete) {
         this.reservaId = reservaId;
         this.clienteId = clienteId;
@@ -68,11 +68,11 @@ public class Reservas {
         this.paqueteId = paqueteId;
     }
 
-    public LocalDate getFechaReserva() {
+    public LocalDateTime getFechaReserva() {
         return fechaReserva;
     }
 
-    public void setFechaReserva(LocalDate fechaReserva) {
+    public void setFechaReserva(LocalDateTime fechaReserva) {
         this.fechaReserva = fechaReserva;
     }
 
