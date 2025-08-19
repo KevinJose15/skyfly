@@ -1,8 +1,7 @@
 package esfe.skyfly.Modelos;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
+
 
 @Entity
 @Table(name = "usuario")
@@ -12,21 +11,21 @@ public class Usuario {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @NotBlank(message = "El nombre es requerido")
+    @Column(nullable = false, length = 100)
     private String name;
 
-    @NotBlank(message = "La contraseña es requerida")
+@Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
-    @NotBlank(message = "El correo es requerido")
-    @Email(message = "Debe proporcionar un correo válido")
+    @Column(nullable = false, unique = true, length = 200)
     private String email;
 
-    @Column(name = "status")
-    private Boolean  status;
+    @Column(nullable = false)
+    private Boolean status = true;
 
     @Enumerated(EnumType.STRING)
-    private Rol rol;
+    @Column(nullable = false)
+    private Rol rol; // tu enum con {Administrador, Agente, Cliente}
 
     public Usuario() {}
 

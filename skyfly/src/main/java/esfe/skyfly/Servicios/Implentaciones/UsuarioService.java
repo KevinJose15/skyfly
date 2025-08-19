@@ -36,12 +36,36 @@ public class UsuarioService implements IUsuarioService {
     public Optional<Usuario> buscarPorId(Integer id) {
         return usuarioRepository.findById(id);
     }
+   @Override
+public Usuario crearOeditar(Usuario usuario) {
+    if (usuario.getId() == null) {
+        // CREACIÓN
+       if (usuario.getPasswordHash() == null || usuario.getPasswordHash().isBlank()) {
+    throw new IllegalArgumentException("La contraseña es requerida");
+}
+        if (usuario.getStatus() == null) {
+            usuario.setStatus(true);
+        }
+    } else {
+        // EDICIÓN
+        Usuario existente = usuarioRepository.findById(usuario.getId())
+                .orElseThrow(() -> new IllegalArgumentException("El usuario con id " + usuario.getId() + " no existe"));
 
-    @Override
-    public Usuario crearOeditar(Usuario usuario) {
-        return usuarioRepository.save(usuario);
+        if (usuario.getPasswordHash() == null || usuario.getPasswordHash().isBlank()) {
+            usuario.setPasswordHash(existente.getPasswordHash());
+        }
+        if (usuario.getEmail() == null || usuario.getEmail().isBlank()) {
+            usuario.setEmail(existente.getEmail());
+        }
+        if (usuario.getStatus() == null) {
+            usuario.setStatus(existente.getStatus());
+        }
+        if (usuario.getRol() == null) {
+            usuario.setRol(existente.getRol());
+        }
     }
-
+    return usuarioRepository.save(usuario);
+}
     @Override
     public void eliminarPorId(Integer id) {
         usuarioRepository.deleteById(id);

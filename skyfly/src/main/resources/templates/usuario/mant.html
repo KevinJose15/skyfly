@@ -39,7 +39,7 @@
         <!-- Solo mostrar contraseña si se está creando -->
         <div class="mb-3" th:if="${action == 'create'}">
             <label for="passwordHash" class="form-label">Contraseña</label>
-            <input type="passwordHash" id="passwordHash" th:field="*{passwordHash}" class="form-control" required>
+         <input type="password" id="passwordHash" th:field="*{passwordHash}" class="form-control" required>
         </div>
 
         <div class="mb-3">
