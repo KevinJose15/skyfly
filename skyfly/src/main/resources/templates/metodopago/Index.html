@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/_MainLayout}">
+<head>
+    <title >Métodos de Pago</title>
+</head>
+<body>
+<section layout:fragment="content">
+    <div th:if="${msg != null}">
+        <script>
+            swal({
+                title: "Confirmación",
+                text: '[[ ${msg} ]]',
+                icon: "success"
+            });
+        </script>
+    </div>
+    <div th:if="${error != null}">
+        <script>
+            swal({
+                title: "Error",
+                text: '[[ ${error} ]]',
+                icon: "error"
+            });
+        </script>
+    </div>
+    <div class="container mt-4">
+        <h2>Métodos de Pago</h2>
+
+        <!-- Mensaje de éxito -->
+        <!--<div th:if="${msg}" class="alert alert-success" th:text="${msg}"></div>-->
+
+        <!-- Botón para crear -->
+        <div class="mb-3">
+            <a th:href="@{/metodopago/create}" class="btn btn-primary">Crear Nuevo Método de Pago</a>
+        </div>
+
+        <!-- Tabla -->
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nombre del Método</th>
+                <th>Acciones</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="metodo : ${metodos.content}">
+                <td th:text="${metodo.metodoPagoId}"></td>
+                <td th:text="${metodo.nombreMetodo}"></td>
+                <td>
+                    <a th:href="@{'/metodopago/view/' + ${metodo.metodoPagoId}}" class="btn btn-info btn-sm">Ver</a>
+                    <a th:href="@{'/metodopago/edit/' + ${metodo.metodoPagoId}}" class="btn btn-warning btn-sm">Editar</a>
+                    <a th:href="@{'/metodopago/delete/' + ${metodo.metodoPagoId}}" class="btn btn-danger btn-sm">Eliminar</a>
+                </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(metodos.content)}">
+                <td colspan="3" class="text-center">No hay métodos de pago registrados</td>
+            </tr>
+            </tbody>
+        </table>
+
+        <!-- Paginación -->
+        <nav th:if="${pageNumbers != null}">
+            <ul class="pagination">
+                <li th:each="pageNum : ${pageNumbers}"
+                    th:classappend="${pageNum == metodos.number + 1} ? 'active'" class="page-item">
+                    <a class="page-link"
+                       th:href="@{|/metodopago?page=${pageNum}&size=${metodos.size}|}"
+                       th:text="${pageNum}"></a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</section>
+</body>
+</html>
