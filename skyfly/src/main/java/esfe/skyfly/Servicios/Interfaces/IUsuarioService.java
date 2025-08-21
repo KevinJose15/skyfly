@@ -20,4 +20,6 @@ public interface IUsuarioService {
     void eliminarPorId(Integer id);
     
     List<Usuario> findByRol(Rol rol);
+
+    String encodePassword(String passwordHash);
 }
