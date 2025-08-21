@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/_MainLayout}">
+<head>
+    <title layout:fragment="title">Destino</title>
+</head>
+<body>
+<section layout:fragment="content">
+    <h2 th:text="'Destino - ' + ${#strings.capitalize(action)}"></h2>
+
+    <!-- FORMULARIO CREAR / EDITAR -->
+    <form th:if="${action == 'create' or action == 'edit'}"
+          th:action="@{'/destinos/' + ${action}}"
+          th:object="${destino}" method="post" enctype="multipart/form-data">
+
+        <input type="hidden" th:field="*{destinoId}"/>
+
+        <!-- Campo oculto para mantener la imagen en Base64 entre postbacks -->
+        <input type="hidden" id="imageBase64" name="imageBase64" th:value="${imageBase64}"/>
+
+        <!-- Nombre -->
+        <div class="mb-3">
+            <label for="nombre" class="form-label">Nombre</label>
+            <input type="text" id="nombre" th:field="*{nombre}" class="form-control" placeholder="Ingrese el nombre" required>
+            <div class="text-danger" th:if="${#fields.hasErrors('nombre')}" th:errors="*{nombre}"></div>
+        </div>
+
+        <!-- País -->
+        <div class="mb-3">
+            <label for="pais" class="form-label">País</label>
+            <input type="text" id="pais" th:field="*{pais}" class="form-control" placeholder="Ingrese el país" required>
+            <div class="text-danger" th:if="${#fields.hasErrors('pais')}" th:errors="*{pais}"></div>
+        </div>
+
+        <!-- Descripción -->
+        <div class="mb-3">
+            <label for="descripcion" class="form-label">Descripción</label>
+            <textarea id="descripcion" th:field="*{descripcion}" class="form-control" placeholder="Ingrese descripción"></textarea>
+        </div>
+
+        <!-- Imagen -->
+        <div class="mb-3">
+            <label for="imagen" class="form-label">Imagen</label>
+            <input type="file" id="imagen" name="file" accept="image/*" class="form-control" onchange="previewImage(event)">
+        </div>
+
+        <!-- Vista previa -->
+        <div class="mb-3">
+            <!-- Imagen actual desde la BD (solo en editar) -->
+            <img id="previewDB"
+                 th:if="${destino.destinoId != null and (imageBase64 == null or imageBase64.isEmpty()) and destino.imagen != null}"
+                 th:src="@{'/destinos/imagen/' + ${destino.destinoId}}"
+                 alt="Imagen actual"
+                 style="max-width: 200px; display:block;">
+
+            <!-- Imagen seleccionada (para crear y editar) -->
+            <img id="preview"
+                 style="max-width: 200px; display:none; margin-top:10px;"
+                 alt="Vista previa">
+        </div>
+
+        <!-- Botones -->
+        <button type="submit"
+                th:text="${destino.destinoId == null ? 'Guardar' : 'Actualizar'}"
+                th:classappend="${destino.destinoId == null ? 'btn-success' : 'btn-warning'}"
+                class="btn"></button>
+        <a th:href="@{/destinos}" class="btn btn-secondary">Cancelar</a>
+    </form>
+
+    <!-- VER -->
+    <div th:if="${action == 'view'}">
+        <p><strong>Nombre:</strong> <span th:text="${destino.nombre}"></span></p>
+        <p><strong>País:</strong> <span th:text="${destino.pais}"></span></p>
+        <p><strong>Descripción:</strong> <span th:text="${destino.descripcion}"></span></p>
+        <p><strong>Imagen:</strong></p>
+        <img th:if="${destino.imagen != null}" th:src="@{'/destinos/imagen/' + ${destino.destinoId}}" alt="Imagen" style="max-width: 200px;">
+        <a th:href="@{/destinos}" class="btn btn-secondary">Volver</a>
+    </div>
+
+    <!-- BORRAR -->
+    <form th:if="${action == 'delete'}" th:action="@{/destinos/delete}" th:object="${destino}" method="post">
+        <input type="hidden" th:field="*{destinoId}"/>
+        <p>¿Estás seguro que deseas eliminar el destino <strong th:text="${destino.nombre}"></strong>?</p>
+        <button type="submit" class="btn btn-danger">Eliminar</button>
+        <a th:href="@{/destinos}" class="btn btn-secondary">Cancelar</a>
+    </form>
+
+    <!-- 🔽 MUEVO EL SCRIPT AQUÍ DENTRO DEL FRAGMENT content -->
+    <script>
+        // Vista previa al seleccionar archivo (ObjectURL para inmediatez + Base64 para postbacks)
+        function previewImage(event) {
+            const input = event.target;
+            const preview = document.getElementById('preview');
+            const previewDB = document.getElementById('previewDB');
+            const imageBase64 = document.getElementById('imageBase64');
+
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+
+                // Mostrar al instante
+                const objectUrl = URL.createObjectURL(file);
+                preview.src = objectUrl;
+                preview.style.display = 'block';
+                if (previewDB) previewDB.style.display = 'none';
+
+                // Guardar en Base64 (para que se conserve si hay errores de validación)
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    if (imageBase64) imageBase64.value = e.target.result;
+                    URL.revokeObjectURL(objectUrl);
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Si volvemos con imageBase64, reconstruir vista previa
+        document.addEventListener('DOMContentLoaded', function () {
+            const imageBase64 = document.getElementById('imageBase64');
+            const preview = document.getElementById('preview');
+            const previewDB = document.getElementById('previewDB');
+
+            if (imageBase64 && imageBase64.value) {
+                preview.src = imageBase64.value;
+                preview.style.display = 'block';
+                if (previewDB) previewDB.style.display = 'none';
+            }
+        });
+    </script>
+</section>
+</body>
+</html>
