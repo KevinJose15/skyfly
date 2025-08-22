@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/_MainLayout}">
+<head>
+    <title>Listado de Paquetes</title>
+
+</head>
+<body>
+<section layout:fragment="content">
+    <!-- Mensaje de éxito -->
+    <div th:if="${msg != null}">
+        <script>
+            swal({
+                title: "Confirmación",
+                text: '[[ ${msg} ]]',
+                icon: "success"
+            });
+        </script>
+    </div>
+
+    <!-- Mensaje de error -->
+    <div th:if="${error != null}">
+        <script>
+            swal({
+                title: "Error",
+                text: '[[ ${error} ]]',
+                icon: "error"
+            });
+        </script>
+    </div>
+
+    <h2 class="mb-4">Listado de Paquetes</h2>
+
+    <!-- Botón Crear -->
+    <a class="btn btn-primary mb-3" th:href="@{/paquetes/create}">Nuevo Paquete</a>
+
+    <!-- Tabla de paquetes -->
+    <table class="table table-bordered">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>Destino</th>
+            <th>Precio</th>
+            <th>Duración (días)</th>
+            <th>Fecha Inicio</th>
+            <th>Fecha Fin</th>
+            <th>Acciones</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="paquete : ${paquetes.content}">
+            <td th:text="${paquete.paqueteId}"></td>
+            <td th:text="${paquete.nombre}"></td>
+            <td th:text="${paquete.destino.nombre}"></td>
+            <td th:text="${paquete.precio}"></td>
+            <td th:text="${paquete.duracionDias}"></td>
+            <td th:text="${#temporals.format(paquete.fechaInicio, 'dd/MM/yyyy')}"></td>
+            <td th:text="${#temporals.format(paquete.fechaFin, 'dd/MM/yyyy')}"></td>
+            <td>
+                <a th:href="@{'/paquetes/view/' + ${paquete.paqueteId}}" class="btn btn-info btn-sm">Ver</a>
+                <a th:href="@{'/paquetes/edit/' + ${paquete.paqueteId}}" class="btn btn-warning btn-sm">Editar</a>
+                <a th:href="@{'/paquetes/delete/' + ${paquete.paqueteId}}" class="btn btn-danger btn-sm">Eliminar</a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    <!-- Paginación -->
+    <nav th:if="${pageNumbers != null}">
+        <ul class="pagination">
+            <li class="page-item" th:classappend="${paquetes.first}? 'disabled'">
+                <a class="page-link" th:href="@{/paquetes(page=${paquetes.number})}">Anterior</a>
+            </li>
+            <li class="page-item" th:each="i : ${pageNumbers}" th:classappend="${paquetes.number == i-1} ? 'active'">
+                <a class="page-link" th:href="@{/paquetes(page=${i})}" th:text="${i}"></a>
+            </li>
+            <li class="page-item" th:classappend="${paquetes.last}? 'disabled'">
+                <a class="page-link" th:href="@{/paquetes(page=${paquetes.number + 2})}">Siguiente</a>
+            </li>
+        </ul>
+    </nav>
+</section>
+</body>
+</html>
