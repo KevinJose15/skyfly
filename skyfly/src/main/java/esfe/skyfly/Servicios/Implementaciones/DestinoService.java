@@ -1,6 +1,7 @@
 package esfe.skyfly.Servicios.Implementaciones;
 
 import esfe.skyfly.Modelos.Destino;
+import esfe.skyfly.Modelos.Paquete;
 import esfe.skyfly.Repositorios.IDestinoRepository;
 import esfe.skyfly.Servicios.Interfaces.IDestinoService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,10 @@ public class DestinoService implements IDestinoService {
     @Override
     public List<Destino> buscarTodos() {
         return destinoRepository.findAll();
+    }
+    @Override
+    public List<Destino> obtenerTodo() {
+        return destinoRepository.findAll(); // ✅ Retorna todos los destinos
     }
 
     @Override
@@ -41,4 +46,5 @@ public class DestinoService implements IDestinoService {
     public void eliminarPorId(Integer id) {
         destinoRepository.deleteById(id);
     }
+    
 }

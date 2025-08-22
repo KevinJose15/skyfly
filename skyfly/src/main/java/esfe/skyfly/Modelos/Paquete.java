@@ -7,11 +7,16 @@ import jakarta.validation.constraints.Positive;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+import org.springframework.format.annotation.DateTimeFormat;
+
 @Entity
+@Table(name = "paquete")
+
 public class Paquete {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "paquete_Id")
     private Integer paqueteId;
 
     @NotBlank(message = "El nombre es requerido")
@@ -24,25 +29,26 @@ public class Paquete {
     private BigDecimal precio;
 
     @Positive(message = "La duración debe ser positiva")
+    @Column(name = "duracion_dias")
     private int duracionDias;
 
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
+    @Column(name = "fechaInicio")
     private LocalDate fechaInicio;
 
+    @Column(name = "fechaFin")
     private LocalDate fechaFin;
 
-    private int destinoId;
-
-    @Transient
+    // Relación con Destino
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "destino_id", nullable = false) // FK en la tabla Paquete
     private Destino destino;
 
     public Paquete() {
     }
 
-    public Paquete(Integer paqueteId, @NotBlank(message = "El nombre es requerido") String nombre,
-            @NotBlank(message = "La descripción es requerida") String descripcion,
-            @Positive(message = "El precio debe ser positivo") BigDecimal precio,
-            @Positive(message = "La duración debe ser positiva") int duracionDias, LocalDate fechaInicio,
-            LocalDate fechaFin, int destinoId, Destino destino) {
+    public Paquete(Integer paqueteId, String nombre, String descripcion, BigDecimal precio,
+                   int duracionDias, LocalDate fechaInicio, LocalDate fechaFin, Destino destino) {
         this.paqueteId = paqueteId;
         this.nombre = nombre;
         this.descripcion = descripcion;
@@ -50,7 +56,6 @@ public class Paquete {
         this.duracionDias = duracionDias;
         this.fechaInicio = fechaInicio;
         this.fechaFin = fechaFin;
-        this.destinoId = destinoId;
         this.destino = destino;
     }
 
@@ -110,14 +115,6 @@ public class Paquete {
         this.fechaFin = fechaFin;
     }
 
-    public int getDestinoId() {
-        return destinoId;
-    }
-
-    public void setDestinoId(int destinoId) {
-        this.destinoId = destinoId;
-    }
-
     public Destino getDestino() {
         return destino;
     }
@@ -126,7 +123,12 @@ public class Paquete {
         this.destino = destino;
     }
 
-   
-    
-    
-}
+      // Calcular fechaFin automáticamente si no existe
+    @PrePersist
+    @PreUpdate
+    public void calcularFechaFin() {
+        if (fechaInicio != null && duracionDias > 0) {
+            this.fechaFin = fechaInicio.plusDays(duracionDias);
+        }
+    }
+} 

@@ -14,7 +14,7 @@ public class Reservas {
     private Integer clienteId;
 
     @NotNull(message = "El paquete es requerido")
-    private Integer paqueteId;
+    private Integer paquete_Id;
 
     private LocalDateTime  fechaReserva = LocalDateTime.now();
 
@@ -26,18 +26,20 @@ public class Reservas {
     private Cliente cliente;
 
     @ManyToOne
-    @JoinColumn(name = "paqueteId", referencedColumnName = "paqueteId", insertable = false, updatable = false)
+    @JoinColumn(name = "paquete_Id", referencedColumnName = "paquete_Id", insertable = false, updatable = false)
     private Paquete paquete;
+
+   
 
     public Reservas() {
     }
 
     public Reservas(Integer reservaId, @NotNull(message = "El cliente es requerido") Integer clienteId,
-            @NotNull(message = "El paquete es requerido") Integer paqueteId, LocalDateTime fechaReserva,
+            @NotNull(message = "El paquete es requerido") Integer paquete_Id, LocalDateTime fechaReserva,
             EstadoReserva estado, Cliente cliente, Paquete paquete) {
         this.reservaId = reservaId;
         this.clienteId = clienteId;
-        this.paqueteId = paqueteId;
+        this.paquete_Id = paquete_Id;
         this.fechaReserva = fechaReserva;
         this.estado = estado;
         this.cliente = cliente;
@@ -61,11 +63,11 @@ public class Reservas {
     }
 
     public Integer getPaqueteId() {
-        return paqueteId;
+        return paquete_Id;
     }
 
     public void setPaqueteId(Integer paqueteId) {
-        this.paqueteId = paqueteId;
+        this.paquete_Id = paqueteId;
     }
 
     public LocalDateTime getFechaReserva() {
@@ -99,6 +101,8 @@ public class Reservas {
     public void setPaquete(Paquete paquete) {
         this.paquete = paquete;
     }
+
+  
 
     
 }
