@@ -1,4 +1,5 @@
 package esfe.skyfly.Modelos;
+
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 
@@ -6,45 +7,28 @@ import java.time.LocalDateTime;
 
 @Entity
 public class Reservas {
-        @Id
+
+    @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer reservaId;
 
-    @NotNull(message = "El cliente es requerido")
-    private Integer clienteId;
+    @ManyToOne
+    @JoinColumn(name = "clienteId", nullable = false)
+    private Cliente cliente;
 
-    @NotNull(message = "El paquete es requerido")
-    private Integer paquete_Id;
+    @ManyToOne
+    @JoinColumn(name = "paqueteId", nullable = false)
+    private Paquete paquete;
 
-    private LocalDateTime  fechaReserva = LocalDateTime.now();
+    private LocalDateTime fechaReserva = LocalDateTime.now();
 
     @Enumerated(EnumType.STRING)
     private EstadoReserva estado = EstadoReserva.PENDIENTE;
 
-    @ManyToOne
-    @JoinColumn(name = "clienteId", referencedColumnName = "clienteId", insertable = false, updatable = false)
-    private Cliente cliente;
+    // ----------------- Constructores, getters y setters -----------------
 
-    @ManyToOne
-    @JoinColumn(name = "paquete_Id", referencedColumnName = "paquete_Id", insertable = false, updatable = false)
-    private Paquete paquete;
-
-   
-
-    public Reservas() {
-    }
-
-    public Reservas(Integer reservaId, @NotNull(message = "El cliente es requerido") Integer clienteId,
-            @NotNull(message = "El paquete es requerido") Integer paquete_Id, LocalDateTime fechaReserva,
-            EstadoReserva estado, Cliente cliente, Paquete paquete) {
-        this.reservaId = reservaId;
-        this.clienteId = clienteId;
-        this.paquete_Id = paquete_Id;
-        this.fechaReserva = fechaReserva;
-        this.estado = estado;
-        this.cliente = cliente;
-        this.paquete = paquete;
-    }
+    public Reservas() {}
+    
 
     public Integer getReservaId() {
         return reservaId;
@@ -52,38 +36,6 @@ public class Reservas {
 
     public void setReservaId(Integer reservaId) {
         this.reservaId = reservaId;
-    }
-
-    public Integer getClienteId() {
-        return clienteId;
-    }
-
-    public void setClienteId(Integer clienteId) {
-        this.clienteId = clienteId;
-    }
-
-    public Integer getPaqueteId() {
-        return paquete_Id;
-    }
-
-    public void setPaqueteId(Integer paqueteId) {
-        this.paquete_Id = paqueteId;
-    }
-
-    public LocalDateTime getFechaReserva() {
-        return fechaReserva;
-    }
-
-    public void setFechaReserva(LocalDateTime fechaReserva) {
-        this.fechaReserva = fechaReserva;
-    }
-
-    public EstadoReserva getEstado() {
-        return estado;
-    }
-
-    public void setEstado(EstadoReserva estado) {
-        this.estado = estado;
     }
 
     public Cliente getCliente() {
@@ -102,7 +54,29 @@ public class Reservas {
         this.paquete = paquete;
     }
 
-  
+    public LocalDateTime getFechaReserva() {
+        return fechaReserva;
+    }
 
-    
+    public void setFechaReserva(LocalDateTime fechaReserva) {
+        this.fechaReserva = fechaReserva;
+    }
+
+    public EstadoReserva getEstado() {
+        return estado;
+    }
+
+    public void setEstado(EstadoReserva estado) {
+        this.estado = estado;
+    }
+    @PrePersist
+public void prePersist() {
+    if (fechaReserva == null) {
+        fechaReserva = LocalDateTime.now();
+    }
+    if (estado == null) {
+        estado = EstadoReserva.PENDIENTE;
+    }
+}
+
 }
