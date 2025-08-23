@@ -57,15 +57,15 @@ CREATE TABLE MetodoPago (
 ) ENGINE=InnoDB;
 
 -- Tabla: Pagos
-CREATE TABLE Pago (
-    pagoId INT PRIMARY KEY AUTO_INCREMENT,
-    reservaId INT,
+CREATE TABLE pago (
+    pago_id INT PRIMARY KEY AUTO_INCREMENT,
+    reserva_id INT,
     monto DECIMAL(10,2),
-    metodoPagoId INT,
-    fechaPago DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, -- <- corregido
+    metodo_pago_id INT,
+    fecha_pago DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, -- <- corregido
     ultimos4Tarjeta VARCHAR(4),
-    estadoPago VARCHAR(20) DEFAULT 'Pendiente',
-    codigoAutorizacion VARCHAR(20),
+    estado_pago VARCHAR(20) DEFAULT 'Pendiente',
+    codigo_autorizacion VARCHAR(20),
     FOREIGN KEY (reservaId) REFERENCES Reservas(reservaId),
     FOREIGN KEY (metodoPagoId) REFERENCES MetodoPago(metodoPagoId)
 ) ENGINE=InnoDB;

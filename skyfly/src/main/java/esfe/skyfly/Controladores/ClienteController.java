@@ -159,4 +159,5 @@ public String saveEditado(@ModelAttribute Cliente cliente, BindingResult result,
         redirect.addFlashAttribute("msg", "Cliente eliminado correctamente");
         return "redirect:/clientes";
     }
+
 }

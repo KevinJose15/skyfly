@@ -1,29 +1,32 @@
- package esfe.skyfly.Servicios.Implementaciones;
+package esfe.skyfly.Servicios.Implementaciones;
 
-import esfe.skyfly.SkyflyApplication;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import esfe.skyfly.Modelos.Usuario;
 import esfe.skyfly.Repositorios.IUsuarioRepository;
 import esfe.skyfly.Servicios.Interfaces.IUsuarioService;
 import esfe.skyfly.Modelos.Rol;
+
 import java.util.List;
 import java.util.Optional;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class UsuarioService implements IUsuarioService {
-
-    private final SkyflyApplication skyflyApplication;
+public class UsuarioService implements IUsuarioService{
 
     @Autowired
     private IUsuarioRepository usuarioRepository;
-    
-    UsuarioService(SkyflyApplication skyflyApplication) {
-        this.skyflyApplication = skyflyApplication;
-    }
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Override
     public Page<Usuario> buscarTodos(Pageable pageable) {
@@ -43,29 +46,26 @@ public class UsuarioService implements IUsuarioService {
     @Override
     @Transactional
     public Usuario crearOeditar(Usuario usuario) {
-        if (usuario.getId() != null) {
-            // Edición: cargar el usuario existente
-            Optional<Usuario> usuarioExistenteOpt = usuarioRepository.findById(usuario.getId());
-            if (usuarioExistenteOpt.isPresent()) {
-                Usuario usuarioExistente = usuarioExistenteOpt.get();
-
-                // ⚡ Mantener la contraseña si no se envió una nueva
-                if (usuario.getPasswordHash() != null && !usuario.getPasswordHash().isBlank()) {
-                    usuarioExistente.setPasswordHash(usuario.getPasswordHash());
-                }
+        if (usuario.getId() == null) {
+            // Nuevo usuario → siempre encriptamos contraseña
+            usuario.setPasswordHash(passwordEncoder.encode(usuario.getPasswordHash()));
+            return usuarioRepository.save(usuario);
+        } else {
+            // Edición
+            return usuarioRepository.findById(usuario.getId()).map(usuarioExistente -> {
 
                 usuarioExistente.setName(usuario.getName());
                 usuarioExistente.setEmail(usuario.getEmail());
                 usuarioExistente.setRol(usuario.getRol());
                 usuarioExistente.setStatus(usuario.getStatus());
 
+                // Solo encriptamos si el usuario ingresó una nueva contraseña
+                if (usuario.getPasswordHash() != null && !usuario.getPasswordHash().isBlank()) {
+                    usuarioExistente.setPasswordHash(passwordEncoder.encode(usuario.getPasswordHash()));
+                }
+
                 return usuarioRepository.save(usuarioExistente);
-            } else {
-                throw new RuntimeException("Usuario no encontrado para edición");
-            }
-        } else {
-            // Creación
-            return usuarioRepository.save(usuario);
+            }).orElseThrow(() -> new RuntimeException("Usuario no encontrado con ID: " + usuario.getId()));
         }
     }
 
@@ -81,7 +81,7 @@ public class UsuarioService implements IUsuarioService {
 
     @Override
     public String encodePassword(String passwordHash) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'encodePassword'");
+        return passwordEncoder.encode(passwordHash);
     }
+
 }

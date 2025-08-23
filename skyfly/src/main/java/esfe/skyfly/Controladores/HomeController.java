@@ -1,13 +1,18 @@
 package esfe.skyfly.Controladores;
 
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 
 @Controller
-@RequestMapping("/")
 public class HomeController {
-    @RequestMapping
+
+    @GetMapping("/")
     public String index() {
-        return "Home/Index";
-    }   
+        return "Home/index"; // Vista principal después del login
+    }
+
+    @GetMapping("/login")
+    public String login() {
+        return "Home/formLogin"; // Vista del formulario de login
+    }
 }

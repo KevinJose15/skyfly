@@ -63,19 +63,23 @@ public class UsuarioController {
         return "usuario/mant";
     }
 
-    @PostMapping("/create")
-    public String saveNuevo(@ModelAttribute Usuario usuario, BindingResult result,
-                            RedirectAttributes redirect, Model model) {
-        if (result.hasErrors()) {
-            model.addAttribute("action", "create");
-            return "usuario/mant";
-        }
-
-        usuarioService.crearOeditar(usuario);
-        redirect.addFlashAttribute("msg", "Usuario creado correctamente");
-        return "redirect:/usuarios";
+// ----------------- CREAR -----------------
+@PostMapping("/create")
+public String saveNuevo(@ModelAttribute Usuario usuario, BindingResult result,
+                        RedirectAttributes redirect, Model model) {
+    if (usuario.getPasswordHash() == null || usuario.getPasswordHash().isBlank()) {
+        result.rejectValue("passwordHash", "error.usuario", "La contraseña es obligatoria");
     }
 
+    if (result.hasErrors()) {
+        model.addAttribute("action", "create");
+        return "usuario/mant";
+    }
+
+    usuarioService.crearOeditar(usuario);
+    redirect.addFlashAttribute("msg", "Usuario creado correctamente");
+    return "redirect:/usuarios";
+}
     // ----------------- EDITAR -----------------
     @GetMapping("/edit/{id}")
     public String edit(@PathVariable Integer id, Model model) {
@@ -86,6 +90,7 @@ public class UsuarioController {
         return "usuario/mant";
     }
 
+// ----------------- EDITAR -----------------
 @PostMapping("/edit")
 public String saveEditado(@ModelAttribute Usuario usuario, BindingResult result,
                           RedirectAttributes redirect, Model model) {
@@ -99,12 +104,9 @@ public String saveEditado(@ModelAttribute Usuario usuario, BindingResult result,
         usuario.setPasswordHash(usuarioExistente.getPasswordHash());
     }
 
-    // Evitar validación de contraseña vacía para edición
-    result.rejectValue("passwordHash", null, null);
+    // Nota: ya no usamos result.rejectValue aquí
 
-    // Guardar usuario
     usuarioService.crearOeditar(usuario);
-
     redirect.addFlashAttribute("msg", "Usuario actualizado correctamente");
     return "redirect:/usuarios";
 }
