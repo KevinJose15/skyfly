@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Bienvenida — Skyfly</title>
-  <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
   <link th:href="@{/css/bienvenida.css}" rel="stylesheet"/>
 </head>
@@ -42,10 +41,8 @@
 
     <div class="hero-right">
       <div class="map-wrapper">
-        <!-- Tu imagen del mundo -->
         <img class="world-map" th:src="@{/img/world-map.png}" alt="Mapa del mundo"/>
-
-        <!-- Hotspots (posiciones aproximadas en % sobre la imagen) -->
+        <!-- Hotspots -->
         <button class="hotspot" style="left: 28%; top: 46%;" data-code="mx" aria-label="México"></button>
         <button class="hotspot" style="left: 24%; top: 67%;" data-code="pe" aria-label="Perú"></button>
         <button class="hotspot" style="left: 33%; top: 67%;" data-code="br" aria-label="Brasil"></button>
@@ -56,7 +53,7 @@
         <button class="hotspot" style="left: 75%; top: 43%;" data-code="jp" aria-label="Japón"></button>
         <button class="hotspot" style="left: 25%; top: 28%;" data-code="ca" aria-label="Canadá"></button>
 
-        <!-- Tooltip / tarjeta emergente -->
+        <!-- Tooltip -->
         <div id="mapTooltip" class="map-tooltip" hidden>
           <img id="ttImg" src="" alt="Destino" />
           <div class="tt-info">
@@ -69,18 +66,16 @@
     </div>
   </section>
 
-  <!-- Destinos destacados -->
+  <!-- Destinos -->
   <section class="destinos">
     <h2>Lo mejor espera por ti</h2>
     <div id="grid-destinos" class="grid-destinos" aria-live="polite"></div>
   </section>
 
-  <!-- Bloque extra para texto/promo -->
   <section class="extra">
     <h3>¿Listo para despegar?</h3>
     <p>
       Aquí puedes agregar promos, paquetes o un storytelling de marca.
-      KPIs de conversión felices garantizados… o te devolvemos el meme 😄.
     </p>
   </section>
 

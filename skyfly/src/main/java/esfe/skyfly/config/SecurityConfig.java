@@ -8,23 +8,23 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
-public class SecurityConfig {
+public class SecurityConfig {   
 
-    @Bean
+   @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/login", "/css/**", "/js/**", "/images/**").permitAll() // rutas públicas
-                .anyRequest().authenticated() // todo lo demás requiere login
+                .requestMatchers("/", "/bienvenida", "/login", "/css/**", "/js/**", "/images/**").permitAll() // <- públicas
+                .anyRequest().authenticated() // lo demás requiere login
             )
-            .formLogin(form -> form
-                .loginPage("/login") // tu vista de login
-                .usernameParameter("email") // usamos email como username
-                .passwordParameter("password") // el form manda 'password', no 'passwordHash'
-                .defaultSuccessUrl("/", true) // cambia a tu vista principal
-                .failureUrl("/login?error=true") // redirige si falla
-                .permitAll()
-            )
+.formLogin(form -> form
+    .loginPage("/login")
+    .usernameParameter("email")
+    .passwordParameter("password")
+    .defaultSuccessUrl("/home", true) // 👈 después de login manda a /home
+    .failureUrl("/login?error=true")
+    .permitAll()
+)
             .logout(logout -> logout
                 .logoutUrl("/logout")
                 .logoutSuccessUrl("/login?logout")
@@ -39,3 +39,5 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 }
+
+
