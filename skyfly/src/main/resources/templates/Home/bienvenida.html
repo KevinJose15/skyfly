@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Bienvenida — Skyfly</title>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+  <link th:href="@{/css/bienvenida.css}" rel="stylesheet"/>
+</head>
+
+<body>
+
+  <!-- Navbar -->
+  <header class="navbar">
+    <div class="brand">
+      <span class="logo">✈</span>
+      <span class="brand-text">Skyfly</span>
+    </div>
+    <nav>
+      <ul class="nav-links">
+        <li><a href="#" class="link">Reservar</a></li>
+        <li><a href="#" class="link">Destinos</a></li>
+        <li><a th:href="@{/login}" class="btn btn-login">Inicia sesión</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-left">
+      <h1 class="headline">
+        <span class="kicker">Deja</span>
+        <span class="script">volar</span>
+        <span class="strong">tus sueños</span>
+        <span class="plane">✈</span>
+      </h1>
+      <p class="subcopy">
+        Conoce cada uno de nuestros destinos y elige tu próxima parada.
+      </p>
+    </div>
+
+    <div class="hero-right">
+      <div class="map-wrapper">
+        <!-- Tu imagen del mundo -->
+        <img class="world-map" th:src="@{/img/world-map.png}" alt="Mapa del mundo"/>
+
+        <!-- Hotspots (posiciones aproximadas en % sobre la imagen) -->
+        <button class="hotspot" style="left: 28%; top: 46%;" data-code="mx" aria-label="México"></button>
+        <button class="hotspot" style="left: 24%; top: 67%;" data-code="pe" aria-label="Perú"></button>
+        <button class="hotspot" style="left: 33%; top: 67%;" data-code="br" aria-label="Brasil"></button>
+        <button class="hotspot" style="left: 66%; top: 45%;" data-code="cn" aria-label="China"></button>
+        <button class="hotspot" style="left: 59%; top: 36%;" data-code="fr" aria-label="Francia"></button>
+        <button class="hotspot" style="left: 22%; top: 33%;" data-code="us" aria-label="Estados Unidos"></button>
+        <button class="hotspot" style="left: 66%; top: 30%;" data-code="ru" aria-label="Rusia"></button>
+        <button class="hotspot" style="left: 75%; top: 43%;" data-code="jp" aria-label="Japón"></button>
+        <button class="hotspot" style="left: 25%; top: 28%;" data-code="ca" aria-label="Canadá"></button>
+
+        <!-- Tooltip / tarjeta emergente -->
+        <div id="mapTooltip" class="map-tooltip" hidden>
+          <img id="ttImg" src="" alt="Destino" />
+          <div class="tt-info">
+            <h4 id="ttTitle"></h4>
+            <p id="ttDesc"></p>
+          </div>
+        </div>
+      </div>
+      <small class="map-hint">Pasa el cursor sobre un país para ver un destino icónico.</small>
+    </div>
+  </section>
+
+  <!-- Destinos destacados -->
+  <section class="destinos">
+    <h2>Lo mejor espera por ti</h2>
+    <div id="grid-destinos" class="grid-destinos" aria-live="polite"></div>
+  </section>
+
+  <!-- Bloque extra para texto/promo -->
+  <section class="extra">
+    <h3>¿Listo para despegar?</h3>
+    <p>
+      Aquí puedes agregar promos, paquetes o un storytelling de marca.
+      KPIs de conversión felices garantizados… o te devolvemos el meme 😄.
+    </p>
+  </section>
+
+  <script th:src="@{/js/bienvenida.js}"></script>
+</body>
+</html>
