@@ -1,20 +1,223 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
 <head>
-    <title>Login</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
+  <meta charset="UTF-8">
+  <title>Login - SkyFly</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f0f4f8;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .card-container {
+      width: 80%;
+      max-width: 1100px;
+      background-color: #2c2c2c;
+      border-radius: 20px;
+      overflow: hidden;
+      display: flex;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.25);
+      min-height: 600px;
+    }
+
+    /* Columna izquierda (formulario) */
+    .left-panel {
+      width: 45%;
+      background-color: #2c2c2c;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 40px;
+      text-align: center;
+    }
+
+    /* Logo ✈ */
+    .logo {
+      font-size: 80px;
+      margin-bottom: 15px;
+      background: linear-gradient(to right, #1a73e8, #0056b3);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .left-panel h2 {
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    .left-panel p {
+      color: #ccc;
+      margin-bottom: 15px;
+      font-size: 0.9rem;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border-radius: 6px;
+      border: 1px solid #555;
+      background: #1e1e1e;
+      color: #fff;
+      font-size: 0.9rem;
+    }
+
+    .btn-login {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 6px;
+      background: linear-gradient(to right, #1a73e8, #0056b3);
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 15px;
+      transition: 0.3s ease;
+    }
+
+    .btn-login:hover {
+      background: linear-gradient(to right, #0056b3, #003f7f);
+    }
+
+    .btn-create {
+      margin-top: 15px;
+      padding: 8px 16px;
+      border: 2px solid #1a73e8;
+      background: transparent;
+      color: #1a73e8;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      text-decoration: none;
+      transition: 0.3s ease;
+      font-size: 0.9rem;
+      display: inline-block;
+    }
+
+    .btn-create:hover {
+      background: #1a73e8;
+      color: white;
+    }
+
+    .message {
+      margin: 10px 0;
+    }
+
+    .text-danger {
+      color: #ff4d4d;
+    }
+
+    .text-success {
+      color: #4caf50;
+    }
+
+    /* Columna derecha (degradado con texto y gif) */
+    .right-panel {
+      width: 55%;
+      background: linear-gradient(to right, #1a73e8, #0056b3, #003f7f);
+      color: white;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 60px;
+    }
+
+    .right-panel h3 {
+      font-size: 24px;
+      margin-bottom: 15px;
+    }
+
+    .right-panel p {
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .info-text {
+      font-size: 0.95rem;
+    }
+
+    /* Contenedor del gif */
+    .gif-container {
+      margin-top: 40px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .gif-container img {
+      width: 300px;
+      max-width: 100%;
+      border-radius: 12px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.3);
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .card-container {
+        flex-direction: column;
+        width: 95%;
+      }
+      .left-panel, .right-panel {
+        width: 100%;
+        padding: 30px;
+      }
+      .gif-container img {
+        width: 180px;
+      }
+    }
+  </style>
 </head>
 <body>
-    <h2>Iniciar sesión</h2>
-    <form th:action="@{/login}" method="post">
-      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-      <label>Email:</label>
-      <input type="email" name="email" required />
-      <label>Contraseña:</label>
-      <input type="password" name="password" required />
-      <button type="submit">Ingresar</button>
-    </form>
-    <p th:if="${param.error}">Usuario o contraseña incorrectos</p>
-    <p th:if="${param.logout}">Sesión cerrada</p>
+  <div class="card-container">
+    
+    <!-- Panel izquierdo -->
+    <div class="left-panel">
+      <div class="logo">✈</div>
+      <h2>Bienvenido a SkyFly</h2>
+      <p>Por favor inicia sesión en tu cuenta</p>
+
+      <!-- Formulario funcional con Spring Security -->
+      <form th:action="@{/login}" method="post">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+        <input type="email" name="email" class="form-control" placeholder="Correo electrónico" required>
+        <input type="password" name="password" class="form-control" placeholder="Contraseña" required>
+
+        <button type="submit" class="btn-login">Ingresar</button>
+
+        <!-- Mensajes -->
+        <div class="message">
+          <p class="text-danger" th:if="${param.error}">Usuario o contraseña incorrectos</p>
+          <p class="text-success" th:if="${param.logout}">Sesión cerrada</p>
+        </div>
+
+        <!-- Crear cuenta -->
+        <a th:href="@{/register}" class="btn-create">Crear nueva cuenta</a>
+      </form>
+    </div>
+
+    <!-- Panel derecho -->
+    <div class="right-panel">
+      <div>
+        <h3>Descubre un mundo de viajes</h3>
+        <p class="info-text">
+  Somos una agencia de viajes comprometida en brindarte seguridad, comodidad y aventuras únicas,  
+  diseñadas a tu medida.  
+  Con nosotros, cada destino se convierte en una historia que recordarás para siempre.
+        </p>
+      </div>
+
+      <!-- GIF decorativo -->
+      <div class="gif-container">
+        <img src="https://i.pinimg.com/originals/1d/fc/17/1dfc177f30cc05e61cd8179aca600ce6.gif" alt="Avión animado">
+      </div>
+    </div>
+  </div>
 </body>
 </html>

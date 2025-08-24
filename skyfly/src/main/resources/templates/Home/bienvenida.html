@@ -1,31 +1,60 @@
 <!DOCTYPE html>
-<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<html lang="es">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Bienvenida — Skyfly</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
-  <link th:href="@{/css/bienvenida.css}" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&family=Roboto:wght@400;500&display=swap" rel="stylesheet">  
+
+  <style>
+    body { font-family: 'Poppins', sans-serif; margin:0; background:#f5f7fa; color:#333; }
+    .navbar { background:#004aad; padding:1rem 2rem; display:flex; justify-content:space-between; align-items:center; color:#fff; }
+    .navbar .brand { display:flex; align-items:center; font-weight:700; font-size:1.5rem; }
+    .navbar .logo { margin-right:8px; }
+    .nav-links { list-style:none; display:flex; gap:1.5rem; margin:0; }
+    .nav-links a { color:#fff; text-decoration:none; font-weight:500; }
+    .btn-login { background:#fff; color:#004aad; padding: 10px 18px; border-radius:10px; font-weight:600; }
+
+    .hero { display:flex; justify-content:space-between; align-items:center; padding:3rem 5%; gap:2rem; flex-wrap:wrap; }
+    .hero-left { flex:1; }
+    .headline { font-size:3rem; line-height:1.2; }
+    .headline .script { font-family:'Roboto', cursive; color:#ff6b6b; }
+    .headline .strong { font-weight:800; color:#004aad; }
+    .subcopy { margin-top:1rem; font-size:1.1rem; }
+
+    .hero-right { flex:1; position:relative; text-align:center; }
+    .map-wrapper { position:relative; max-width:100%; }
+    .world-map { width:100%; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.2); }
+    .hotspot { position:absolute; width:16px; height:16px; background:#ff6b6b; border:2px solid #fff; border-radius:50%; cursor:pointer; transform:translate(-50%, -50%); }
+    .map-tooltip { position:absolute; background:#fff; border-radius:8px; padding:0.8rem; box-shadow:0 2px 10px rgba(0,0,0,0.2); transform:translate(-50%, -120%); width:180px; text-align:left; font-size:0.9rem; z-index:9999; }
+    .map-tooltip img { width:100%; border-radius:6px; margin-bottom:0.5rem; }
+    .map-hint { display:block; margin-top:0.5rem; font-size:0.8rem; color:#777; }
+
+    .destinos { padding:2rem 5%; background:#fff; text-align:center; }
+    .destinos h2 { font-size:2rem; margin-bottom:1.5rem; }
+    .grid-destinos { display:grid; grid-template-columns:repeat(4,1fr); gap:1.5rem; }
+    .card { background:#f9f9f9; border-radius:12px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.1); transition: transform 0.2s; }
+    .card:hover { transform:translateY(-5px); }
+    .card img { width:100%; height:140px; object-fit:cover; }
+    .card h4 { margin:0.5rem; font-size:1.1rem; }
+    .card p { margin:0.5rem; font-size:0.9rem; color:#555; }
+
+    .extra { padding:2rem 5%; background:#f0f4ff; text-align:center; }
+  </style>
 </head>
 
 <body>
-
-  <!-- Navbar -->
   <header class="navbar">
-    <div class="brand">
-      <span class="logo">✈</span>
-      <span class="brand-text">Skyfly</span>
-    </div>
+    <div class="brand"><span class="logo">✈</span><span class="brand-text">Skyfly</span></div>
     <nav>
       <ul class="nav-links">
         <li><a href="#" class="link">Reservar</a></li>
         <li><a href="#" class="link">Destinos</a></li>
-        <li><a th:href="@{/login}" class="btn btn-login">Inicia sesión</a></li>
+  <li><a th:href="@{/login}" class="btn btn-login" style="color:#004aad;">Iniciar sesión</a></li>
       </ul>
     </nav>
   </header>
 
-  <!-- Hero -->
   <section class="hero">
     <div class="hero-left">
       <h1 class="headline">
@@ -34,26 +63,27 @@
         <span class="strong">tus sueños</span>
         <span class="plane">✈</span>
       </h1>
-      <p class="subcopy">
-        Conoce cada uno de nuestros destinos y elige tu próxima parada.
-      </p>
+      <p class="subcopy">Conoce cada uno de nuestros destinos y elige tu próxima parada.</p>
     </div>
 
     <div class="hero-right">
       <div class="map-wrapper">
-        <img class="world-map" th:src="@{/img/world-map.png}" alt="Mapa del mundo"/>
-        <!-- Hotspots -->
-        <button class="hotspot" style="left: 28%; top: 46%;" data-code="mx" aria-label="México"></button>
-        <button class="hotspot" style="left: 24%; top: 67%;" data-code="pe" aria-label="Perú"></button>
-        <button class="hotspot" style="left: 33%; top: 67%;" data-code="br" aria-label="Brasil"></button>
-        <button class="hotspot" style="left: 66%; top: 45%;" data-code="cn" aria-label="China"></button>
-        <button class="hotspot" style="left: 59%; top: 36%;" data-code="fr" aria-label="Francia"></button>
-        <button class="hotspot" style="left: 22%; top: 33%;" data-code="us" aria-label="Estados Unidos"></button>
-        <button class="hotspot" style="left: 66%; top: 30%;" data-code="ru" aria-label="Rusia"></button>
-        <button class="hotspot" style="left: 75%; top: 43%;" data-code="jp" aria-label="Japón"></button>
-        <button class="hotspot" style="left: 25%; top: 28%;" data-code="ca" aria-label="Canadá"></button>
+        <img class="world-map" src="https://upload.wikimedia.org/wikipedia/commons/8/80/World_map_-_low_resolution.svg" alt="Mapa del mundo"/>
 
-        <!-- Tooltip -->
+        <!-- Hotspots de todos los destinos -->
+        <button class="hotspot" style="left:28%; top:46%;" data-code="mx" aria-label="México"></button>
+        <button class="hotspot" style="left:24%; top:67%;" data-code="pe" aria-label="Perú"></button>
+        <button class="hotspot" style="left:33%; top:67%;" data-code="br" aria-label="Brasil"></button>
+        <button class="hotspot" style="left:66%; top:45%;" data-code="cn" aria-label="China"></button>
+        <button class="hotspot" style="left:59%; top:36%;" data-code="fr" aria-label="Francia"></button>
+        <button class="hotspot" style="left:22%; top:33%;" data-code="us" aria-label="Estados Unidos"></button>
+        <button class="hotspot" style="left:66%; top:30%;" data-code="ru" aria-label="Rusia"></button>
+        <button class="hotspot" style="left:75%; top:43%;" data-code="jp" aria-label="Japón"></button>
+        <button class="hotspot" style="left:25%; top:28%;" data-code="ca" aria-label="Canadá"></button>
+        <button class="hotspot" style="left:63%; top:54%;" data-code="it" aria-label="Italia"></button>
+        <button class="hotspot" style="left:58%; top:42%;" data-code="es" aria-label="España"></button>
+        <button class="hotspot" style="left:45%; top:65%;" data-code="eg" aria-label="Egipto"></button>
+
         <div id="mapTooltip" class="map-tooltip" hidden>
           <img id="ttImg" src="" alt="Destino" />
           <div class="tt-info">
@@ -66,7 +96,6 @@
     </div>
   </section>
 
-  <!-- Destinos -->
   <section class="destinos">
     <h2>Lo mejor espera por ti</h2>
     <div id="grid-destinos" class="grid-destinos" aria-live="polite"></div>
@@ -74,11 +103,53 @@
 
   <section class="extra">
     <h3>¿Listo para despegar?</h3>
-    <p>
-      Aquí puedes agregar promos, paquetes o un storytelling de marca.
-    </p>
+    <p>Aquí puedes agregar promos, paquetes o un storytelling de marca.</p>
   </section>
 
-  <script th:src="@{/js/bienvenida.js}"></script>
+  <script>
+    const destinos = {
+      mx: { title: "México", img: "https://content.r9cdn.net/rimg/dimg/fb/9b/fce36aaa-city-34713-16296d9e374.jpg?crop=true&width=1020&height=498", desc: "Explora Cancún y su mar turquesa." },
+      pe: { title: "Perú", img: "https://image-tc.galaxy.tf/wijpeg-7ellqz2uqv2l9plk30futx9jr/experiencias-machu-picchu_wide.jpg?crop=0%2C63%2C1200%2C675&width=1140", desc: "Descubre Machu Picchu." },
+      br: { title: "Brasil", img: "https://voyeglobal.com/wp-content/webp-express/webp-images/uploads/2025/02/thumbnail-1.jpeg.webp", desc: "Vive el carnaval en Río de Janeiro." },
+      cn: { title: "China", img: "https://upload.wikimedia.org/wikipedia/commons/2/23/The_Great_Wall_of_China_at_Jinshanling-edit.jpg", desc: "Camina por la Gran Muralla China." },
+      fr: { title: "Francia", img: "https://media.tacdn.com/media/attractions-splice-spp-360x240/06/6f/4c/bc.jpg", desc: "Admira la Torre Eiffel." },
+      us: { title: "Estados Unidos", img: "https://forbes.es/wp-content/uploads/2017/08/GettyImages-600966434.jpg", desc: "Conquista la Gran Manzana." },
+      ru: { title: "Rusia", img: "https://e00-expansion.uecdn.es/assets/multimedia/imagenes/2016/08/30/14725492206022.jpg", desc: "Explora la Plaza Roja." },
+      jp: { title: "Japón", img: "https://res.cloudinary.com/aenetworks/image/upload/c_fill,ar_2,w_3840,h_1920,g_auto/dpr_auto/f_auto/q_auto:eco/v1/gettyimages-1390815938?_a=BAVAZGDX0", desc: "Disfruta la modernidad y tradición en Tokyo." },
+      ca: { title: "Canadá", img: "https://blog.grandvoyage.com/wp-content/uploads/2023/12/13.jpg", desc: "Admira las Cataratas del Niágara." },
+      it: { title: "Italia", img: "https://www.monumentosderoma.es/media/bholevzk/fontana-de-trevi-noche.jpg?anchor=center&mode=crop&width=555&height=370&rnd=132360957171900000", desc: "Recorre Roma y la Fontana de Trevi." },
+      es: { title: "España", img: "https://educahistoria.com/wp-content/uploads/2023/07/aerial-drone-view-of-barcelona-spain-2023-03-30-02-07-38-utc-980x551.jpg", desc: "Descubre Barcelona y su arquitectura." },
+      eg: { title: "Egipto", img: "https://cdn-imgix.headout.com/media/images/c151a30f4d1285a4fa1aca9f6bc0f053-History%20of%20Khafre%E2%80%99s%20Pyramid.jpg?auto=format&w=1069.6000000000001&h=687.6&q=90&ar=14%3A9&crop=faces&fit=crop", desc: "Visita las Pirámides de Giza." }
+    };
+
+    const tooltip = document.getElementById("mapTooltip");
+    const ttImg = document.getElementById("ttImg");
+    const ttTitle = document.getElementById("ttTitle");
+    const ttDesc = document.getElementById("ttDesc");
+
+    document.querySelectorAll(".hotspot").forEach(btn => {
+      btn.addEventListener("mouseenter", () => {
+        const code = btn.dataset.code;
+        const data = destinos[code];
+        if (data) {
+          ttImg.src = data.img;
+          ttTitle.textContent = data.title;
+          ttDesc.textContent = data.desc;
+          tooltip.hidden = false;
+          tooltip.style.left = btn.style.left;
+          tooltip.style.top = btn.style.top;
+        }
+      });
+      btn.addEventListener("mouseleave", () => { tooltip.hidden = true; });
+    });
+
+    const grid = document.getElementById("grid-destinos");
+    Object.values(destinos).forEach(d => {
+      const card = document.createElement("div");
+      card.className = "card";
+      card.innerHTML = `<img src="${d.img}" alt="${d.title}"><h4>${d.title}</h4><p>${d.desc}</p>`;
+      grid.appendChild(card);
+    });
+  </script>
 </body>
 </html>
