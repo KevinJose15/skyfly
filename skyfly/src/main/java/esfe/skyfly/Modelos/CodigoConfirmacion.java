@@ -12,18 +12,22 @@ public class CodigoConfirmacion {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_Codigo") // <- coincide con la BD
     private Integer idCodigo;
 
     @NotBlank(message = "El email es requerido")
     @Email(message = "Debe ser un email válido")
+    @Column(name = "email")
     private String email;
 
     @NotBlank(message = "El código es requerido")
-    @Column(length = 10)
+    @Column(name = "codigo", length = 10)
     private String codigo;
 
+    @Column(name = "fecha_Generacion")
     private LocalDateTime fechaGeneracion = LocalDateTime.now();
-@Column(columnDefinition = "TINYINT(1)")
+
+    @Column(name = "usado", columnDefinition = "TINYINT(1)")
     private boolean usado = false;
 
     public CodigoConfirmacion() {}
