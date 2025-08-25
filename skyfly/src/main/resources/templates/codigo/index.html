@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Generar Código</title>
+</head>
+<body>
+<h2>Generar Código de Confirmación</h2>
+
+
+<!-- Mensaje de éxito/error -->
+<div th:if="${msg != null}">
+    <p th:text="${msg}"></p>
+</div>
+
+<br>
+<a th:href="@{/codigo/validar}">Ir a Validar Código</a>
+
+</body>
+</html>
