@@ -19,9 +19,6 @@ public class ClienteService implements IClienteService {
     @Autowired
     private IClienteRepository clienteRepository;
 
-    @Autowired
-    private IUsuarioService usuarioService;
-
     @Override
     public Page<Cliente> buscarTodos(Pageable pageable) {
         return clienteRepository.findAll(pageable);
@@ -39,12 +36,7 @@ public class ClienteService implements IClienteService {
 
     @Override
     public Cliente crearOeditar(Cliente cliente) {
-        // ⚡ Hidratar el usuario antes de guardar
-        if (cliente.getUsuario() != null && cliente.getUsuario().getId() != null) {
-            Usuario usuario = usuarioService.buscarPorId(cliente.getUsuario().getId())
-                    .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
-            cliente.setUsuario(usuario);
-        }
+        // 👀 Aquí no re-buscamos el usuario, lo recibimos ya listo desde el controlador
         return clienteRepository.save(cliente);
     }
 

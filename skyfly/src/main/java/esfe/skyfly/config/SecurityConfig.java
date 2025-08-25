@@ -14,17 +14,17 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/", "/bienvenida", "/login", "/css/**", "/js/**", "/images/**").permitAll() // <- públicas
+                .requestMatchers("/", "/bienvenida", "/login",  "/registro", "/css/**", "/js/**", "/images/**").permitAll() // públicas
                 .anyRequest().authenticated() // lo demás requiere login
             )
-.formLogin(form -> form
-    .loginPage("/login")
-    .usernameParameter("email")
-    .passwordParameter("password")
-    .defaultSuccessUrl("/home", true) // 👈 después de login manda a /home
-    .failureUrl("/login?error=true")
-    .permitAll()
-)
+            .formLogin(form -> form
+                .loginPage("/login")
+                .usernameParameter("email")
+                .passwordParameter("password")
+                .defaultSuccessUrl("/home", true) // después de login manda a /home
+                .failureUrl("/login?error=true")
+                .permitAll()
+            )
             .logout(logout -> logout
                 .logoutUrl("/logout")
                 .logoutSuccessUrl("/login?logout")
@@ -39,5 +39,3 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 }
-
-

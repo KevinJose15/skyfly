@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-public class UsuarioService implements IUsuarioService{
+public class UsuarioService implements IUsuarioService, UserDetailsService {
 
     @Autowired
     private IUsuarioRepository usuarioRepository;
@@ -53,13 +53,11 @@ public class UsuarioService implements IUsuarioService{
         } else {
             // Edición
             return usuarioRepository.findById(usuario.getId()).map(usuarioExistente -> {
-
                 usuarioExistente.setName(usuario.getName());
                 usuarioExistente.setEmail(usuario.getEmail());
                 usuarioExistente.setRol(usuario.getRol());
                 usuarioExistente.setStatus(usuario.getStatus());
 
-                // Solo encriptamos si el usuario ingresó una nueva contraseña
                 if (usuario.getPasswordHash() != null && !usuario.getPasswordHash().isBlank()) {
                     usuarioExistente.setPasswordHash(passwordEncoder.encode(usuario.getPasswordHash()));
                 }
@@ -84,4 +82,16 @@ public class UsuarioService implements IUsuarioService{
         return passwordEncoder.encode(passwordHash);
     }
 
+    // ✅ Implementación de Spring Security
+ @Override
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado con email: " + email));
+
+        return User.builder()
+                .username(usuario.getEmail())  // usamos email como username
+                .password(usuario.getPasswordHash()) // contraseña ya encriptada
+                .roles(usuario.getRol().name()) // asignamos el rol
+                .build();
+    }
 }
