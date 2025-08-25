@@ -66,7 +66,7 @@ public String validarCodigo(@RequestParam("email") String email,
             }
         }
 
-        redirect.addFlashAttribute("msg", "✅ Código válido. Pago y reserva confirmados.");
+        redirect.addFlashAttribute("msg", " Código válido. Pago y reserva confirmados.");
     } else {
         redirect.addFlashAttribute("msg", "❌ Código inválido o ya usado.");
     }
