@@ -21,24 +21,56 @@
       padding: 30px;
       box-shadow: 0 8px 25px rgba(0,0,0,0.25);
       display: flex;
-      flex-direction: column;
-      gap: 20px;
-      min-height: 550px; /* 🔹 un poco más alto */
-    }
-
-    .content-section {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
+      flex-direction: row; /* 🔹 ahora en 2 columnas */
       gap: 30px;
+      min-height: 550px;
     }
 
-    /* --- Formulario --- */
+    /* --- Sección izquierda (logo + info) --- */
+    .info-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: white;
+      padding: 20px;
+    }
+
+    .logo {
+      font-size: 100px;
+      margin-bottom: 15px;
+      background: linear-gradient(to right, #1a73e8, #0056b3);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .info-container h2 {
+      margin-bottom: 10px;
+    }
+
+    .info-container p {
+      font-size: 0.95rem;
+      color: #ccc;
+      max-width: 90%;
+    }
+
+    /* --- Sección derecha (formulario + botones) --- */
+    .form-section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 15px;
+      padding: 20px;
+    }
+
     .form-container {
       display: flex;
       flex-direction: column;
       gap: 12px;
-      flex: 1;
+      width: 100%;
     }
 
     .form-control {
@@ -51,41 +83,13 @@
       font-size: 0.9rem;
     }
 
-    /* --- Logo + texto --- */
-    .info-container {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      color: white;
-      padding: 10px;
-    }
-
-    .logo {
-      font-size: 60px;
-      margin-bottom: 10px;
-      background: linear-gradient(to right, #1a73e8, #0056b3);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .info-container h2 {
-      margin-bottom: 6px;
-    }
-
-    .info-container p {
-      font-size: 0.9rem;
-      color: #ccc;
-    }
-
-    /* --- Botones --- */
+    /* --- Botones debajo del formulario --- */
     .buttons-container {
       display: flex;
-      gap: 15px;
-      justify-content: center;
+      flex-direction: column; /* 🔹 ahora en columna */
+      gap: 12px;
       margin-top: 15px;
+      width: 100%;
     }
 
     .btn-register {
@@ -97,6 +101,7 @@
       font-weight: bold;
       cursor: pointer;
       transition: 0.3s ease;
+      text-align: center;
     }
 
     .btn-register:hover {
@@ -112,6 +117,7 @@
       cursor: pointer;
       font-weight: bold;
       text-decoration: none;
+      text-align: center;
       transition: 0.3s ease;
     }
 
@@ -120,7 +126,7 @@
       color: white;
     }
 
-    /* --- Mensaje flotante --- */
+    /* --- Notificación --- */
     .notification {
       position: fixed;
       bottom: 30px;
@@ -153,8 +159,17 @@
 </head>
 <body>
   <div class="card-container">
-    <div class="content-section">
-      <!-- Formulario -->
+    <!-- Izquierda: Logo + info -->
+    <div class="info-container">
+      <div class="logo">✈</div>
+      <h2>Crear nueva cuenta</h2>
+      <p>Ingresa tus datos para registrarte y ser parte de SkyFly.</p>
+      <p> Crea tu cuenta para descubrir destinos únicos y aventuras inolvidables.  
+          Seguridad, comodidad y experiencias memorables te esperan.</p>
+    </div>
+
+    <!-- Derecha: Formulario + botones -->
+    <div class="form-section">
       <form id="registerForm" th:action="@{/registro}" method="post" th:object="${usuario}" class="form-container">
         <input type="text" th:field="*{name}" class="form-control" placeholder="Nombre completo" required>
         <input type="email" th:field="*{email}" class="form-control" placeholder="Correo electrónico" required>
@@ -163,18 +178,11 @@
         <input type="text" name="direccion" class="form-control" placeholder="Dirección" required>
       </form>
 
-      <!-- Logo e información -->
-      <div class="info-container">
-        <div class="logo">✈</div>
-        <h2>Crear nueva cuenta</h2>
-        <p>Ingresa tus datos para registrarte y ser parte de SkyFly.</p>
+      <!-- Botones -->
+      <div class="buttons-container">
+        <button type="submit" form="registerForm" class="btn-register">Registrarse</button>
+        <a th:href="@{/login}" class="btn-login">Volver al login</a>
       </div>
-    </div>
-
-    <!-- Botones -->
-    <div class="buttons-container">
-      <button type="submit" form="registerForm" class="btn-register">Registrarse</button>
-      <a th:href="@{/login}" class="btn-login">Volver al login</a>
     </div>
   </div>
 
@@ -190,7 +198,6 @@
     form.addEventListener("submit", function(event) {
       event.preventDefault(); // evita envío inmediato
 
-      // validar campos
       const inputs = form.querySelectorAll("input[required]");
       let valid = true;
       inputs.forEach(input => {
@@ -200,13 +207,10 @@
       });
 
       if (valid) {
-        // mostrar notificación
         notification.classList.add("show");
-
-        // ocultar después de 3 segundos
         setTimeout(() => {
           notification.classList.remove("show");
-          form.submit(); // ahora sí enviamos el formulario
+          form.submit();
         }, 3000);
       }
     });
