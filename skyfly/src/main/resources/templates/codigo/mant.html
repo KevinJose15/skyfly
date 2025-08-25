@@ -3,27 +3,97 @@
 <head>
     <meta charset="UTF-8">
     <title>Validar Código</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: url('https://i.pinimg.com/736x/63/46/50/6346507b1e5e97f9afeea4c03bc06911.jpg') no-repeat center center fixed;
+            background-size: cover;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            width: 400px;
+            text-align: center;
+        }
+        h2 {
+            color: #004aad;
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+            font-weight: bold;
+            text-align: left;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+        button {
+            margin-top: 20px;
+            width: 100%;
+            padding: 10px;
+            background: #004aad;
+            color: white;
+            font-weight: bold;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #007bff;
+        }
+        p {
+            margin-top: 15px;
+            font-weight: bold;
+            color: green;
+        }
+        a {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 10px 15px;
+            background: #004aad;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            transition: background 0.3s;
+        }
+        a:hover {
+            background: #007bff;
+        }
+    </style>
 </head>
 <body>
-<h2>Validar Código de Confirmación</h2>
+<div class="container">
+    <h2>Validar Código de Confirmación</h2>
 
-<form th:action="@{/codigo/validar}" method="post">
-    <label>Email:</label>
-    <input type="email" name="email" required>
-    <br><br>
-    <label>Código:</label>
-    <input type="text" name="codigo" maxlength="6" required>
-    <br><br>
-    <button type="submit">Validar</button>
-</form>
+    <form th:action="@{/codigo/validar}" method="post">
+        <label>Email:</label>
+        <input type="email" name="email" required>
 
-<!-- Mensaje de validación -->
-<div th:if="${msg != null}">
-    <p th:text="${msg}"></p>
+        <label>Código:</label>
+        <input type="text" name="codigo" maxlength="6" required>
+
+        <button type="submit">Validar</button>
+    </form>
+
+    <!-- Mensaje de validación -->
+    <div th:if="${msg != null}">
+        <p th:text="${msg}"></p>
+    </div>
+
+    <a th:href="@{/codigo}">Volver a Generar Código</a>
 </div>
-
-<br>
-<a th:href="@{/pagos}">Volver a Generar Código</a>
-
 </body>
 </html>
