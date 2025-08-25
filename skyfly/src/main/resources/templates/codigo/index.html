@@ -2,19 +2,59 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Generar Código</title>
+    <title>Código generado</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: url('https://i.pinimg.com/1200x/35/bf/b6/35bfb6e07653f0c688b2b9528489f520.jpg') no-repeat center center fixed;
+            background-size: cover;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            text-align: center;
+            width: 350px;
+        }
+        h2 {
+            color: #004aad;
+        }
+        p {
+            color: green;
+            font-weight: bold;
+        }
+        a {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 10px 15px;
+            background: #004aad;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            transition: background 0.3s;
+        }
+        a:hover {
+            background: #007bff;
+        }
+    </style>
 </head>
 <body>
-<h2>Generar Código de Confirmación</h2>
+<div class="container">
+    <h2>Código generado</h2>
 
+    <!-- Mensaje de éxito/error -->
+    <div th:if="${msg != null}">
+        <p th:text="${msg}"></p>
+    </div>
 
-<!-- Mensaje de éxito/error -->
-<div th:if="${msg != null}">
-    <p th:text="${msg}"></p>
+    <a th:href="@{/codigo/validar}">Ir a Validar Código</a>
 </div>
-
-<br>
-<a th:href="@{/codigo/validar}">Ir a Validar Código</a>
-
 </body>
 </html>
