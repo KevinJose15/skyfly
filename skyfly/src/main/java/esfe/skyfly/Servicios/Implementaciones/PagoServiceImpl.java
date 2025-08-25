@@ -36,4 +36,10 @@ public class PagoServiceImpl implements IPagoService {
     public void eliminarPorId(Integer id) {
         pagoRepository.deleteById(id);
 }
+// 🔹 Nuevo método: busca el último pago asociado al email del cliente
+    @Override
+    public Pago buscarPorEmailCliente(String email) {
+        return pagoRepository.findUltimoPagoPorEmail(email)
+                .orElse(null);
+}
 }
