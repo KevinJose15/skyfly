@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/_MainLayout}">
+<head>
+    <title layout:fragment="title">Confirmación de Pago</title>
+</head>
+<body>
+<section layout:fragment="content">
+    <div class="container mt-4">
+
+        <script th:inline="javascript">
+
+            swal({
+                title: "Pago Exitoso",
+                text: "[[${mensaje}]]",
+                icon: "success",
+                button: "Aceptar"
+            }).then(() => {
+                window.location.href = "[[@{/pagos}]]";
+            });
+        </script>
+
+        <div class="card p-4">
+            <h3>Pago realizado con éxito</h3>
+            <p><strong>Código de Confirmación:</strong> <span th:text="${mensaje}"></span></p>
+            <a th:href="@{/pagos}" class="btn btn-primary mt-3">Volver al listado de pagos</a>
+        </div>
+    </div>
+</section>
+</body>
+</html>

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/_MainLayout}">
+<head>
+    <title layout:fragment="title">Pagos</title>
+</head>
+<body>
+<section layout:fragment="content">
+    <div th:if="${error != null}">
+    <p th:text="${error}" style="color:red;"></p>
+</div>
+    <div class="container mt-4">
+
+        <!-- Mensaje -->
+        <div th:if="${msg != null}">
+            <script>
+                swal({
+                    title: "Confirmación",
+                    text: '[[ ${msg} ]]',
+                    icon: "success"
+                });
+            </script>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2>Listado de Pagos</h2>
+            <a th:href="@{/pagos/create}" class="btn btn-primary">Nuevo Pago</a>
+        </div>
+
+        <table class="table table-striped table-bordered">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Reserva</th>
+                <th>Monto</th>
+                <th>Método de Pago</th>
+                <th>Fecha</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+            </thead>
+            <tbody>
+<tr th:each="p : ${pagos}">
+    <td th:text="${p.pagoId != null ? p.pagoId : '---'}"></td>
+    <td th:text="${p.reserva != null && p.reserva.reservaId != null ? p.reserva.reservaId : '---'}"></td>
+    <td th:text="${p.monto != null ? p.monto : '---'}"></td>
+   <td th:text="${p.metodoPago != null ? p.metodoPago.nombreMetodo : '---'}"></td>
+
+    <td th:text="${p.fechaPago != null ? #temporals.format(p.fechaPago, 'dd/MM/yyyy HH:mm') : '---'}"></td>
+    <td th:text="${p.estadoPago != null ? p.estadoPago : '---'}"></td>
+    <td>
+        <a th:href="@{'/pagos/view/' + ${p.pagoId}}" class="btn btn-info btn-sm">Ver</a>
+        <!--<a th:href="@{'/pagos/edit/' + ${p.pagoId}}" class="btn btn-warning btn-sm">Editar</a>-->
+        <a th:href="@{'/pagos/delete/' + ${p.pagoId}}" class="btn btn-danger btn-sm">Eliminar</a>
+    </td>
+</tr>
+</tbody>
+
+        </table>
+    </div>
+</section>
+</body>
+</html>
