@@ -1,41 +1,215 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
 <head>
-    <title>Registro de Usuario</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
+  <meta charset="UTF-8">
+  <title>Registro de Usuario</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f0f4f8;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .card-container {
+      width: 900px;
+      background-color: #2c2c2c;
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.25);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      min-height: 550px; /* 🔹 un poco más alto */
+    }
+
+    .content-section {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 30px;
+    }
+
+    /* --- Formulario --- */
+    .form-container {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      flex: 1;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #555;
+      background: #1e1e1e;
+      color: #fff;
+      font-size: 0.9rem;
+    }
+
+    /* --- Logo + texto --- */
+    .info-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: white;
+      padding: 10px;
+    }
+
+    .logo {
+      font-size: 60px;
+      margin-bottom: 10px;
+      background: linear-gradient(to right, #1a73e8, #0056b3);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .info-container h2 {
+      margin-bottom: 6px;
+    }
+
+    .info-container p {
+      font-size: 0.9rem;
+      color: #ccc;
+    }
+
+    /* --- Botones --- */
+    .buttons-container {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      margin-top: 15px;
+    }
+
+    .btn-register {
+      padding: 12px 20px;
+      border: none;
+      border-radius: 6px;
+      background: linear-gradient(to right, #1a73e8, #0056b3);
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s ease;
+    }
+
+    .btn-register:hover {
+      background: linear-gradient(to right, #0056b3, #003f7f);
+    }
+
+    .btn-login {
+      padding: 12px 20px;
+      border: 2px solid #1a73e8;
+      background: transparent;
+      color: #1a73e8;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      text-decoration: none;
+      transition: 0.3s ease;
+    }
+
+    .btn-login:hover {
+      background: #1a73e8;
+      color: white;
+    }
+
+    /* --- Mensaje flotante --- */
+    .notification {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      background: #1a73e8;
+      color: white;
+      padding: 15px 20px;
+      border-radius: 10px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.3);
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(20px);
+      transition: all 0.4s ease;
+    }
+
+    .notification.show {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0);
+    }
+
+    .notification span {
+      font-size: 22px;
+    }
+  </style>
 </head>
 <body>
-    <h2>Crear nueva cuenta</h2>
+  <div class="card-container">
+    <div class="content-section">
+      <!-- Formulario -->
+      <form id="registerForm" th:action="@{/registro}" method="post" th:object="${usuario}" class="form-container">
+        <input type="text" th:field="*{name}" class="form-control" placeholder="Nombre completo" required>
+        <input type="email" th:field="*{email}" class="form-control" placeholder="Correo electrónico" required>
+        <input type="password" th:field="*{passwordHash}" class="form-control" placeholder="Contraseña" required>
+        <input type="text" name="telefono" class="form-control" placeholder="Teléfono" required>
+        <input type="text" name="direccion" class="form-control" placeholder="Dirección" required>
+      </form>
 
-    <form th:action="@{/registro}" method="post" th:object="${usuario}">
-        <div>
-            <label>Nombre:</label>
-            <input type="text" th:field="*{name}" required />
-        </div>
+      <!-- Logo e información -->
+      <div class="info-container">
+        <div class="logo">✈</div>
+        <h2>Crear nueva cuenta</h2>
+        <p>Ingresa tus datos para registrarte y ser parte de SkyFly.</p>
+      </div>
+    </div>
 
-        <div>
-            <label>Email:</label>
-            <input type="email" th:field="*{email}" required />
-        </div>
+    <!-- Botones -->
+    <div class="buttons-container">
+      <button type="submit" form="registerForm" class="btn-register">Registrarse</button>
+      <a th:href="@{/login}" class="btn-login">Volver al login</a>
+    </div>
+  </div>
 
-        <div>
-            <label>Contraseña:</label>
-            <input type="password" th:field="*{passwordHash}" required />
-        </div>
+  <!-- Notificación -->
+  <div id="notification" class="notification">
+    <span>✈</span> Listo, ahora puedes iniciar sesión
+  </div>
 
-        <div>
-            <label>Teléfono:</label>
-            <input type="text" name="telefono" required />
-        </div>
+  <script>
+    const form = document.getElementById("registerForm");
+    const notification = document.getElementById("notification");
 
-        <div>
-            <label>Dirección:</label>
-            <input type="text" name="direccion" required />
-        </div>
+    form.addEventListener("submit", function(event) {
+      event.preventDefault(); // evita envío inmediato
 
-        <button type="submit">Registrarse</button>
-    </form>
+      // validar campos
+      const inputs = form.querySelectorAll("input[required]");
+      let valid = true;
+      inputs.forEach(input => {
+        if (!input.value.trim()) {
+          valid = false;
+        }
+      });
 
-    <a th:href="@{/login}">Volver al login</a>
+      if (valid) {
+        // mostrar notificación
+        notification.classList.add("show");
+
+        // ocultar después de 3 segundos
+        setTimeout(() => {
+          notification.classList.remove("show");
+          form.submit(); // ahora sí enviamos el formulario
+        }, 3000);
+      }
+    });
+  </script>
 </body>
 </html>
