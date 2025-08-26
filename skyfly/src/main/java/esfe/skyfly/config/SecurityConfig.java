@@ -8,21 +8,27 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
-public class SecurityConfig {   
+public class SecurityConfig {
 
-   @Bean
+    private final CustomAuthenticationSuccessHandler successHandler;
+
+    public SecurityConfig(CustomAuthenticationSuccessHandler successHandler) {
+        this.successHandler = successHandler;
+    }
+
+    @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/", "/bienvenida", "/login",  "/registro", "/css/**", "/js/**", "/images/**").permitAll() // públicas
+                .requestMatchers("/", "/bienvenida", "/login", "/registro",
+                        "/css/", "/js/", "/images/").permitAll()
                 .anyRequest().authenticated()
-                 // lo demás requiere login
             )
             .formLogin(form -> form
                 .loginPage("/login")
                 .usernameParameter("email")
                 .passwordParameter("password")
-                .defaultSuccessUrl("/home", true) // después de login manda a /home
+                .successHandler(successHandler) // 👉 Usamos el handler
                 .failureUrl("/login?error=true")
                 .permitAll()
             )

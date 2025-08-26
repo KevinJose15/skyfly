@@ -30,14 +30,27 @@ public class HomeController {
         return "Home/bienvenida";
     }
 
-    @GetMapping("/home")
-    public String home() {
-        return "Home/index";
-    }
-
     @GetMapping("/login")
     public String login() {
         return "Home/formLogin";
+    }
+
+    // 👉 Vista para administrador
+    @GetMapping("/admin/main")
+    public String mainAdmin() {
+        return "_MainLayout"; // esta es tu vista para admin/agente
+    }
+
+    // 👉 Vista para agente
+    @GetMapping("/agente/main")
+    public String mainAgente() {
+        return "_MainLayout"; // misma vista, distinto endpoint
+    }
+
+    // 👉 Vista para cliente
+    @GetMapping("/cliente/index")
+    public String indexCliente() {
+        return "Cliente/index"; // tu index con destinos
     }
 
     // 👉 Vista de registro
