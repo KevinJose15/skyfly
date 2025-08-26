@@ -3,6 +3,7 @@ package esfe.skyfly.Servicios.Implementaciones;
 import esfe.skyfly.Modelos.Pago;
 import esfe.skyfly.Repositorios.IPagoRepository;
 import esfe.skyfly.Servicios.Interfaces.IPagoService;
+import esfe.skyfly.Modelos.EstadoReserva;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.List;
@@ -36,10 +37,9 @@ public class PagoServiceImpl implements IPagoService {
     public void eliminarPorId(Integer id) {
         pagoRepository.deleteById(id);
 }
-// 🔹 Nuevo método: busca el último pago asociado al email del cliente
-    @Override
-    public Pago buscarPorEmailCliente(String email) {
-        return pagoRepository.findUltimoPagoPorEmail(email)
-                .orElse(null);
+@Override
+public Optional<Pago> buscarUltimoPagoPendientePorCliente(String email) {
+    return pagoRepository.findFirstByReserva_Cliente_Usuario_EmailAndEstadoPagoOrderByFechaPagoDesc(
+            email, EstadoReserva.PENDIENTE);
 }
 }

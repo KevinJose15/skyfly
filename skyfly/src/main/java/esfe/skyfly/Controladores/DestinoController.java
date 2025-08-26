@@ -1,6 +1,7 @@
 package esfe.skyfly.Controladores;
 
 import esfe.skyfly.Modelos.Destino;
+import esfe.skyfly.Repositorios.IDestinoRepository;
 import esfe.skyfly.Servicios.Interfaces.IDestinoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -15,6 +16,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import esfe.skyfly.Repositorios.IDestinoRepository;
 
 import java.util.Base64; // <<==== IMPORTANTE
 import java.util.List;
@@ -204,4 +206,10 @@ public class DestinoController {
         }
         return Base64.getDecoder().decode(base64);
     }
+    @GetMapping ("/cliente")
+    
+    public String indexCliente(Model model) {
+    model.addAttribute("destinos", destinoService.obtenerTodo());
+    return "destinos/index"; // se va a la vista destinos/index.html
+}
 }

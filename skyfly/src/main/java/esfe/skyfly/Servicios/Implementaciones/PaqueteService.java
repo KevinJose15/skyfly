@@ -47,4 +47,5 @@ public class PaqueteService implements IPaqueteService {
     public List<Paquete> buscarTodos() {
         return paqueteRepository.findAll();
     }
+    
 }

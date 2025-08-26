@@ -6,6 +6,7 @@ import esfe.skyfly.Modelos.EstadoReserva;
 import esfe.skyfly.Servicios.Interfaces.CodigoConfirmacionService;
 import esfe.skyfly.Servicios.Implementaciones.PagoServiceImpl;
 import esfe.skyfly.Servicios.Implementaciones.ReservaService;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -41,36 +42,43 @@ public class CodigoConfirmacionController {
         return "codigo/mant"; // Formulario para validar código
     }
 
-    // Validar código
+  // Validar código
 @PostMapping("/validar")
-public String validarCodigo(@RequestParam("email") String email,
-                            @RequestParam("codigo") String codigo,
+public String validarCodigo(@RequestParam("codigo") String codigo,
+                            Authentication authentication,
                             RedirectAttributes redirect) {
+    try {
+        String email = (authentication != null) ? authentication.getName() : "NO_AUTH";
+        System.out.println("DEBUG - Email autenticado: " + email);
+        System.out.println("DEBUG - Código recibido: " + codigo);
 
-    boolean valido = codigoConfirmacionService.validarCodigo(email, codigo);
+        boolean valido = codigoConfirmacionService.validarCodigo(email, codigo);
+        System.out.println("DEBUG - Resultado validación: " + valido);
 
-    if (valido) {
-        // 🔹 Buscar último pago del cliente por email
-        Pago pago = pagoService.buscarPorEmailCliente(email);
+        if (valido) {
+            pagoService.buscarUltimoPagoPendientePorCliente(email).ifPresent(pago -> {
+                System.out.println("DEBUG - Pago encontrado: " + pago.getPagoId());
 
-        if (pago != null) {
-            // Confirmar pago
-            pago.setEstadoPago(EstadoReserva.CONFIRMADA);
-            pagoService.crearOeditar(pago); // save actualizado
+                pago.setEstadoPago(EstadoReserva.CONFIRMADA);
+                pagoService.crearOeditar(pago);
 
-            // Confirmar reserva asociada
-            Reservas reserva = reservaService.buscarPorId(pago.getReservaId()).orElse(null);
-            if (reserva != null) {
-                reserva.setEstado(EstadoReserva.CONFIRMADA);
-                reservaService.crearOeditar(reserva); // save actualizado
-            }
+                reservaService.buscarPorId(pago.getReservaId()).ifPresent(reserva -> {
+                    System.out.println("DEBUG - Reserva encontrada: " + reserva.getReservaId());
+                    reserva.setEstado(EstadoReserva.CONFIRMADA);
+                    reservaService.crearOeditar(reserva);
+                });
+            });
+
+            redirect.addFlashAttribute("msg", "✅ Código válido. Pago y reserva confirmados.");
+        } else {
+            redirect.addFlashAttribute("msg", "❌ Código inválido o ya usado.");
         }
 
-        redirect.addFlashAttribute("msg", " Código válido. Pago y reserva confirmados.");
-    } else {
-        redirect.addFlashAttribute("msg", "❌ Código inválido o ya usado.");
+    } catch (Exception e) {
+        e.printStackTrace(); // 🔥 Esto mostrará la causa en consola
+        redirect.addFlashAttribute("msg", "⚠ Error interno: " + e.getMessage());
     }
 
-    return "redirect:/pagos";
+    return "redirect:/pagos/index";
 }
 }

@@ -55,10 +55,24 @@
         <a th:href="@{'/pagos/delete/' + ${p.pagoId}}" class="btn btn-danger btn-sm">Eliminar</a>
     </td>
 </tr>
+
 </tbody>
 
         </table>
     </div>
+    <div th:if="${#authentication.principal != null}">
+    <div th:if="${pagoPendiente != null}">
+        <h3>Pago pendiente</h3>
+        <p>Reserva: <span th:text="${pagoPendiente.reserva.id}"></span></p>
+        <p>Monto: <span th:text="${pagoPendiente.monto}"></span></p>
+        <form th:action="@{/confirmar}" method="post">
+            <button type="submit">Confirmar Pago</button>
+        </form>
+    </div>
+    <div th:if="${pagoPendiente == null}">
+        <p>No tienes pagos pendientes</p>
+ </div>
+</div>
 </section>
 </body>
 </html>

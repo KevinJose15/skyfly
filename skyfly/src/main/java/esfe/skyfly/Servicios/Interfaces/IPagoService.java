@@ -9,6 +9,5 @@ public interface IPagoService {
     Optional<Pago> buscarPorId(Integer id);
     Pago crearOeditar(Pago pago);
     void eliminarPorId(Integer id);
-    // 🔹 Nuevo método
-    Pago buscarPorEmailCliente(String email);
+    Optional<Pago> buscarUltimoPagoPendientePorCliente(String email);
 }

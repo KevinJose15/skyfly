@@ -11,6 +11,7 @@ import esfe.skyfly.Servicios.Interfaces.IReservaService;
 import esfe.skyfly.Servicios.Interfaces.IMetodoPagoService;
 import esfe.skyfly.Servicios.Interfaces.CodigoConfirmacionService;
 
+import org.springframework.security.core.Authentication;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -40,19 +41,27 @@ public class PagoController {
     @Autowired
     private IMetodoPagoService metodoPagoService;
 
-    // LISTAR PAGOS
-    @GetMapping
-    public String index(Model model) {
-        try {
-            model.addAttribute("pagos", pagoService.obtenerTodos());
-        } catch (Exception e) {
-            e.printStackTrace();
-            model.addAttribute("error", e.getMessage());
-        }
+    // -----------------------------
+    // LISTAR PAGOS (INDEX)
+    // -----------------------------
+    @GetMapping({"/", "/index"})
+    public String index(Authentication authentication, Model model) {
+
+        // Todos los pagos para la tabla
+        model.addAttribute("pagos", pagoService.obtenerTodos());
+
+        // Último pago pendiente del cliente logeado
+        String email = authentication.getName();
+        Pago pagoPendiente = pagoService.buscarUltimoPagoPendientePorCliente(email)
+                                        .orElse(null);
+        model.addAttribute("pagoPendiente", pagoPendiente);
+
         return "pagos/index";
     }
 
-    // OBTENER MONTO DE RESERVA (para llenar automáticamente)
+    // -----------------------------
+    // OBTENER MONTO DE RESERVA
+    // -----------------------------
     @GetMapping("/reserva/monto/{reservaId}")
     @ResponseBody
     public String obtenerMontoReserva(@PathVariable Integer reservaId) {
@@ -67,7 +76,9 @@ public class PagoController {
         return formatoDolar.format(monto);
     }
 
+    // -----------------------------
     // FORMULARIO NUEVO PAGO
+    // -----------------------------
     @GetMapping("/create")
     public String create(Model model) {
         model.addAttribute("pago", new Pago());
@@ -77,7 +88,9 @@ public class PagoController {
         return "pagos/mant";
     }
 
+    // -----------------------------
     // FORMULARIO EDITAR PAGO
+    // -----------------------------
     @GetMapping("/edit/{id}")
     public String edit(@PathVariable Integer id, Model model) {
         Pago pago = pagoService.buscarPorId(id)
@@ -90,27 +103,42 @@ public class PagoController {
         return "pagos/mant";
     }
 
+    // -----------------------------
     // VER PAGO
+    // -----------------------------
     @GetMapping("/view/{id}")
     public String view(@PathVariable Integer id, Model model) {
         Pago pago = pagoService.buscarPorId(id)
                 .orElseThrow(() -> new IllegalArgumentException("Pago no encontrado"));
+
         model.addAttribute("pago", pago);
         model.addAttribute("action", "view");
         return "pagos/mant";
     }
 
-    // ELIMINAR PAGO (GET)
+    // -----------------------------
+    // ELIMINAR PAGO
+    // -----------------------------
     @GetMapping("/delete/{id}")
     public String delete(@PathVariable Integer id, Model model) {
         Pago pago = pagoService.buscarPorId(id)
                 .orElseThrow(() -> new IllegalArgumentException("Pago no encontrado"));
+
         model.addAttribute("pago", pago);
         model.addAttribute("action", "delete");
         return "pagos/mant";
     }
 
+    @PostMapping("/delete")
+    public String deletePost(@ModelAttribute Pago pago, RedirectAttributes redirect) {
+        pagoService.eliminarPorId(pago.getPagoId());
+        redirect.addFlashAttribute("msg", "Pago eliminado correctamente");
+        return "redirect:/pagos/index";
+    }
+
+    // -----------------------------
     // GUARDAR NUEVO PAGO
+    // -----------------------------
     @PostMapping("/create")
     public String saveNuevo(@ModelAttribute Pago pago, BindingResult result, Model model,
                             RedirectAttributes redirect) {
@@ -120,17 +148,17 @@ public class PagoController {
             result.rejectValue("numeroTarjeta", "error.numeroTarjeta", "Número de tarjeta inválido");
         }
 
-        // Hidratar reserva y monto
+        // Hidratar reserva
         if (pago.getReservaId() != null) {
             Reservas reserva = reservaService.buscarPorId(pago.getReservaId())
                     .orElseThrow(() -> new IllegalArgumentException("Reserva no encontrada"));
             pago.setReserva(reserva);
 
-if (reserva.getPaquete() != null && reserva.getPaquete().getPrecio() != null) {
-    pago.setMonto(reserva.getPaquete().getPrecio()); // ya es BigDecimal
-} else {
-    pago.setMonto(BigDecimal.ZERO);
-}
+            if (reserva.getPaquete() != null && reserva.getPaquete().getPrecio() != null) {
+                pago.setMonto(reserva.getPaquete().getPrecio());
+            } else {
+                pago.setMonto(BigDecimal.ZERO);
+            }
         } else {
             result.rejectValue("reservaId", "error.reservaId", "Debes seleccionar una reserva");
         }
@@ -143,7 +171,6 @@ if (reserva.getPaquete() != null && reserva.getPaquete().getPrecio() != null) {
             result.rejectValue("metodoPagoId", "error.metodoPagoId", "Debes seleccionar un método de pago");
         }
 
-        // Si hay errores, volver a la vista
         if (result.hasErrors()) {
             model.addAttribute("reservas", reservaService.obtenerTodos());
             model.addAttribute("metodosPago", metodoPagoService.obtenerTodos());
@@ -162,7 +189,6 @@ if (reserva.getPaquete() != null && reserva.getPaquete().getPrecio() != null) {
         pago.setFechaPago(LocalDateTime.now());
         pago.setEstadoPago(EstadoReserva.PENDIENTE);
 
-        // Guardar pago
         pagoService.crearOeditar(pago);
 
         // Generar código de confirmación
@@ -174,7 +200,9 @@ if (reserva.getPaquete() != null && reserva.getPaquete().getPrecio() != null) {
         return "redirect:/codigo";
     }
 
+    // -----------------------------
     // GUARDAR EDICIÓN
+    // -----------------------------
     @PostMapping("/edit")
     public String saveEditado(@ModelAttribute Pago pago, BindingResult result, Model model,
                               RedirectAttributes redirect) {
@@ -184,13 +212,11 @@ if (reserva.getPaquete() != null && reserva.getPaquete().getPrecio() != null) {
             pago.setReserva(reservaService.buscarPorId(pago.getReservaId())
                     .orElseThrow(() -> new IllegalArgumentException("Reserva no encontrada")));
         }
-
         if (pago.getMetodoPagoId() != null) {
             pago.setMetodoPago(metodoPagoService.buscarPorId(pago.getMetodoPagoId())
                     .orElseThrow(() -> new IllegalArgumentException("Método de pago no encontrado")));
         }
 
-        // Validar tarjeta
         if (pago.getNumeroTarjeta() != null && !LuhnValidator.isValid(pago.getNumeroTarjeta())) {
             result.rejectValue("numeroTarjeta", "error.numeroTarjeta", "Número de tarjeta inválido");
         }
@@ -202,7 +228,7 @@ if (reserva.getPaquete() != null && reserva.getPaquete().getPrecio() != null) {
             return "pagos/mant";
         }
 
-        // Guardar últimos 4 dígitos de tarjeta
+        // Guardar últimos 4 dígitos
         if (pago.getNumeroTarjeta() != null && pago.getNumeroTarjeta().length() >= 4) {
             pago.setUltimos4Tarjeta(pago.getNumeroTarjeta()
                     .substring(pago.getNumeroTarjeta().length() - 4));
@@ -210,14 +236,6 @@ if (reserva.getPaquete() != null && reserva.getPaquete().getPrecio() != null) {
 
         pagoService.crearOeditar(pago);
         redirect.addFlashAttribute("msg", "Pago actualizado correctamente");
-        return "redirect:/pagos";
-    }
-
-    // ELIMINAR POST
-    @PostMapping("/delete")
-    public String deletePost(@ModelAttribute Pago pago, RedirectAttributes redirect) {
-        pagoService.eliminarPorId(pago.getPagoId());
-        redirect.addFlashAttribute("msg", "Pago eliminado correctamente");
-        return "redirect:/pagos";
+        return "redirect:/pagos/index";
     }
 }

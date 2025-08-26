@@ -15,7 +15,8 @@ public class SecurityConfig {
         http
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/", "/bienvenida", "/login",  "/registro", "/css/**", "/js/**", "/images/**").permitAll() // públicas
-                .anyRequest().authenticated() // lo demás requiere login
+                .anyRequest().authenticated()
+                 // lo demás requiere login
             )
             .formLogin(form -> form
                 .loginPage("/login")
