@@ -75,4 +75,10 @@ public class FacturaService implements IFacturaService {
     public byte[] generarPdf(Factura factura) {
         return pdfFacturaUtil.generarPdfFactura(factura);
     }
+
+@Override
+public Optional<Factura> buscarDetallePorId(Integer id) {
+    // ahora este findById está anotado con @EntityGraph
+    return facturaRepository.findById(id);
+}
 }

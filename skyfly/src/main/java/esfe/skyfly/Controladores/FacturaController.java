@@ -5,6 +5,7 @@ import java.nio.charset.StandardCharsets;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -32,6 +33,7 @@ public class FacturaController {
     }
 
     @GetMapping("/{id}")
+    @Transactional(readOnly = true)
     public String detalle(@PathVariable Integer id, Model model) {
         Factura factura = facturaService.buscarPorId(id)
                 .orElseThrow(() -> new IllegalArgumentException("Factura no encontrada"));
@@ -40,6 +42,7 @@ public class FacturaController {
     }
 
     @GetMapping("/{id}/pdf")
+    @Transactional(readOnly = true)
     public void descargarPdf(@PathVariable Integer id, HttpServletResponse response) {
         Factura factura = facturaService.buscarPorId(id)
                 .orElseThrow(() -> new IllegalArgumentException("Factura no encontrada"));

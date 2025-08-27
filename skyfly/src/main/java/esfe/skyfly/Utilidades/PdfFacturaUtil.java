@@ -33,6 +33,14 @@ public class PdfFacturaUtil {
 
             Reservas r = factura.getReserva();
 
+            // ----------- Datos enriquecidos -----------
+            String clienteNombre = leerNombreUsuario(r); // Usuario.name o email (fallback)
+            String paqueteNombre = (r != null && r.getPaquete() != null)
+                    ? nz(r.getPaquete().getNombre()) : "N/D";
+            String destinoNombre = (r != null && r.getPaquete() != null && r.getPaquete().getDestino() != null)
+                    ? nz(r.getPaquete().getDestino().getNombre()) : "N/D";
+            // ------------------------------------------
+
             PdfPTable tabla = new PdfPTable(2);
             tabla.setWidthPercentage(100);
             tabla.setSpacingBefore(10f);
@@ -40,10 +48,12 @@ public class PdfFacturaUtil {
             tabla.setWidths(new float[]{30, 70});
 
             addRow(tabla, "N° Factura:", String.valueOf(factura.getIdFactura()), bold, normal);
-
-            // Ajusta el getter real del ID de reserva según tu entidad Reservas
-            // Ejemplos: getReservaId(), getId(), getReserva_id()...
             addRow(tabla, "Reserva ID:", trySafeReservaId(r), bold, normal);
+
+            // Nuevas filas de negocio
+            addRow(tabla, "Cliente:", clienteNombre, bold, normal);
+            addRow(tabla, "Paquete:", paqueteNombre, bold, normal);
+            addRow(tabla, "Destino:", destinoNombre, bold, normal);
 
             addRow(tabla, "Monto base:", "$ " + factura.getMontoTotal(), bold, normal);
             addRow(tabla, "Impuestos:", "$ " + factura.getImpuestos(), bold, normal);
@@ -62,11 +72,26 @@ public class PdfFacturaUtil {
 
     private String trySafeReservaId(Reservas r) {
         try {
-            // Cambia "getReservaId" por el nombre real de tu getter en Reservas
-            return String.valueOf(r.getReservaId());
+            return String.valueOf(r.getReservaId()); // tu getter real
         } catch (Exception ignore) {
             return "N/D";
         }
+    }
+
+    // Lee Usuario.name; si está vacío, cae a email; si no hay nada, N/D
+    private String leerNombreUsuario(Reservas r) {
+        try {
+            if (r != null && r.getCliente() != null && r.getCliente().getUsuario() != null) {
+                var u = r.getCliente().getUsuario();
+                if (u.getName() != null && !u.getName().isBlank()) return u.getName();
+                if (u.getEmail() != null && !u.getEmail().isBlank()) return u.getEmail();
+            }
+        } catch (Exception ignore) {}
+        return "N/D";
+    }
+
+    private String nz(String s) {
+        return (s == null || s.isBlank()) ? "N/D" : s;
     }
 
     private void addRow(PdfPTable table, String label, String value, Font labelFont, Font valueFont) {

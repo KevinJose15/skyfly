@@ -11,34 +11,27 @@
   <span th:text="${#temporals.format(factura.fechaEmision,'dd/MM/yyyy')}">01/08/2025</span>
 </p>
 
-<!-- Ajusta el getter del ID de reserva a tu entidad Reservas -->
 <p><b>Reserva:</b> <span th:text="${factura.reserva.reservaId}">100</span></p>
 
-<p><b>Monto base:</b> $<span th:text="${#numbers.formatDecimal(factura.montoTotal,1,2)}">0.00</span></p>
-<p><b>Impuestos:</b> $<span th:text="${#numbers.formatDecimal(factura.impuestos,1,2)}">0.00</span></p>
-<p><b>Total a pagar:</b> $<span th:text="${#numbers.formatDecimal(factura.totalAPagar,1,2)}">0.00</span></p>
-
-<p>
-  <a th:href="@{|/facturas/${factura.idFactura}/pdf|}">Descargar PDF</a> |
-  <a th:href="@{/facturas}">Volver</a>
-</p>
-</body>
-</html>
-<!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="es">
-<head>
-  <meta charset="UTF-8">
-  <title th:text="'Factura #' + ${factura.idFactura}">Factura</title>
-</head>
-<body>
-<h1 th:text="'Factura #' + ${factura.idFactura}">Factura</h1>
-
-<p><b>Fecha emisión:</b>
-  <span th:text="${#temporals.format(factura.fechaEmision,'dd/MM/yyyy')}">01/08/2025</span>
+<!-- ==== NUEVO: Datos enriquecidos ==== -->
+<p><b>Cliente:</b>
+  <span th:text="${factura.reserva != null && factura.reserva.cliente != null && factura.reserva.cliente.usuario != null
+                  ? ( #strings.isEmpty(factura.reserva.cliente.usuario.name)
+                        ? factura.reserva.cliente.usuario.email
+                        : factura.reserva.cliente.usuario.name )
+                  : 'N/D'}">N/D</span>
 </p>
 
-<!-- Ajusta el getter del ID de reserva a tu entidad Reservas -->
-<p><b>Reserva:</b> <span th:text="${factura.reserva.reservaId}">100</span></p>
+<p><b>Paquete:</b>
+  <span th:text="${factura.reserva != null && factura.reserva.paquete != null
+                  ? factura.reserva.paquete.nombre : 'N/D'}">N/D</span>
+</p>
+
+<p><b>Destino:</b>
+  <span th:text="${factura.reserva != null && factura.reserva.paquete != null && factura.reserva.paquete.destino != null
+                  ? factura.reserva.paquete.destino.nombre : 'N/D'}">N/D</span>
+</p>
+<!-- =================================== -->
 
 <p><b>Monto base:</b> $<span th:text="${#numbers.formatDecimal(factura.montoTotal,1,2)}">0.00</span></p>
 <p><b>Impuestos:</b> $<span th:text="${#numbers.formatDecimal(factura.impuestos,1,2)}">0.00</span></p>

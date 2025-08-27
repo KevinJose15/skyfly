@@ -14,4 +14,5 @@ public interface IFacturaService {
     List<Factura> listarPorReserva(Reservas reserva);
     void eliminar(Integer id);
     byte[] generarPdf(Factura factura);
+    Optional<Factura> buscarDetallePorId(Integer id);
 }
