@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/_mainLayout}">
+<head>
+  <title layout:fragment="title">Cliente</title>
+
+  <style>
+    /* ===== Travel B2C Theme (sin selectores de th:*) ===== */
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+
+    :root{
+      --sky: #00b8f0;
+      --ocean: #0066cc;
+      --mint: #2ec4b6;
+      --sun: #ffb703;
+      --ink: #1b2b3a;
+      --soft: #f4f8ff;
+      --border: #dbe6f3;
+      --danger: #e53935;
+      --warning: #ffb703;
+      --radius: 14px;
+      --shadow: 0 10px 28px rgba(13,38,76,.15);
+    }
+
+    body{
+      font-family: 'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(1200px 600px at 20% -10%, rgba(0,184,240,.20), transparent 60%),
+        radial-gradient(1000px 500px at 110% 10%, rgba(46,196,182,.18), transparent 60%),
+        linear-gradient(180deg, #ffffff 0%, #f0f7ff 100%);
+    }
+
+    /* Contenedor de contenido (no dependemos de layout:fragment en el CSS) */
+    .crud-page{
+      max-width: 960px;
+      margin: 42px auto 70px;
+      padding: 0 20px;
+      position: relative;
+    }
+    .crud-page::before{
+      content:"";
+      position: absolute;
+      top: -24px;
+      left: 20px;
+      width: 170px;
+      height: 6px;
+      border-radius: 8px;
+      background: linear-gradient(90deg, var(--ocean), var(--sky), var(--mint), var(--sun));
+      box-shadow: 0 6px 20px rgba(0,184,240,.35);
+    }
+
+    h2{
+      margin: 0 0 20px 0;
+      font-weight: 700;
+      letter-spacing: .2px;
+      line-height: 1.2;
+      font-size: clamp(1.35rem, 1.1rem + 1.1vw, 2rem);
+      background: linear-gradient(90deg, var(--ocean), var(--sky) 60%, var(--mint));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    /* Tarjeta base para cualquier acción */
+    .crud-card{
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 22px 20px;
+      margin: 10px 0 26px;
+    }
+
+    /* Estilos por acción (apoyados en clase del section) */
+    .crud-create .crud-card,
+    .crud-edit .crud-card{
+      border-left: 6px solid var(--mint);
+      background:
+        radial-gradient(800px 320px at 110% -10%, rgba(0,184,240,.08), transparent 60%),
+        radial-gradient(600px 260px at -10% 110%, rgba(46,196,182,.08), transparent 60%),
+        #fff;
+    }
+
+    .crud-view .crud-card{
+      border-left: 6px solid var(--sky);
+      background:
+        radial-gradient(800px 320px at 110% -10%, rgba(0,102,204,.06), transparent 60%),
+        #fff;
+    }
+
+    .crud-delete .crud-card{
+      border-left: 6px solid var(--danger);
+      background:
+        linear-gradient(180deg, #fff 0%, #fff 55%, #fff0 56%),
+        repeating-linear-gradient(135deg, rgba(229,57,53,.06) 0 14px, rgba(229,57,53,.10) 14px 28px),
+        #fff;
+    }
+
+    .mb-3{ margin-bottom: 16px; }
+    label.form-label{
+      display: block;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--ocean);
+      font-size: .95rem;
+    }
+    .form-control,
+    .form-select,
+    input[type="text"],
+    select{
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: .98rem;
+      background: #fff;
+      outline: none;
+      transition: border-color .2s ease, box-shadow .2s ease, transform .06s ease;
+    }
+    .form-control:focus,
+    .form-select:focus,
+    input[type="text"]:focus,
+    select:focus{
+      border-color: var(--sky);
+      box-shadow: 0 0 0 4px rgba(0,184,240,.15);
+    }
+
+    /* Botones */
+    .btn{
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: none;
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform .08s ease, box-shadow .2s ease, filter .2s ease;
+      box-shadow: 0 6px 16px rgba(27,43,58,.12);
+      background: #e7eef8;
+      color: #204b63;
+      text-decoration: none;
+    }
+    .btn:hover{ transform: translateY(-1px); }
+    .btn:active{ transform: translateY(0); filter: brightness(.97); }
+    .btn + .btn{ margin-left: 8px; }
+
+    .btn-primary{
+      background: linear-gradient(90deg, var(--ocean), var(--sky));
+      color: #fff;
+    }
+    .btn-warning{
+      background: linear-gradient(90deg, var(--warning), #ffd166);
+      color: #3a2a00;
+    }
+    .btn-secondary{
+      background: #edf5ff;
+      color: #274c77;
+    }
+    .btn-danger{
+      background: linear-gradient(90deg, var(--danger), #ff6b6b);
+      color: #fff;
+    }
+
+    /* Línea decorativa “ruta aérea” */
+    .crud-card::after{
+      content:"";
+      display:block;
+      height: 2px;
+      width: 100%;
+      margin-top: 18px;
+      background:
+        radial-gradient(circle at 8px 50%, var(--sun) 0 4px, transparent 4px) left/32px 2px repeat-x,
+        linear-gradient(90deg, rgba(0,0,0,.06), rgba(0,0,0,0));
+      border-radius: 2px;
+      opacity: .55;
+    }
+
+    @media (min-width: 720px){
+      .crud-card{ padding: 24px 26px; }
+      .grid-2{
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+<section layout:fragment="content"
+         class="crud-page"
+         th:classappend="' crud-' + ${action}">
+
+  <h2 th:text="'Cliente - ' + ${#strings.capitalize(action)}"></h2>
+
+  <!-- CREAR / EDITAR (mismo estilo) -->
+  <form class="crud-card"
+        th:if="${action == 'create' or action == 'edit'}"
+        th:action="@{'/clientes/' + ${action}}"
+        th:object="${cliente}" method="post">
+
+    <input type="hidden" th:field="*{clienteId}"/>
+
+    <div class="grid-2">
+      <div class="mb-3">
+        <label for="telefono" class="form-label">Teléfono</label>
+        <input type="text" id="telefono" th:field="*{telefono}" class="form-control" required>
+      </div>
+
+      <div class="mb-3">
+        <label for="usuario" class="form-label">Usuario</label>
+        <select id="usuario" th:field="*{usuario.id}" class="form-select" required>
+          <option th:each="u : ${usuarios}"
+                  th:value="${u.id}"
+                  th:text="${u.name}"
+                  th:selected="${cliente.usuario != null and cliente.usuario.id == u.id}">
+          </option>
+        </select>
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label for="direccion" class="form-label">Dirección</label>
+      <input type="text" id="direccion" th:field="*{direccion}" class="form-control" required>
+    </div>
+
+    <button type="submit"
+            th:text="${action == 'create' ? 'Guardar' : 'Actualizar'}"
+            th:classappend="${action == 'create' ? ' btn-primary' : ' btn-warning'}"
+            class="btn"></button>
+    <a th:href="@{/clientes}" class="btn btn-secondary">Cancelar</a>
+  </form>
+
+  <!-- VER -->
+  <div class="crud-card" th:if="${action == 'view'}">
+    <p><strong>Teléfono:</strong> <span th:text="${cliente.telefono}"></span></p>
+    <p><strong>Dirección:</strong> <span th:text="${cliente.direccion}"></span></p>
+    <p><strong>Usuario:</strong> <span th:text="${cliente.usuario != null ? cliente.usuario.name : '---'}"></span></p>
+    <a th:href="@{/clientes}" class="btn btn-secondary">Volver</a>
+  </div>
+
+  <!-- BORRAR -->
+  <form class="crud-card" th:if="${action == 'delete'}"
+        th:action="@{/clientes/delete}" th:object="${cliente}" method="post">
+    <input type="hidden" th:field="*{clienteId}"/>
+    <p>¿Estás seguro que deseas eliminar al cliente
+      <strong th:text="${cliente.usuario != null ? cliente.usuario.name : '---'}"></strong>?</p>
+    <button type="submit" class="btn btn-danger">Eliminar</button>
+    <a th:href="@{/clientes}" class="btn btn-secondary">Cancelar</a>
+  </form>
+
+</section>
+</body>
+</html>

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>Mis reservas</title>
+  <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<h2>Mis reservas</h2>
+<table>
+  <thead>
+    <tr>
+      <th>ID</th><th>Destino</th><th>Paquete</th><th>Fecha</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr th:each="r : ${reservas}">
+      <td th:text="${r.id}">1</td>
+      <td th:text="${r.destino != null ? r.destino.nombre : '-'}"></td>
+      <td th:text="${r.paquete != null ? r.paquete.nombre : '-'}"></td>
+      <td th:text="${#temporals.format(r.fecha, 'yyyy-MM-dd')}"></td>
+    </tr>
+  </tbody>
+</table>
+</body>
+</html>

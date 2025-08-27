@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>Nueva reserva</title>
+  <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<h2>Confirmar reserva</h2>
+
+<form th:action="@{/reservas/create}" method="post" th:object="${reserva}">
+  <input type="hidden" th:field="*{cliente.id}">
+  <input type="hidden" th:field="*{destino.id}">
+  <input type="hidden" th:field="*{paquete.id}">
+
+  <p>Destino: <span th:text="*{destino != null ? destino.nombre : '-'}"></span></p>
+  <p>Paquete: <span th:text="*{paquete != null ? paquete.nombre : '-'}"></span></p>
+
+  <!-- Podrías pedir fecha de viaje u otros campos permitidos -->
+  <label>Fecha de viaje</label>
+  <input type="date" th:field="*{fecha}" required>
+
+  <button type="submit">Confirmar y continuar a pago</button>
+</form>
+</body>
+</html>

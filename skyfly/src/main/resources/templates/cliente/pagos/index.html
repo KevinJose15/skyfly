@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>Mis pagos</title>
+  <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<h2>Mis pagos</h2>
+
+<table>
+  <thead>
+    <tr><th>ID</th><th>Reserva</th><th>Monto</th><th>Fecha</th><th>Estado</th></tr>
+  </thead>
+  <tbody>
+    <tr th:each="p : ${pagos}">
+      <td th:text="${p.id}"></td>
+      <td th:text="${p.reserva != null ? p.reserva.id : '-'}"></td>
+      <td th:text="${#numbers.formatDecimal(p.monto,1,2)}"></td>
+      <td th:text="${#temporals.format(p.fecha, 'yyyy-MM-dd HH:mm')}"></td>
+      <td th:text="${p.estado}"></td>
+    </tr>
+  </tbody>
+</table>
+</body>
+</html>

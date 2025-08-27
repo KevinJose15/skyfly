@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>Destinos</title>
+  <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<h2>Destinos</h2>
+<div class="cards" th:if="${destinos}">
+  <div class="card" th:each="d : ${destinos}">
+    <img th:src="@{/images/{img}(img=${d.imagen})}" alt="Destino">
+    <h3 th:text="${d.nombre}">Nombre</h3>
+    <p th:text="${d.descripcion}">Descripción</p>
+
+    <form th:action="@{/reservas/create}" method="get">
+      <input type="hidden" name="destinoId" th:value="${d.id}">
+      <button type="submit">Reservar</button>
+    </form>
+  </div>
+</div>
+</body>
+</html>

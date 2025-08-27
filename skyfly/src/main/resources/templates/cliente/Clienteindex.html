@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>SkyFly - Tu viaje empieza aquí</title>
+  <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+  <h2>¡Bienvenido a SkyFly!</h2>
+  <p>Explora destinos, elige un paquete y ¡reserva en minutos!</p>
+
+  <nav>
+    <a th:href="@{/destinos/index}">Ver destinos</a> |
+    <a th:href="@{/paquetes/index}">Ver paquetes</a> |
+    <a th:href="@{/reservas/index}">Mis reservas</a> |
+    <a th:href="@{/pagos/index}">Mis pagos</a>
+  </nav>
+</body>
+</html>

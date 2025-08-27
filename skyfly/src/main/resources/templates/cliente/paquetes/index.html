@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>Paquetes</title>
+  <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<h2>Paquetes</h2>
+<div class="cards" th:if="${paquetes}">
+  <div class="card" th:each="p : ${paquetes}">
+    <h3 th:text="${p.nombre}">Paquete</h3>
+    <p th:text="${p.descripcion}">Descripción</p>
+    <p><strong th:text="${#numbers.formatDecimal(p.precio, 1, 2)}"></strong> USD</p>
+
+    <form th:action="@{/reservas/create}" method="get">
+      <input type="hidden" name="paqueteId" th:value="${p.id}">
+      <button type="submit">Reservar</button>
+    </form>
+  </div>
+</div>
+</body>
+</html>
