@@ -1,7 +1,6 @@
 package esfe.skyfly.Controladores;
 
 import esfe.skyfly.Modelos.Paquete;
-
 import esfe.skyfly.Servicios.Interfaces.IPaqueteService;
 import esfe.skyfly.Servicios.Interfaces.IDestinoService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +29,8 @@ public class PaqueteController {
     @Autowired
     private IDestinoService destinoService;
 
-    // ----------- INDEX (LISTADO + PAGINACIÓN) --------------
+    // ----------- INDEX ADMIN/AGENTE (LISTADO + PAGINACIÓN) --------------
+    // Tu endpoint original se mantiene tal cual
     @GetMapping
     public String index(Model model,
                         @RequestParam(value = "page") Optional<Integer> page,
@@ -50,7 +50,43 @@ public class PaqueteController {
             model.addAttribute("pageNumbers", pageNumbers);
         }
 
-        return "paquete/index"; // 👈 la vista debe estar en templates/paquete/index.html
+        return "paquete/index"; // templates/paquete/index.html (ADMIN/AGENTE)
+    }
+
+    // ----------- NUEVO: ALIAS ADMIN/AGENTE EN /paquetes/mant --------------
+    // Útil si tu SecurityConfig protege /paquetes/mant/**
+    @GetMapping("/mant")
+    public String mant(Model model,
+                       @RequestParam(value = "page") Optional<Integer> page,
+                       @RequestParam(value = "size") Optional<Integer> size) {
+        // Reutilizamos la misma lógica del index admin/agente
+        int currentPage = page.orElse(1) - 1;
+        int pageSize = size.orElse(5);
+
+        Pageable pageable = PageRequest.of(currentPage, pageSize);
+        Page<Paquete> paquetesPage = paqueteService.buscarTodos(pageable);
+
+        model.addAttribute("paquetes", paquetesPage);
+
+        int totalPages = paquetesPage.getTotalPages();
+        if (totalPages > 0) {
+            List<Integer> pageNumbers = IntStream.rangeClosed(1, totalPages)
+                    .boxed().collect(Collectors.toList());
+            model.addAttribute("pageNumbers", pageNumbers);
+        }
+
+        return "paquete/index"; // misma vista de administración
+    }
+
+    // ----------- NUEVO: CLIENTE (SOLO LECTURA / SELECCIÓN) --------------
+    // Alimenta templates/Cliente/paquetes/index.html
+    @GetMapping("/index")
+    public String paquetesCliente(Model model) {
+        // Si tu service tiene un método List<Paquete> obtenerTodos()/buscarTodos(), úsalo.
+        // Como no lo mostraste, traemos una "página grande" y sacamos el content:
+        List<Paquete> paquetes = paqueteService.buscarTodos(PageRequest.of(0, 100)).getContent();
+        model.addAttribute("paquetes", paquetes);
+        return "Cliente/paquetes/index";
     }
 
     // ----------- CREAR --------------

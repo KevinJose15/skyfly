@@ -30,7 +30,7 @@ public class UsuarioController {
     @Autowired
     private IUsuarioService usuarioService;
 
-    // ----------------- LISTAR -----------------
+    // ----------------- LISTAR (ADMIN) -----------------
     @GetMapping
     public String index(Model model,
                         @RequestParam(value = "page") Optional<Integer> page,
@@ -55,7 +55,16 @@ public class UsuarioController {
         return "usuario/index";
     }
 
-    // ----------------- CREAR -----------------
+    // ---------- NUEVO: alias /usuarios/mant (ADMIN) ----------
+    // Reutiliza el mismo listado del index por consistencia con SecurityConfig
+    @GetMapping("/mant")
+    public String mant(Model model,
+                       @RequestParam(value = "page") Optional<Integer> page,
+                       @RequestParam(value = "size") Optional<Integer> size) {
+        return index(model, page, size);
+    }
+
+    // ----------------- CREAR (ADMIN) -----------------
     @GetMapping("/create")
     public String create(Model model) {
         model.addAttribute("usuario", new Usuario());
@@ -63,24 +72,27 @@ public class UsuarioController {
         return "usuario/mant";
     }
 
-// ----------------- CREAR -----------------
-@PostMapping("/create")
-public String saveNuevo(@ModelAttribute Usuario usuario, BindingResult result,
-                        RedirectAttributes redirect, Model model) {
-    if (usuario.getPasswordHash() == null || usuario.getPasswordHash().isBlank()) {
-        result.rejectValue("passwordHash", "error.usuario", "La contraseña es obligatoria");
+    @PostMapping("/create")
+    public String saveNuevo(@ModelAttribute Usuario usuario, BindingResult result,
+                            RedirectAttributes redirect, Model model) {
+
+        // Validación mínima – contraseña requerida al crear
+        if (usuario.getPasswordHash() == null || usuario.getPasswordHash().isBlank()) {
+            result.rejectValue("passwordHash", "error.usuario", "La contraseña es obligatoria");
+        }
+
+        if (result.hasErrors()) {
+            model.addAttribute("action", "create");
+            return "usuario/mant";
+        }
+
+        // crearOeditar ya encripta al crear (según tu servicio)
+        usuarioService.crearOeditar(usuario);
+        redirect.addFlashAttribute("msg", "Usuario creado correctamente");
+        return "redirect:/usuarios";
     }
 
-    if (result.hasErrors()) {
-        model.addAttribute("action", "create");
-        return "usuario/mant";
-    }
-
-    usuarioService.crearOeditar(usuario);
-    redirect.addFlashAttribute("msg", "Usuario creado correctamente");
-    return "redirect:/usuarios";
-}
-    // ----------------- EDITAR -----------------
+    // ----------------- EDITAR (ADMIN) -----------------
     @GetMapping("/edit/{id}")
     public String edit(@PathVariable Integer id, Model model) {
         Usuario usuario = usuarioService.buscarPorId(id)
@@ -90,28 +102,26 @@ public String saveNuevo(@ModelAttribute Usuario usuario, BindingResult result,
         return "usuario/mant";
     }
 
-// ----------------- EDITAR -----------------
-@PostMapping("/edit")
-public String saveEditado(@ModelAttribute Usuario usuario, BindingResult result,
-                          RedirectAttributes redirect, Model model) {
+    @PostMapping("/edit")
+    public String saveEditado(@ModelAttribute Usuario usuario, BindingResult result,
+                              RedirectAttributes redirect, Model model) {
 
-    // Obtener el usuario existente de la base de datos
-    Usuario usuarioExistente = usuarioService.buscarPorId(usuario.getId())
-                                  .orElseThrow();
+        // Obtener el usuario existente de la base
+        Usuario usuarioExistente = usuarioService.buscarPorId(usuario.getId())
+                                  .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
 
-    // Mantener la contraseña actual si el campo está vacío
-    if (usuario.getPasswordHash() == null || usuario.getPasswordHash().isEmpty()) {
-        usuario.setPasswordHash(usuarioExistente.getPasswordHash());
+        // Mantener la contraseña actual si el campo está vacío
+        if (usuario.getPasswordHash() == null || usuario.getPasswordHash().isEmpty()) {
+            usuario.setPasswordHash(usuarioExistente.getPasswordHash());
+        }
+        // Si no está vacía, tu servicio ya re-encripta condicionalmente
+
+        usuarioService.crearOeditar(usuario);
+        redirect.addFlashAttribute("msg", "Usuario actualizado correctamente");
+        return "redirect:/usuarios";
     }
 
-    // Nota: ya no usamos result.rejectValue aquí
-
-    usuarioService.crearOeditar(usuario);
-    redirect.addFlashAttribute("msg", "Usuario actualizado correctamente");
-    return "redirect:/usuarios";
-}
-
-    // ----------------- VER -----------------
+    // ----------------- VER (ADMIN) -----------------
     @GetMapping("/view/{id}")
     public String view(@PathVariable Integer id, Model model) {
         Usuario usuario = usuarioService.buscarPorId(id)
@@ -121,7 +131,7 @@ public String saveEditado(@ModelAttribute Usuario usuario, BindingResult result,
         return "usuario/mant";
     }
 
-    // ----------------- ELIMINAR -----------------
+    // ----------------- ELIMINAR (ADMIN) -----------------
     @GetMapping("/delete/{id}")
     public String deleteConfirm(@PathVariable Integer id, Model model) {
         Usuario usuario = usuarioService.buscarPorId(id)

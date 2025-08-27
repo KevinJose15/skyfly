@@ -30,7 +30,7 @@ public class ClienteController {
     private IClienteService clienteService;
 
     @Autowired
-    private IUsuarioService usuarioService; // 👉 necesario para filtrar usuarios con rol Cliente
+    private IUsuarioService usuarioService; // necesario para filtrar usuarios con rol Cliente
 
     // ----------- INDEX (LISTADO + PAGINACIÓN) --------------
     @GetMapping
@@ -52,14 +52,22 @@ public class ClienteController {
             model.addAttribute("pageNumbers", pageNumbers);
         }
 
-        return "cliente/index"; // 👈 carpeta debe llamarse "cliente"
+        return "cliente/index"; // carpeta debe llamarse "cliente"
+    }
+
+    // ----------- NUEVO: ALIAS /clientes/mant (ADMIN/AGENTE) --------------
+    @GetMapping("/mant")
+    public String mant(Model model,
+                       @RequestParam(value = "page") Optional<Integer> page,
+                       @RequestParam(value = "size") Optional<Integer> size) {
+        return index(model, page, size); // reutiliza el listado
     }
 
     // ----------- CREAR --------------
     @GetMapping("/create")
     public String create(Model model) {
         model.addAttribute("cliente", new Cliente());
-        // 👉 cargamos solo usuarios con rol Cliente
+        // cargamos solo usuarios con rol Cliente
         List<Usuario> usuarios = usuarioService.findByRol(Rol.Cliente);
         model.addAttribute("usuarios", usuarios);
         model.addAttribute("action", "create");
@@ -95,69 +103,63 @@ public class ClienteController {
         return "cliente/mant";
     }
 
-    // ----------- PROCESAR POST según action --------------
-@PostMapping("/create")
-public String saveNuevo(@ModelAttribute Cliente cliente, BindingResult result,
-                        RedirectAttributes redirect, Model model) {
-    if (result.hasErrors()) {
-        List<Usuario> usuarios = usuarioService.findByRol(Rol.Cliente);
-        model.addAttribute("usuarios", usuarios);
-        model.addAttribute("action", "create");
-        return "cliente/mant";
-    }
+    // ----------- PROCESAR CREATE --------------
+    @PostMapping("/create")
+    public String saveNuevo(@ModelAttribute Cliente cliente, BindingResult result,
+                            RedirectAttributes redirect, Model model) {
+        // Validar selección de usuario
+        if (cliente.getUsuario() == null || cliente.getUsuario().getId() == null) {
+            result.rejectValue("usuario", "error.usuario", "Debes seleccionar un usuario");
+        }
 
-    // 👇 Validar que el usuario venga seleccionado
-    if (cliente.getUsuario() == null || cliente.getUsuario().getId() == null) {
-        result.rejectValue("usuario", "error.usuario", "Debes seleccionar un usuario");
-        List<Usuario> usuarios = usuarioService.findByRol(Rol.Cliente);
-        model.addAttribute("usuarios", usuarios);
-        model.addAttribute("action", "create");
-        return "cliente/mant";
-    }
+        if (result.hasErrors()) {
+            List<Usuario> usuarios = usuarioService.findByRol(Rol.Cliente);
+            model.addAttribute("usuarios", usuarios);
+            model.addAttribute("action", "create");
+            return "cliente/mant";
+        }
 
-    // 👇 Cargar el usuario real desde la BD
-    Usuario usuario = usuarioService.buscarPorId(cliente.getUsuario().getId())
-            .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
-    cliente.setUsuario(usuario);
+        // Cargar el usuario real desde la BD y asociarlo
+        Usuario usuario = usuarioService.buscarPorId(cliente.getUsuario().getId())
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+        cliente.setUsuario(usuario);
 
-    clienteService.crearOeditar(cliente);
-    redirect.addFlashAttribute("msg", "Cliente creado correctamente");
-    return "redirect:/clientes";
-}
-
-@PostMapping("/edit")
-public String saveEditado(@ModelAttribute Cliente cliente, BindingResult result,
-                          RedirectAttributes redirect, Model model) {
-    if (result.hasErrors()) {
-        List<Usuario> usuarios = usuarioService.findByRol(Rol.Cliente);
-        model.addAttribute("usuarios", usuarios);
-        model.addAttribute("action", "edit");
-        return "cliente/mant";
-    }
-
-    // 👇 Validar que el usuario venga seleccionado
-    if (cliente.getUsuario() == null || cliente.getUsuario().getId() == null) {
-        result.rejectValue("usuario", "error.usuario", "Debes seleccionar un usuario");
-        List<Usuario> usuarios = usuarioService.findByRol(Rol.Cliente);
-        model.addAttribute("usuarios", usuarios);
-        model.addAttribute("action", "edit");
-        return "cliente/mant";
-    }
-
-    // 👇 Cargar el usuario real desde la BD
-    Usuario usuario = usuarioService.buscarPorId(cliente.getUsuario().getId())
-            .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
-    cliente.setUsuario(usuario);
-
-    clienteService.crearOeditar(cliente);
-    redirect.addFlashAttribute("msg", "Cliente actualizado correctamente");
-    return "redirect:/clientes";
-}
-    @PostMapping("/delete")
-    public String deleteCliente(@ModelAttribute Cliente cliente, RedirectAttributes redirect) {
-        clienteService.eliminarPorId(cliente.getClienteId()); // 👈 usar clienteId
-        redirect.addFlashAttribute("msg", "Cliente eliminado correctamente");
+        clienteService.crearOeditar(cliente);
+        redirect.addFlashAttribute("msg", "Cliente creado correctamente");
         return "redirect:/clientes";
     }
 
+    // ----------- PROCESAR EDIT --------------
+    @PostMapping("/edit")
+    public String saveEditado(@ModelAttribute Cliente cliente, BindingResult result,
+                              RedirectAttributes redirect, Model model) {
+        // Validar selección de usuario
+        if (cliente.getUsuario() == null || cliente.getUsuario().getId() == null) {
+            result.rejectValue("usuario", "error.usuario", "Debes seleccionar un usuario");
+        }
+
+        if (result.hasErrors()) {
+            List<Usuario> usuarios = usuarioService.findByRol(Rol.Cliente);
+            model.addAttribute("usuarios", usuarios);
+            model.addAttribute("action", "edit");
+            return "cliente/mant";
+        }
+
+        // Cargar el usuario real desde la BD y asociarlo
+        Usuario usuario = usuarioService.buscarPorId(cliente.getUsuario().getId())
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+        cliente.setUsuario(usuario);
+
+        clienteService.crearOeditar(cliente);
+        redirect.addFlashAttribute("msg", "Cliente actualizado correctamente");
+        return "redirect:/clientes";
+    }
+
+    // ----------- PROCESAR DELETE --------------
+    @PostMapping("/delete")
+    public String deleteCliente(@ModelAttribute Cliente cliente, RedirectAttributes redirect) {
+        clienteService.eliminarPorId(cliente.getClienteId()); // usar clienteId
+        redirect.addFlashAttribute("msg", "Cliente eliminado correctamente");
+        return "redirect:/clientes";
+    }
 }

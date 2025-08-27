@@ -19,27 +19,47 @@ public class HomeController {
     @Autowired
     private IClienteService clienteService;
 
+    // Redirección inicial
     @GetMapping("/")
-    public String redirectToBienvenida() { return "redirect:/bienvenida"; }
+    public String redirectToBienvenida() {
+        return "redirect:/bienvenida";
+    }
+
+    // (Compatibilidad) Si en alguna parte quedó /home, evita 404
+    @GetMapping("/home")
+    public String homeFallback() {
+        return "redirect:/bienvenida";
+    }
 
     @GetMapping("/bienvenida")
-    public String bienvenida() { return "Home/bienvenida"; }
+    public String bienvenida() {
+        return "Home/bienvenida";
+    }
 
     @GetMapping("/login")
-    public String login() { return "Home/formLogin"; }
+    public String login() {
+        return "Home/formLogin";
+    }
 
-    // Main de Admin/Agente (sirven el mismo layout)
+    // 👉 Vista para administrador
     @GetMapping("/admin/main")
-    public String mainAdmin() { return "_MainLayout"; }
+    public String mainAdmin() {
+        return "_MainLayout"; // layout de administración
+    }
 
+    // 👉 Vista para agente
     @GetMapping("/agente/main")
-    public String mainAgente() { return "_MainLayout"; }
+    public String mainAgente() {
+        return "_MainLayout"; // mismo layout para agente
+    }
 
-    // Index de Cliente
+    // 👉 Vista para cliente
     @GetMapping("/cliente/index")
-    public String indexCliente() { return "Cliente/index"; }
+    public String indexCliente() {
+        return "Cliente/index"; // landing del cliente (destinos/paquetes)
+    }
 
-    // Registro
+    // 👉 Vista de registro
     @GetMapping("/registro")
     public String mostrarRegistro(Model model) {
         model.addAttribute("usuario", new Usuario());
@@ -47,13 +67,16 @@ public class HomeController {
         return "Home/registro";
     }
 
+    // 👉 Procesar registro
     @PostMapping("/registro")
     public String registrarCuenta(@ModelAttribute Usuario usuario,
                                   @ModelAttribute Cliente cliente) {
+        // Configuramos el usuario
         usuario.setRol(Rol.Cliente);
         usuario.setStatus(true);
         Usuario usuarioGuardado = usuarioService.crearOeditar(usuario);
 
+        // Asociamos cliente a usuario
         cliente.setUsuario(usuarioGuardado);
         clienteService.crearOeditar(cliente);
 

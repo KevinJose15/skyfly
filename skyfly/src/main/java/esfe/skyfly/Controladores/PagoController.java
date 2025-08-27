@@ -24,6 +24,8 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 import java.text.NumberFormat;
 import java.util.Locale;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/pagos")
@@ -42,15 +44,15 @@ public class PagoController {
     private IMetodoPagoService metodoPagoService;
 
     // -----------------------------
-    // LISTAR PAGOS (INDEX)
+    // LISTAR PAGOS (ADMIN/AGENTE)
     // -----------------------------
     @GetMapping({"/", "/index"})
     public String index(Authentication authentication, Model model) {
 
-        // Todos los pagos para la tabla
+        // Todos los pagos para la tabla (uso administrativo)
         model.addAttribute("pagos", pagoService.obtenerTodos());
 
-        // Último pago pendiente del cliente logeado
+        // Último pago pendiente del cliente logeado (si aplica)
         String email = authentication.getName();
         Pago pagoPendiente = pagoService.buscarUltimoPagoPendientePorCliente(email)
                                         .orElse(null);
@@ -59,8 +61,40 @@ public class PagoController {
         return "pagos/index";
     }
 
+    // 👉 NUEVO: alias para admin/agente si tu SecurityConfig usa /pagos/mant/**
+    @GetMapping("/mant")
+    public String mant(Authentication authentication, Model model) {
+        return index(authentication, model);
+    }
+
     // -----------------------------
-    // OBTENER MONTO DE RESERVA
+    // LISTAR PAGOS DEL CLIENTE (CLIENTE)
+    // -----------------------------
+    // Vista: templates/Cliente/pagos/index.html
+    @GetMapping("/index-cliente")
+    public String indexCliente(Authentication authentication, Model model) {
+        String email = authentication.getName();
+
+        // Si tu service tuviera un "findByClienteEmail", úsalo.
+        // Aquí filtramos en memoria para no tocar tu service:
+        List<Pago> propios = pagoService.obtenerTodos().stream()
+            .filter(p -> p.getReserva() != null
+                      && p.getReserva().getCliente() != null
+                      && p.getReserva().getCliente().getUsuario() != null
+                      && email.equalsIgnoreCase(p.getReserva().getCliente().getUsuario().getEmail()))
+            .collect(Collectors.toList());
+
+        model.addAttribute("pagos", propios);
+
+        // También puedes mostrar su último pendiente si lo deseas:
+        Pago pagoPendiente = pagoService.buscarUltimoPagoPendientePorCliente(email).orElse(null);
+        model.addAttribute("pagoPendiente", pagoPendiente);
+
+        return "Cliente/pagos/index";
+    }
+
+    // -----------------------------
+    // OBTENER MONTO DE RESERVA (AJAX)
     // -----------------------------
     @GetMapping("/reserva/monto/{reservaId}")
     @ResponseBody
@@ -77,7 +111,7 @@ public class PagoController {
     }
 
     // -----------------------------
-    // FORMULARIO NUEVO PAGO
+    // FORMULARIO NUEVO PAGO (ADMIN/AGENTE)
     // -----------------------------
     @GetMapping("/create")
     public String create(Model model) {
@@ -89,7 +123,7 @@ public class PagoController {
     }
 
     // -----------------------------
-    // FORMULARIO EDITAR PAGO
+    // FORMULARIO EDITAR PAGO (ADMIN/AGENTE)
     // -----------------------------
     @GetMapping("/edit/{id}")
     public String edit(@PathVariable Integer id, Model model) {
@@ -104,7 +138,7 @@ public class PagoController {
     }
 
     // -----------------------------
-    // VER PAGO
+    // VER PAGO (ADMIN/AGENTE)
     // -----------------------------
     @GetMapping("/view/{id}")
     public String view(@PathVariable Integer id, Model model) {
@@ -117,7 +151,7 @@ public class PagoController {
     }
 
     // -----------------------------
-    // ELIMINAR PAGO
+    // ELIMINAR PAGO (ADMIN/AGENTE)
     // -----------------------------
     @GetMapping("/delete/{id}")
     public String delete(@PathVariable Integer id, Model model) {
@@ -137,7 +171,7 @@ public class PagoController {
     }
 
     // -----------------------------
-    // GUARDAR NUEVO PAGO
+    // GUARDAR NUEVO PAGO (ADMIN/AGENTE)
     // -----------------------------
     @PostMapping("/create")
     public String saveNuevo(@ModelAttribute Pago pago, BindingResult result, Model model,
@@ -201,7 +235,7 @@ public class PagoController {
     }
 
     // -----------------------------
-    // GUARDAR EDICIÓN
+    // GUARDAR EDICIÓN (ADMIN/AGENTE)
     // -----------------------------
     @PostMapping("/edit")
     public String saveEditado(@ModelAttribute Pago pago, BindingResult result, Model model,
@@ -237,5 +271,88 @@ public class PagoController {
         pagoService.crearOeditar(pago);
         redirect.addFlashAttribute("msg", "Pago actualizado correctamente");
         return "redirect:/pagos/index";
+    }
+
+    // =====================================================
+    // NUEVO: FLUJO DEL CLIENTE (CREATE con reserva preseleccionada)
+    // =====================================================
+
+    // Formulario de pago para CLIENTE (reserva ya elegida)
+    // Vista: templates/Cliente/pagos/create.html
+    @GetMapping("/create-cliente")
+    public String createCliente(@RequestParam Integer reservaId, Model model) {
+        Reservas reserva = reservaService.buscarPorId(reservaId)
+                .orElseThrow(() -> new IllegalArgumentException("Reserva no encontrada"));
+
+        Pago pago = new Pago();
+        pago.setReserva(reserva);
+
+        model.addAttribute("pago", pago);
+        model.addAttribute("metodosPago", metodoPagoService.obtenerTodos());
+        // No exponemos lista de reservas aquí; la reserva ya viene fijada.
+        return "Cliente/pagos/create";
+    }
+
+    // Procesar pago del CLIENTE
+    @PostMapping("/create-cliente")
+    public String saveNuevoCliente(@ModelAttribute Pago pago, BindingResult result, Model model,
+                                   RedirectAttributes redirect) {
+
+        // Validar tarjeta
+        if (pago.getNumeroTarjeta() == null || !LuhnValidator.isValid(pago.getNumeroTarjeta())) {
+            result.rejectValue("numeroTarjeta", "error.numeroTarjeta", "Número de tarjeta inválido");
+        }
+
+        // Hidratar reserva (obligatoria)
+        if (pago.getReserva() == null || pago.getReserva().getReservaId() == null) {
+            result.rejectValue("reserva.reservaId", "error.reserva", "Reserva inválida");
+        } else {
+            Reservas reserva = reservaService.buscarPorId(pago.getReserva().getReservaId())
+                    .orElseThrow(() -> new IllegalArgumentException("Reserva no encontrada"));
+            pago.setReserva(reserva);
+
+            if (reserva.getPaquete() != null && reserva.getPaquete().getPrecio() != null) {
+                pago.setMonto(reserva.getPaquete().getPrecio());
+            } else {
+                pago.setMonto(BigDecimal.ZERO);
+            }
+        }
+
+        // Hidratar método de pago
+        if (pago.getMetodoPagoId() != null) {
+            pago.setMetodoPago(metodoPagoService.buscarPorId(pago.getMetodoPagoId())
+                    .orElseThrow(() -> new IllegalArgumentException("Método de pago no encontrado")));
+        } else {
+            result.rejectValue("metodoPagoId", "error.metodoPagoId", "Debes seleccionar un método de pago");
+        }
+
+        if (result.hasErrors()) {
+            model.addAttribute("metodosPago", metodoPagoService.obtenerTodos());
+            return "Cliente/pagos/create";
+        }
+
+        // Guardar últimos 4
+        if (pago.getNumeroTarjeta() != null && pago.getNumeroTarjeta().length() >= 4) {
+            pago.setUltimos4Tarjeta(
+                pago.getNumeroTarjeta().substring(pago.getNumeroTarjeta().length() - 4));
+        }
+
+        // Datos de pago
+        pago.setCodigoAutorizacion(UUID.randomUUID().toString().substring(0, 8).toUpperCase());
+        pago.setFechaPago(LocalDateTime.now());
+        pago.setEstadoPago(EstadoReserva.PENDIENTE);
+
+        pagoService.crearOeditar(pago);
+
+        // Código de confirmación
+        String emailCliente = pago.getReserva().getCliente().getUsuario().getEmail();
+        CodigoConfirmacion codigo = codigoConfirmacionService.crearCodigo(emailCliente);
+
+        redirect.addFlashAttribute("msg",
+            "Pago registrado ✅. Código de confirmación enviado a: " + emailCliente +
+            " (Código: " + codigo.getCodigo() + ")");
+
+        // Redirige al listado del cliente
+        return "redirect:/pagos/index-cliente";
     }
 }
