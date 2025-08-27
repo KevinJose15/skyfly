@@ -1,25 +1,30 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<head>
-  <title>Mis pagos</title>
-  <link rel="stylesheet" th:href="@{/css/style.css}">
-</head>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{_MainLayout}">
 <body>
-<h2>Mis pagos</h2>
+<div layout:fragment="content">
+  <h2>Mis pagos</h2>
 
-<table>
-  <thead>
-    <tr><th>ID</th><th>Reserva</th><th>Monto</th><th>Fecha</th><th>Estado</th></tr>
-  </thead>
-  <tbody>
+  <div th:if="${pagoPendiente != null}" class="alert alert-warning">
+    Tienes un pago pendiente para la reserva
+    <span th:text="${pagoPendiente.reserva != null ? pagoPendiente.reserva.reservaId : '—'}"></span>.
+  </div>
+
+  <table class="table table-striped">
+    <thead>
+      <tr><th>ID</th><th>Reserva</th><th>Monto</th><th>Estado</th><th>Fecha</th></tr>
+    </thead>
+    <tbody>
     <tr th:each="p : ${pagos}">
-      <td th:text="${p.id}"></td>
-      <td th:text="${p.reserva != null ? p.reserva.id : '-'}"></td>
-      <td th:text="${#numbers.formatDecimal(p.monto,1,2)}"></td>
-      <td th:text="${#temporals.format(p.fecha, 'yyyy-MM-dd HH:mm')}"></td>
-      <td th:text="${p.estado}"></td>
+      <td th:text="${p.pagoId}">1</td>
+      <td th:text="${p.reserva != null ? p.reserva.reservaId : '—'}">—</td>
+      <td th:text="${#numbers.formatDecimal(p.monto,1,'POINT',2,'NONE')}">$0.00</td>
+      <td th:text="${p.estadoPago}">PENDIENTE</td>
+      <td th:text="${#temporals.format(p.fechaPago, 'yyyy-MM-dd HH:mm')}">—</td>
     </tr>
-  </tbody>
-</table>
+    </tbody>
+  </table>
+</div>
 </body>
 </html>

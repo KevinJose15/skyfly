@@ -1,21 +1,23 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<head>
-  <title>Paquetes</title>
-  <link rel="stylesheet" th:href="@{/css/style.css}">
-</head>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{_MainLayout}">
 <body>
-<h2>Paquetes</h2>
-<div class="cards" th:if="${paquetes}">
-  <div class="card" th:each="p : ${paquetes}">
-    <h3 th:text="${p.nombre}">Paquete</h3>
-    <p th:text="${p.descripcion}">Descripción</p>
-    <p><strong th:text="${#numbers.formatDecimal(p.precio, 1, 2)}"></strong> USD</p>
-
-    <form th:action="@{/reservas/create}" method="get">
-      <input type="hidden" name="paqueteId" th:value="${p.id}">
-      <button type="submit">Reservar</button>
-    </form>
+<div layout:fragment="content">
+  <h2>Paquetes</h2>
+  <div th:if="${#lists.isEmpty(paquetes)}">No hay paquetes disponibles.</div>
+  <div class="row" th:each="p : ${paquetes}">
+    <div class="col-md-4 mb-3">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title" th:text="${p.nombre}">Nombre</h5>
+          <p class="card-text" th:text="${p.descripcion}">Descripción</p>
+          <p class="fw-bold" th:text="${#numbers.formatDecimal(p.precio,1,'POINT',2,'NONE')}">$0.00</p>
+          <a class="btn btn-primary"
+             th:href="@{/reservas/create-cliente(paqueteId=${p.paqueteId})}">Reservar</a>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 </body>

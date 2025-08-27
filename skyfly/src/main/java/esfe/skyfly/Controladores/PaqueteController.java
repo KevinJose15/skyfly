@@ -7,9 +7,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -30,13 +32,13 @@ public class PaqueteController {
     private IDestinoService destinoService;
 
     // ----------- INDEX ADMIN/AGENTE (LISTADO + PAGINACIÓN) --------------
-    // Tu endpoint original se mantiene tal cual
     @GetMapping
     public String index(Model model,
                         @RequestParam(value = "page") Optional<Integer> page,
                         @RequestParam(value = "size") Optional<Integer> size) {
-        int currentPage = page.orElse(1) - 1;
-        int pageSize = size.orElse(5);
+
+        int currentPage = Math.max(0, page.orElse(1) - 1);
+        int pageSize    = Math.max(1, size.orElse(5));
 
         Pageable pageable = PageRequest.of(currentPage, pageSize);
         Page<Paquete> paquetesPage = paqueteService.buscarTodos(pageable);
@@ -50,43 +52,28 @@ public class PaqueteController {
             model.addAttribute("pageNumbers", pageNumbers);
         }
 
-        return "paquete/index"; // templates/paquete/index.html (ADMIN/AGENTE)
+        // -> templates/paquete/index.html (ADMIN/AGENTE)
+        return "paquete/index";
     }
 
-    // ----------- NUEVO: ALIAS ADMIN/AGENTE EN /paquetes/mant --------------
-    // Útil si tu SecurityConfig protege /paquetes/mant/**
+    // ----------- ALIAS ADMIN/AGENTE EN /paquetes/mant (opcional) --------------
     @GetMapping("/mant")
     public String mant(Model model,
                        @RequestParam(value = "page") Optional<Integer> page,
                        @RequestParam(value = "size") Optional<Integer> size) {
-        // Reutilizamos la misma lógica del index admin/agente
-        int currentPage = page.orElse(1) - 1;
-        int pageSize = size.orElse(5);
-
-        Pageable pageable = PageRequest.of(currentPage, pageSize);
-        Page<Paquete> paquetesPage = paqueteService.buscarTodos(pageable);
-
-        model.addAttribute("paquetes", paquetesPage);
-
-        int totalPages = paquetesPage.getTotalPages();
-        if (totalPages > 0) {
-            List<Integer> pageNumbers = IntStream.rangeClosed(1, totalPages)
-                    .boxed().collect(Collectors.toList());
-            model.addAttribute("pageNumbers", pageNumbers);
-        }
-
-        return "paquete/index"; // misma vista de administración
+        // Reutiliza el listado (evita duplicar lógica/paginación)
+        return index(model, page, size);
     }
 
-    // ----------- NUEVO: CLIENTE (SOLO LECTURA / SELECCIÓN) --------------
-    // Alimenta templates/Cliente/paquetes/index.html
-    @GetMapping("/index")
+    // ----------- CLIENTE (SOLO LECTURA/SELECCIÓN) --------------
+    // URL separada para cliente (evita solaparse con el index de admin)
+    @GetMapping("/index-cliente")
     public String paquetesCliente(Model model) {
-        // Si tu service tiene un método List<Paquete> obtenerTodos()/buscarTodos(), úsalo.
-        // Como no lo mostraste, traemos una "página grande" y sacamos el content:
+        // Si no tienes método obtenerTodos(), tomamos un "batch" razonable
         List<Paquete> paquetes = paqueteService.buscarTodos(PageRequest.of(0, 100)).getContent();
         model.addAttribute("paquetes", paquetes);
-        return "Cliente/paquetes/index";
+        // -> templates/cliente/paquetes/index.html
+        return "cliente/paquetes/index";
     }
 
     // ----------- CREAR --------------
@@ -101,7 +88,8 @@ public class PaqueteController {
     // ----------- EDITAR --------------
     @GetMapping("/edit/{id}")
     public String edit(@PathVariable Integer id, Model model) {
-        Paquete paquete = paqueteService.buscarPorId(id).orElseThrow();
+        Paquete paquete = paqueteService.buscarPorId(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Paquete no encontrado: " + id));
         model.addAttribute("paquete", paquete);
         model.addAttribute("destinos", destinoService.buscarTodos());
         model.addAttribute("action", "edit");
@@ -111,7 +99,8 @@ public class PaqueteController {
     // ----------- VER (solo lectura) --------------
     @GetMapping("/view/{id}")
     public String view(@PathVariable Integer id, Model model) {
-        Paquete paquete = paqueteService.buscarPorId(id).orElseThrow();
+        Paquete paquete = paqueteService.buscarPorId(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Paquete no encontrado: " + id));
         model.addAttribute("paquete", paquete);
         model.addAttribute("destinos", destinoService.buscarTodos());
         model.addAttribute("action", "view");
@@ -121,7 +110,8 @@ public class PaqueteController {
     // ----------- ELIMINAR (confirmación) --------------
     @GetMapping("/delete/{id}")
     public String deleteConfirm(@PathVariable Integer id, Model model) {
-        Paquete paquete = paqueteService.buscarPorId(id).orElseThrow();
+        Paquete paquete = paqueteService.buscarPorId(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Paquete no encontrado: " + id));
         model.addAttribute("paquete", paquete);
         model.addAttribute("destinos", destinoService.buscarTodos());
         model.addAttribute("action", "delete");
@@ -161,6 +151,9 @@ public class PaqueteController {
     // ----------- PROCESAR ELIMINAR --------------
     @PostMapping("/delete")
     public String deletePaquete(@ModelAttribute Paquete paquete, RedirectAttributes redirect) {
+        if (paquete.getPaqueteId() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "ID de paquete requerido");
+        }
         paqueteService.eliminarPorId(paquete.getPaqueteId());
         redirect.addFlashAttribute("msg", "Paquete eliminado correctamente");
         return "redirect:/paquetes";

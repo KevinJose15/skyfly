@@ -4,11 +4,15 @@ import esfe.skyfly.Modelos.Pago;
 import esfe.skyfly.Modelos.Reservas;
 import esfe.skyfly.Modelos.EstadoReserva;
 import esfe.skyfly.Servicios.Interfaces.CodigoConfirmacionService;
-import esfe.skyfly.Servicios.Implementaciones.PagoServiceImpl;
-import esfe.skyfly.Servicios.Implementaciones.ReservaService;
+import esfe.skyfly.Servicios.Interfaces.IPagoService;
+import esfe.skyfly.Servicios.Interfaces.IReservaService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -16,69 +20,87 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @RequestMapping("/codigo")
 public class CodigoConfirmacionController {
 
-    private final CodigoConfirmacionService codigoConfirmacionService;
-    private final PagoServiceImpl pagoService;
-    private final ReservaService reservaService;
+    private static final Logger log = LoggerFactory.getLogger(CodigoConfirmacionController.class);
 
-    public CodigoConfirmacionController(
-            CodigoConfirmacionService codigoConfirmacionService,
-            PagoServiceImpl pagoService,
-            ReservaService reservaService
-    ) {
+    private final CodigoConfirmacionService codigoConfirmacionService;
+    private final IPagoService pagoService;
+    private final IReservaService reservaService;
+
+    public CodigoConfirmacionController(CodigoConfirmacionService codigoConfirmacionService,
+                                        IPagoService pagoService,
+                                        IReservaService reservaService) {
         this.codigoConfirmacionService = codigoConfirmacionService;
         this.pagoService = pagoService;
         this.reservaService = reservaService;
     }
 
-    // Vista inicial (index)
+    // Landing opcional
     @GetMapping
     public String index(Model model) {
-        return "codigo/index";
+        return "codigo/index"; // templates/codigo/index.html (si lo usas)
     }
 
-    // Vista de validación del código
+    // Form de validación
     @GetMapping("/validar")
     public String validarView() {
-        return "codigo/mant"; // Formulario para validar código
+        return "codigo/mant"; // templates/codigo/mant.html
     }
 
-  // Validar código
-@PostMapping("/validar")
-public String validarCodigo(@RequestParam("codigo") String codigo,
-                            Authentication authentication,
-                            RedirectAttributes redirect) {
-    try {
-        String email = (authentication != null) ? authentication.getName() : "NO_AUTH";
-        System.out.println("DEBUG - Email autenticado: " + email);
-        System.out.println("DEBUG - Código recibido: " + codigo);
+    // Validar código (CLIENTE)
+    @PostMapping("/validar")
+    public String validarCodigo(@RequestParam("codigo") String codigo,
+                                Authentication authentication,
+                                RedirectAttributes redirect) {
+        try {
+            if (authentication == null) {
+                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Autenticación requerida");
+            }
 
-        boolean valido = codigoConfirmacionService.validarCodigo(email, codigo);
-        System.out.println("DEBUG - Resultado validación: " + valido);
+            final String email = authentication.getName();
+            log.debug("Validando código para email={} codigo={}", email, codigo);
 
-        if (valido) {
-            pagoService.buscarUltimoPagoPendientePorCliente(email).ifPresent(pago -> {
-                System.out.println("DEBUG - Pago encontrado: " + pago.getPagoId());
+            boolean valido = codigoConfirmacionService.validarCodigo(email, codigo);
+            log.debug("Resultado validación: {}", valido);
 
-                pago.setEstadoPago(EstadoReserva.CONFIRMADA);
-                pagoService.crearOeditar(pago);
+            if (valido) {
+                // Buscar el último pago pendiente del cliente
+                pagoService.buscarUltimoPagoPendientePorCliente(email).ifPresentOrElse(pago -> {
+                    log.debug("Pago pendiente encontrado: {}", pago.getPagoId());
 
-                reservaService.buscarPorId(pago.getReservaId()).ifPresent(reserva -> {
-                    System.out.println("DEBUG - Reserva encontrada: " + reserva.getReservaId());
-                    reserva.setEstado(EstadoReserva.CONFIRMADA);
-                    reservaService.crearOeditar(reserva);
+                    // Confirmar pago
+                    pago.setEstadoPago(EstadoReserva.CONFIRMADA);
+                    pagoService.crearOeditar(pago);
+
+                    // Confirmar reserva asociada (vía objeto, no por id transitorio)
+                    Reservas reserva = (pago.getReserva() != null)
+                            ? pago.getReserva()
+                            : reservaService.buscarPorId(pago.getReservaId())
+                                  .orElse(null);
+
+                    if (reserva != null) {
+                        log.debug("Reserva asociada: {}", reserva.getReservaId());
+                        reserva.setEstado(EstadoReserva.CONFIRMADA);
+                        reservaService.crearOeditar(reserva);
+                    } else {
+                        log.warn("No se pudo localizar la reserva asociada al pago {}", pago.getPagoId());
+                    }
+                }, () -> {
+                    log.warn("No hay pago pendiente para {}", email);
                 });
-            });
 
-            redirect.addFlashAttribute("msg", "✅ Código válido. Pago y reserva confirmados.");
-        } else {
-            redirect.addFlashAttribute("msg", "❌ Código inválido o ya usado.");
+                redirect.addFlashAttribute("msg", "✅ Código válido. Pago y reserva confirmados.");
+            } else {
+                redirect.addFlashAttribute("msg", "❌ Código inválido o ya usado.");
+            }
+
+        } catch (ResponseStatusException ex) {
+            throw ex; // deja que Security/ControllerAdvice lo maneje
+        } catch (Exception e) {
+            log.error("Error al validar código", e);
+            redirect.addFlashAttribute("msg", "⚠ Error interno: " + e.getMessage());
         }
 
-    } catch (Exception e) {
-        e.printStackTrace(); // 🔥 Esto mostrará la causa en consola
-        redirect.addFlashAttribute("msg", "⚠ Error interno: " + e.getMessage());
+        // Mantén al cliente en su funnel
+        return "redirect:/pagos/index-cliente";
     }
-
-    return "redirect:/pagos/index";
-}
 }

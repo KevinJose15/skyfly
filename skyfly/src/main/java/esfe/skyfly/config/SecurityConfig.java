@@ -19,45 +19,69 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .authorizeHttpRequests(auth -> auth
-                // Públicas
-                .requestMatchers("/", "/bienvenida", "/login", "/registro",
-                                 "/css/**", "/js/**", "/images/**").permitAll()
+          .authorizeHttpRequests(auth -> auth
+              // -------------------------
+              // Público (sin login)
+              // -------------------------
+              .requestMatchers(
+                  "/", "/bienvenida", "/login", "/registro",
+                  "/css/**", "/js/**", "/images/**", "/assets/**", "/webjars/**", "/favicon.ico"
+              ).permitAll()
 
-                // ADMIN (gestión completa de usuarios)
-                .requestMatchers("/usuarios/**").hasAuthority("Administrador")
+              // -------------------------
+              // CLIENTE (poner ANTES que backoffice para que no lo pisen los catch-alls)
+              // -------------------------
+    .requestMatchers(
+  "/destinos/index-cliente",
+  "/paquetes/index-cliente",
+  "/reservas/index-cliente", "/reservas/create-cliente",
+  "/pagos/index-cliente", "/pagos/create-cliente",
+  "/codigo/**"
+).hasRole("CLIENTE")
 
-                // ADMIN + AGENTE (CRUD de negocio)
-                .requestMatchers("/clientes/mant/**").hasAnyAuthority("Administrador", "Agente")
-                .requestMatchers("/destinos/mant/**").hasAnyAuthority("Administrador", "Agente")
-                .requestMatchers("/paquetes/mant/**").hasAnyAuthority("Administrador", "Agente")
-                .requestMatchers("/reservas/mant/**").hasAnyAuthority("Administrador", "Agente")
-                .requestMatchers("/pagos/mant/**").hasAnyAuthority("Administrador", "Agente")
+              // -------------------------
+              // ADMIN-ONLY
+              // -------------------------
+              .requestMatchers(
+                  "/usuarios/**"
+              ).hasRole("ADMINISTRADOR")
 
-                // CLIENTE (solo lectura + su información)
-                .requestMatchers("/cliente/**").hasAuthority("Cliente")
-                .requestMatchers("/destinos/index/**").hasAuthority("Cliente")
-                .requestMatchers("/paquetes/index/**").hasAuthority("Cliente")
-                .requestMatchers("/reservas/index/**").hasAuthority("Cliente")
-                .requestMatchers("/pagos/index/**").hasAuthority("Cliente")
+              // -------------------------
+              // BACKOFFICE (ADMIN + AGENTE)
+              // Nota: estas rutas incluyen CRUD y listados operativos.
+              // Las rutas de cliente ya quedaron protegidas arriba y no se pisan por el orden.
+              // -------------------------
+              .requestMatchers(
+                  "/clientes/**",
+                  "/destinos/**",
+                  "/paquetes/**",
+                  "/reservas/**",
+                  "/pagos/**",
+                  "/metodopago/**",
+                  "/facturas/**"
+              ).hasAnyRole("ADMINISTRADOR", "AGENTE")
 
-                // Resto autenticado
-                .anyRequest().authenticated()
-            )
-            .formLogin(form -> form
-                .loginPage("/login")
-                .usernameParameter("email")
-                .passwordParameter("password")
-                .successHandler(successHandler)   // ← redirección por rol
-                .failureUrl("/login?error=true")
-                .permitAll()
-            )
-            .logout(logout -> logout
-                .logoutUrl("/logout")
-                .logoutSuccessUrl("/login?logout")
-                .permitAll()
-            );
+              // Cualquier otra cosa requiere autenticación
+              .anyRequest().authenticated()
+          )
+          .formLogin(form -> form
+              .loginPage("/login")
+              .usernameParameter("email")
+              .passwordParameter("password")
+              .successHandler(successHandler) // redirección por rol
+              .failureUrl("/login?error=true")
+              .permitAll()
+          )
+          .logout(logout -> logout
+              .logoutUrl("/logout")
+              .logoutSuccessUrl("/login?logout")
+              .permitAll()
+          )
+          .exceptionHandling(ex -> ex
+              .accessDeniedPage("/access-denied")
+          );
 
+        // CSRF habilitado por defecto (OK para formularios con token)
         return http.build();
     }
 

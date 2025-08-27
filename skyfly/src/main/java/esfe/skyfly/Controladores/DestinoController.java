@@ -7,15 +7,18 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import jakarta.validation.Valid;
 import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
@@ -39,8 +42,8 @@ public class DestinoController {
                         @RequestParam(value = "page") Optional<Integer> page,
                         @RequestParam(value = "size") Optional<Integer> size) {
 
-        int currentPage = page.orElse(1) - 1;
-        int pageSize = size.orElse(5);
+        int currentPage = Math.max(0, page.orElse(1) - 1);
+        int pageSize    = Math.max(1, size.orElse(5));
 
         Pageable pageable = PageRequest.of(currentPage, pageSize);
         Page<Destino> destinosPage = destinoService.buscarTodos(pageable);
@@ -54,30 +57,26 @@ public class DestinoController {
             model.addAttribute("pageNumbers", pageNumbers);
         }
 
-        // OJO: respetamos tu vista con I mayúscula
-        return "destino/Index";
+        return "destino/index"; // Asegúrate de tener templates/destino/index.html
     }
 
     // ------------------ ALIAS MANT (ADMIN/AGENTE) ------------------
-    // Útil si tu SecurityConfig protege /destinos/mant/**
     @GetMapping("/mant")
-    public String destinosMant(Model model) {
-        // Si prefieres paginar aquí, puedes reutilizar index(...)
-        List<Destino> destinos = destinoService.buscarTodos(); // o destinoService.obtenerTodo()
-        model.addAttribute("destinos", destinos);
-        return "Destinos/mant"; // respetando tu naming existente
+    public String destinosMant(Model model,
+                               @RequestParam(value = "page") Optional<Integer> page,
+                               @RequestParam(value = "size") Optional<Integer> size) {
+        // Reutiliza el listado con paginación (así no duplicas lógica)
+        return index(model, page, size);
     }
 
     // ------------------ CLIENTE: solo ver/seleccionar ------------------
-    // Vista: templates/Cliente/destinos/index.html
     @GetMapping("/index-cliente")
     public String destinosCliente(Model model) {
         List<Destino> destinos = destinoService.buscarTodos(); // listado completo para clientes
         model.addAttribute("destinos", destinos);
-        return "Cliente/destinos/index";
+        return "cliente/destinos/index"; // templates/cliente/destinos/index.html
     }
 
-    // Alias legible
     @GetMapping("/cliente")
     public String indexCliente(Model model) {
         return destinosCliente(model);
@@ -88,14 +87,14 @@ public class DestinoController {
     public String create(Model model) {
         model.addAttribute("destino", new Destino());
         model.addAttribute("action", "create");
-        return "destino/mant";
+        return "destino/mant"; // templates/destino/mant.html
     }
 
     // ------------------ EDITAR ------------------
     @GetMapping("/edit/{id}")
     public String edit(@PathVariable Integer id, Model model) {
         Destino destino = destinoService.buscarPorId(id)
-                .orElseThrow(() -> new IllegalArgumentException("ID de destino inválido: " + id));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "ID de destino inválido: " + id));
         model.addAttribute("destino", destino);
         model.addAttribute("action", "edit");
         return "destino/mant";
@@ -105,7 +104,7 @@ public class DestinoController {
     @GetMapping("/view/{id}")
     public String view(@PathVariable Integer id, Model model) {
         Destino destino = destinoService.buscarPorId(id)
-                .orElseThrow(() -> new IllegalArgumentException("ID de destino inválido: " + id));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "ID de destino inválido: " + id));
         model.addAttribute("destino", destino);
         model.addAttribute("action", "view");
         return "destino/mant";
@@ -115,7 +114,7 @@ public class DestinoController {
     @GetMapping("/delete/{id}")
     public String deleteConfirm(@PathVariable Integer id, Model model) {
         Destino destino = destinoService.buscarPorId(id)
-                .orElseThrow(() -> new IllegalArgumentException("ID de destino inválido: " + id));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "ID de destino inválido: " + id));
         model.addAttribute("destino", destino);
         model.addAttribute("action", "delete");
         return "destino/mant";
@@ -123,10 +122,10 @@ public class DestinoController {
 
     // ------------------ PROCESAR CREAR ------------------
     @PostMapping("/create")
-    public String saveNuevo(@ModelAttribute Destino destino,
+    public String saveNuevo(@Valid @ModelAttribute Destino destino,
+                            BindingResult result,
                             @RequestParam(value = "file", required = false) MultipartFile file,
                             @RequestParam(value = "imageBase64", required = false) String imageBase64,
-                            BindingResult result,
                             Model model,
                             RedirectAttributes redirect) {
 
@@ -136,13 +135,10 @@ public class DestinoController {
             return "destino/mant";
         }
 
-        // 1) Si viene archivo, usarlo
         try {
             if (file != null && !file.isEmpty()) {
                 destino.setImagen(file.getBytes());
-            }
-            // 2) Si no hay archivo pero sí base64, usarlo
-            else if (imageBase64 != null && !imageBase64.isBlank()) {
+            } else if (imageBase64 != null && !imageBase64.isBlank()) {
                 destino.setImagen(decodeBase64Image(imageBase64));
             }
         } catch (Exception e) {
@@ -159,10 +155,10 @@ public class DestinoController {
 
     // ------------------ PROCESAR EDITAR ------------------
     @PostMapping("/edit")
-    public String saveEditado(@ModelAttribute Destino destino,
+    public String saveEditado(@Valid @ModelAttribute Destino destino,
+                              BindingResult result,
                               @RequestParam(value = "file", required = false) MultipartFile file,
                               @RequestParam(value = "imageBase64", required = false) String imageBase64,
-                              BindingResult result,
                               Model model,
                               RedirectAttributes redirect) {
 
@@ -173,18 +169,13 @@ public class DestinoController {
         }
 
         try {
-            // 1) Si viene archivo nuevo, usarlo
             if (file != null && !file.isEmpty()) {
                 destino.setImagen(file.getBytes());
-            }
-            // 2) Si no hay archivo pero sí base64 (preview), usarlo
-            else if (imageBase64 != null && !imageBase64.isBlank()) {
+            } else if (imageBase64 != null && !imageBase64.isBlank()) {
                 destino.setImagen(decodeBase64Image(imageBase64));
-            }
-            // 3) Si no hay archivo ni base64, conservar la imagen actual de BD
-            else if (destino.getDestinoId() != null) {
+            } else if (destino.getDestinoId() != null) {
                 Destino actual = destinoService.buscarPorId(destino.getDestinoId())
-                        .orElseThrow(() -> new IllegalArgumentException("ID de destino inválido: " + destino.getDestinoId()));
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "ID de destino inválido: " + destino.getDestinoId()));
                 destino.setImagen(actual.getImagen());
             }
         } catch (Exception e) {
@@ -202,6 +193,9 @@ public class DestinoController {
     // ------------------ PROCESAR ELIMINAR ------------------
     @PostMapping("/delete")
     public String deleteDestino(@ModelAttribute Destino destino, RedirectAttributes redirect) {
+        if (destino.getDestinoId() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "ID de destino requerido");
+        }
         destinoService.eliminarPorId(destino.getDestinoId());
         redirect.addFlashAttribute("msg", "Destino eliminado correctamente");
         return "redirect:/destinos";
@@ -211,16 +205,16 @@ public class DestinoController {
     @GetMapping("/imagen/{id}")
     public ResponseEntity<byte[]> getImagen(@PathVariable Integer id) {
         Destino destino = destinoService.buscarPorId(id)
-                .orElseThrow(() -> new IllegalArgumentException("ID de destino inválido: " + id));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "ID de destino inválido: " + id));
 
-        if (destino.getImagen() != null) {
-            return ResponseEntity.ok()
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"imagen_" + id + ".jpg\"")
-                    .contentType(MediaType.IMAGE_JPEG)
-                    .body(destino.getImagen());
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+        byte[] data = destino.getImagen();
+        if (data == null || data.length == 0) return ResponseEntity.notFound().build();
+
+        MediaType type = sniffImageType(data);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"imagen_" + id + "\"")
+                .contentType(type)
+                .body(data);
     }
 
     // ------------------ Util ------------------
@@ -229,5 +223,12 @@ public class DestinoController {
         int comma = base64.indexOf(',');
         if (comma != -1) base64 = base64.substring(comma + 1);
         return Base64.getDecoder().decode(base64);
+    }
+
+    private MediaType sniffImageType(byte[] bytes) {
+        if (bytes.length > 3 && bytes[0] == (byte)0xFF && bytes[1] == (byte)0xD8) return MediaType.IMAGE_JPEG; // JPG
+        if (bytes.length > 4 && bytes[0] == (byte)0x89 && bytes[1] == 0x50 && bytes[2] == 0x4E && bytes[3] == 0x47) return MediaType.IMAGE_PNG; // PNG
+        if (bytes.length > 3 && bytes[0] == 0x47 && bytes[1] == 0x49 && bytes[2] == 0x46) return MediaType.IMAGE_GIF; // GIF
+        return MediaType.APPLICATION_OCTET_STREAM;
     }
 }

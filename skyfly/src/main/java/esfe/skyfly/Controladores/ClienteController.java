@@ -1,8 +1,11 @@
 package esfe.skyfly.Controladores;
 
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -30,15 +33,15 @@ public class ClienteController {
     private IClienteService clienteService;
 
     @Autowired
-    private IUsuarioService usuarioService; // necesario para filtrar usuarios con rol Cliente
+    private IUsuarioService usuarioService; // necesario para filtrar usuarios con rol CLIENTE
 
     // ----------- INDEX (LISTADO + PAGINACIÓN) --------------
     @GetMapping
     public String index(Model model,
                         @RequestParam(value = "page") Optional<Integer> page,
                         @RequestParam(value = "size") Optional<Integer> size) {
-        int currentPage = page.orElse(1) - 1;
-        int pageSize = size.orElse(5);
+        int currentPage = Math.max(0, page.orElse(1) - 1);
+        int pageSize = Math.max(1, size.orElse(5));
 
         Pageable pageable = PageRequest.of(currentPage, pageSize);
         Page<Cliente> clientesPage = clienteService.buscarTodos(pageable);
@@ -52,79 +55,108 @@ public class ClienteController {
             model.addAttribute("pageNumbers", pageNumbers);
         }
 
-        return "cliente/index"; // carpeta debe llamarse "cliente"
+        // Asegúrate de tener templates/clientes/index.html
+        return "clientes/index";
     }
 
-    // ----------- NUEVO: ALIAS /clientes/mant (ADMIN/AGENTE) --------------
-    @GetMapping("/mant")
+    // ----------- ALIAS LISTADO --------------
+    @GetMapping("/mant") // opcional: alias solo para listar
     public String mant(Model model,
                        @RequestParam(value = "page") Optional<Integer> page,
                        @RequestParam(value = "size") Optional<Integer> size) {
-        return index(model, page, size); // reutiliza el listado
+        return index(model, page, size);
     }
 
     // ----------- CREAR --------------
     @GetMapping("/create")
     public String create(Model model) {
         model.addAttribute("cliente", new Cliente());
-        // cargamos solo usuarios con rol Cliente
+
+        // Cargar solo usuarios con rol CLIENTE y opcionalmente libres (no asignados a Cliente)
         List<Usuario> usuarios = usuarioService.findByRol(Rol.Cliente);
         model.addAttribute("usuarios", usuarios);
+
         model.addAttribute("action", "create");
-        return "cliente/mant";
+        return "clientes/mant"; // Asegúrate de tener templates/clientes/mant.html
     }
 
     // ----------- EDITAR --------------
     @GetMapping("/edit/{id}")
     public String edit(@PathVariable Integer id, Model model) {
-        Cliente cliente = clienteService.buscarPorId(id).orElseThrow();
+        Cliente cliente = clienteService.buscarPorId(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cliente no encontrado"));
+
         model.addAttribute("cliente", cliente);
+
         List<Usuario> usuarios = usuarioService.findByRol(Rol.Cliente);
         model.addAttribute("usuarios", usuarios);
+
         model.addAttribute("action", "edit");
-        return "cliente/mant";
+        return "clientes/mant";
     }
 
     // ----------- VER (solo lectura) --------------
     @GetMapping("/view/{id}")
     public String view(@PathVariable Integer id, Model model) {
-        Cliente cliente = clienteService.buscarPorId(id).orElseThrow();
+        Cliente cliente = clienteService.buscarPorId(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cliente no encontrado"));
+
         model.addAttribute("cliente", cliente);
         model.addAttribute("action", "view");
-        return "cliente/mant";
+        return "clientes/mant";
     }
 
     // ----------- ELIMINAR (confirmación) --------------
     @GetMapping("/delete/{id}")
     public String deleteConfirm(@PathVariable Integer id, Model model) {
-        Cliente cliente = clienteService.buscarPorId(id).orElseThrow();
+        Cliente cliente = clienteService.buscarPorId(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cliente no encontrado"));
+
         model.addAttribute("cliente", cliente);
         model.addAttribute("action", "delete");
-        return "cliente/mant";
+        return "clientes/mant";
     }
 
     // ----------- PROCESAR CREATE --------------
     @PostMapping("/create")
     public String saveNuevo(@ModelAttribute Cliente cliente, BindingResult result,
                             RedirectAttributes redirect, Model model) {
+
         // Validar selección de usuario
         if (cliente.getUsuario() == null || cliente.getUsuario().getId() == null) {
             result.rejectValue("usuario", "error.usuario", "Debes seleccionar un usuario");
+        }
+
+        // Cargar el usuario real desde la BD y validar rol
+        if (!result.hasFieldErrors("usuario")) {
+            Usuario usuario = usuarioService.buscarPorId(cliente.getUsuario().getId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Usuario no encontrado"));
+
+            if (usuario.getRol() != Rol.Cliente) {
+                result.rejectValue("usuario", "error.usuario", "El usuario seleccionado no tiene rol CLIENTE");
+            } else {
+                cliente.setUsuario(usuario);
+            }
         }
 
         if (result.hasErrors()) {
             List<Usuario> usuarios = usuarioService.findByRol(Rol.Cliente);
             model.addAttribute("usuarios", usuarios);
             model.addAttribute("action", "create");
-            return "cliente/mant";
+            return "clientes/mant";
         }
 
-        // Cargar el usuario real desde la BD y asociarlo
-        Usuario usuario = usuarioService.buscarPorId(cliente.getUsuario().getId())
-                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
-        cliente.setUsuario(usuario);
+        try {
+            clienteService.crearOeditar(cliente);
+        } catch (DataIntegrityViolationException ex) {
+            // Por si el usuario ya está ligado a otro Cliente (único)
+            result.rejectValue("usuario", "error.usuario", "El usuario ya está asignado a un cliente");
+            List<Usuario> usuarios = usuarioService.findByRol(Rol.Cliente);
+            model.addAttribute("usuarios", usuarios);
+            model.addAttribute("action", "create");
+            return "clientes/mant";
+        }
 
-        clienteService.crearOeditar(cliente);
         redirect.addFlashAttribute("msg", "Cliente creado correctamente");
         return "redirect:/clientes";
     }
@@ -133,24 +165,41 @@ public class ClienteController {
     @PostMapping("/edit")
     public String saveEditado(@ModelAttribute Cliente cliente, BindingResult result,
                               RedirectAttributes redirect, Model model) {
+
         // Validar selección de usuario
         if (cliente.getUsuario() == null || cliente.getUsuario().getId() == null) {
             result.rejectValue("usuario", "error.usuario", "Debes seleccionar un usuario");
+        }
+
+        // Cargar el usuario real desde la BD y validar rol
+        if (!result.hasFieldErrors("usuario")) {
+            Usuario usuario = usuarioService.buscarPorId(cliente.getUsuario().getId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Usuario no encontrado"));
+
+            if (usuario.getRol() != Rol.Cliente) {
+                result.rejectValue("usuario", "error.usuario", "El usuario seleccionado no tiene rol CLIENTE");
+            } else {
+                cliente.setUsuario(usuario);
+            }
         }
 
         if (result.hasErrors()) {
             List<Usuario> usuarios = usuarioService.findByRol(Rol.Cliente);
             model.addAttribute("usuarios", usuarios);
             model.addAttribute("action", "edit");
-            return "cliente/mant";
+            return "clientes/mant";
         }
 
-        // Cargar el usuario real desde la BD y asociarlo
-        Usuario usuario = usuarioService.buscarPorId(cliente.getUsuario().getId())
-                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
-        cliente.setUsuario(usuario);
+        try {
+            clienteService.crearOeditar(cliente);
+        } catch (DataIntegrityViolationException ex) {
+            result.rejectValue("usuario", "error.usuario", "El usuario ya está asignado a un cliente");
+            List<Usuario> usuarios = usuarioService.findByRol(Rol.Cliente);
+            model.addAttribute("usuarios", usuarios);
+            model.addAttribute("action", "edit");
+            return "clientes/mant";
+        }
 
-        clienteService.crearOeditar(cliente);
         redirect.addFlashAttribute("msg", "Cliente actualizado correctamente");
         return "redirect:/clientes";
     }
@@ -158,7 +207,10 @@ public class ClienteController {
     // ----------- PROCESAR DELETE --------------
     @PostMapping("/delete")
     public String deleteCliente(@ModelAttribute Cliente cliente, RedirectAttributes redirect) {
-        clienteService.eliminarPorId(cliente.getClienteId()); // usar clienteId
+        if (cliente.getClienteId() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "ID de cliente requerido");
+        }
+        clienteService.eliminarPorId(cliente.getClienteId());
         redirect.addFlashAttribute("msg", "Cliente eliminado correctamente");
         return "redirect:/clientes";
     }

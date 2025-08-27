@@ -88,16 +88,20 @@ public class UsuarioService implements IUsuarioService, UserDetailsService {
         return usuarioRepository.findByEmail(email);
     }
 
-    // ✅ Spring Security (sin cambios de fondo)
-    @Override
-    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        Usuario usuario = usuarioRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado con email: " + email));
+@Override
+public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+    Usuario u = usuarioRepository.findByEmail(email)
+        .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado con email: " + email));
 
-        return User.builder()
-                .username(usuario.getEmail())        // usamos email como username
-                .password(usuario.getPasswordHash()) // contraseña ya encriptada
-                .roles(usuario.getRol().name())      // asignamos el rol (ROLE_XYZ)
-                .build();
-    }
+    // Normaliza el nombre del rol del enum a MAYÚSCULAS sin espacios/acentos
+    String roleKey = switch (u.getRol()) {
+    case Administrador -> "ADMINISTRADOR";
+    case Agente        -> "AGENTE";
+    case Cliente       -> "CLIENTE";
+};
+return User.withUsername(u.getEmail())
+           .password(u.getPasswordHash())
+           .roles(roleKey)        // genera ROLE_ADMINISTRADOR …
+           .build();
+}
 }

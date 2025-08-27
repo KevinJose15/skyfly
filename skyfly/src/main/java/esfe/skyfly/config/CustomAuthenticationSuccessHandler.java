@@ -13,28 +13,27 @@ import java.io.IOException;
 @Component
 public class CustomAuthenticationSuccessHandler implements AuthenticationSuccessHandler {
 
-    @Override
-    public void onAuthenticationSuccess(HttpServletRequest request,
-                                        HttpServletResponse response,
-                                        Authentication authentication) throws IOException, ServletException {
+  private boolean hasRole(Authentication auth, String rolKey) {
+    return auth.getAuthorities().stream()
+      .map(GrantedAuthority::getAuthority)
+      .anyMatch(a -> a.equals("ROLE_" + rolKey) || a.equals(rolKey));
+  }
 
-        String redirectURL = request.getContextPath();
+  @Override
+  public void onAuthenticationSuccess(HttpServletRequest request,
+                                      HttpServletResponse response,
+                                      Authentication authentication) throws IOException {
+    String redirectURL = request.getContextPath();
 
-        for (GrantedAuthority authority : authentication.getAuthorities()) {
-            String role = authority.getAuthority();
-
-            if ("Administrador".equals(role)) {
-                redirectURL = "/admin/main";   // _MainLayout.html
-                break;
-            } else if ("Agente".equals(role)) {
-                redirectURL = "/agente/main";  // _MainLayout.html
-                break;
-            } else if ("Cliente".equals(role)) {
-                redirectURL = "/cliente/index"; // Cliente/index.html
-                break;
-            }
-        }
-
-        response.sendRedirect(redirectURL);
+    if (hasRole(authentication, "ADMINISTRADOR")) {
+      redirectURL = "/admin/main";
+    } else if (hasRole(authentication, "AGENTE")) {
+      redirectURL = "/agente/main";
+    } else if (hasRole(authentication, "CLIENTE")) {
+      redirectURL = "/cliente/index";
+    } else {
+      redirectURL = "/bienvenida";
     }
+    response.sendRedirect(redirectURL);
+  }
 }

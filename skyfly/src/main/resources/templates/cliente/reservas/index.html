@@ -1,25 +1,27 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<head>
-  <title>Mis reservas</title>
-  <link rel="stylesheet" th:href="@{/css/style.css}">
-</head>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{_MainLayout}">
 <body>
-<h2>Mis reservas</h2>
-<table>
-  <thead>
-    <tr>
-      <th>ID</th><th>Destino</th><th>Paquete</th><th>Fecha</th>
-    </tr>
-  </thead>
-  <tbody>
+<div layout:fragment="content">
+  <h2>Mis reservas</h2>
+  <table class="table table-striped">
+    <thead>
+      <tr><th>ID</th><th>Paquete</th><th>Estado</th><th>Fecha</th><th>Acciones</th></tr>
+    </thead>
+    <tbody>
     <tr th:each="r : ${reservas}">
-      <td th:text="${r.id}">1</td>
-      <td th:text="${r.destino != null ? r.destino.nombre : '-'}"></td>
-      <td th:text="${r.paquete != null ? r.paquete.nombre : '-'}"></td>
-      <td th:text="${#temporals.format(r.fecha, 'yyyy-MM-dd')}"></td>
+      <td th:text="${r.reservaId}">1</td>
+      <td th:text="${r.paquete != null ? r.paquete.nombre : '—'}">Paquete</td>
+      <td th:text="${r.estado}">PENDIENTE</td>
+      <td th:text="${#temporals.format(r.fechaReserva, 'yyyy-MM-dd HH:mm')}">—</td>
+      <td>
+        <a class="btn btn-sm btn-success"
+           th:href="@{/pagos/create-cliente(reservaId=${r.reservaId})}">Pagar</a>
+      </td>
     </tr>
-  </tbody>
-</table>
+    </tbody>
+  </table>
+</div>
 </body>
 </html>

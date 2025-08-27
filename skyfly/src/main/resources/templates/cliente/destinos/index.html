@@ -1,21 +1,22 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<head>
-  <title>Destinos</title>
-  <link rel="stylesheet" th:href="@{/css/style.css}">
-</head>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{_MainLayout}">
 <body>
-<h2>Destinos</h2>
-<div class="cards" th:if="${destinos}">
-  <div class="card" th:each="d : ${destinos}">
-    <img th:src="@{/images/{img}(img=${d.imagen})}" alt="Destino">
-    <h3 th:text="${d.nombre}">Nombre</h3>
-    <p th:text="${d.descripcion}">Descripción</p>
-
-    <form th:action="@{/reservas/create}" method="get">
-      <input type="hidden" name="destinoId" th:value="${d.id}">
-      <button type="submit">Reservar</button>
-    </form>
+<div layout:fragment="content">
+  <h2>Destinos</h2>
+  <div th:if="${#lists.isEmpty(destinos)}">No hay destinos disponibles.</div>
+  <div class="row" th:each="d : ${destinos}">
+    <div class="col-md-4 mb-3">
+      <div class="card">
+        <img th:if="${d.destinoId}" class="card-img-top"
+             th:src="@{/destinos/imagen/{id}(id=${d.destinoId})}" alt="imagen destino"/>
+        <div class="card-body">
+          <h5 class="card-title" th:text="${d.nombre}">Nombre</h5>
+          <p class="card-text" th:text="${d.descripcion}">Descripción</p>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 </body>

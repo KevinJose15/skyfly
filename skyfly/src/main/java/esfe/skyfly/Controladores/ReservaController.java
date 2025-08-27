@@ -17,6 +17,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
+
+import jakarta.validation.Valid;
+
 import esfe.skyfly.Modelos.Reservas;
 import esfe.skyfly.Modelos.Cliente;
 import esfe.skyfly.Modelos.EstadoReserva;
@@ -24,26 +29,18 @@ import esfe.skyfly.Modelos.Paquete;
 import esfe.skyfly.Servicios.Interfaces.IReservaService;
 import esfe.skyfly.Servicios.Interfaces.IClienteService;
 import esfe.skyfly.Servicios.Interfaces.IPaqueteService;
-
-// 👉 NUEVO: util para obtener el cliente logueado
 import esfe.skyfly.Utilidades.SecurityUtils;
 
 @Controller
 @RequestMapping("/reservas")
 public class ReservaController {
 
-    @Autowired
-    private IReservaService reservaService;
+    @Autowired private IReservaService reservaService;
+    @Autowired private IClienteService clienteService;
+    @Autowired private IPaqueteService paqueteService;
 
-    @Autowired
-    private IClienteService clienteService;
-
-    @Autowired
-    private IPaqueteService paqueteService;
-
-    // 👉 NUEVO: inyectamos SecurityUtils
-    @Autowired
-    private SecurityUtils securityUtils;
+    // Para obtener el cliente logueado
+    @Autowired private SecurityUtils securityUtils;
 
     // =======================
     // LISTADO (ADMIN/AGENTE)
@@ -53,8 +50,8 @@ public class ReservaController {
                         @RequestParam(value = "page") Optional<Integer> page,
                         @RequestParam(value = "size") Optional<Integer> size) {
 
-        int currentPage = page.orElse(1) - 1;
-        int pageSize = size.orElse(5);
+        int currentPage = Math.max(0, page.orElse(1) - 1);
+        int pageSize    = Math.max(1, size.orElse(5));
 
         Pageable pageable = PageRequest.of(currentPage, pageSize);
         Page<Reservas> reservasPage = reservaService.buscarTodos(pageable);
@@ -68,51 +65,46 @@ public class ReservaController {
             model.addAttribute("pageNumbers", pageNumbers);
         }
 
+        // -> templates/reserva/index.html
         return "reserva/index";
     }
 
-    // 👉 NUEVO: alias para ADMIN/AGENTE si usas /reservas/mant en SecurityConfig
+    // Alias admin/agente si proteges /reservas/mant/**
     @GetMapping("/mant")
     public String mant(Model model,
                        @RequestParam(value = "page") Optional<Integer> page,
                        @RequestParam(value = "size") Optional<Integer> size) {
-        return index(model, page, size); // reutiliza el mismo listado admin/agente
+        return index(model, page, size);
     }
 
     // ===================================
     // LISTADO (CLIENTE) - SOLO SUS DATOS
     // ===================================
-    // Vista: templates/Cliente/reservas/index.html
+    // -> templates/cliente/reservas/index.html
     @GetMapping("/index-cliente")
     public String reservasCliente(Model model) {
         Cliente cli = securityUtils.getClienteActual();
-        if (cli == null) {
-            // Defensa extra: si no hay cliente logueado, redirige
-            return "redirect:/login";
-        }
+        if (cli == null) return "redirect:/login";
 
-        // Si no tienes un findByClienteId en tu service, filtramos en memoria
-        List<Reservas> todas = reservaService
-                .buscarTodos(PageRequest.of(0, 1000))
-                .getContent();
-
-        List<Reservas> propias = todas.stream()
+        // Si no hay método dedicado, filtramos en memoria (batch razonable)
+        List<Reservas> propias = reservaService.buscarTodos(PageRequest.of(0, 1000))
+                .getContent().stream()
                 .filter(r -> r.getCliente() != null
-                        && r.getCliente().getClienteId().equals(cli.getClienteId()))
+                          && r.getCliente().getClienteId().equals(cli.getClienteId()))
                 .collect(Collectors.toList());
 
         model.addAttribute("reservas", propias);
-        return "Cliente/reservas/index";
+        return "cliente/reservas/index";
     }
 
     // ==========================
-    // CREATE (ADMIN/AGENTE) — TU CÓDIGO ORIGINAL
+    // CREATE (ADMIN/AGENTE)
     // ==========================
     @GetMapping("/create")
     public String create(Model model) {
         Reservas r = new Reservas();
         r.setFechaReserva(LocalDateTime.now());
-        r.setEstado(EstadoReserva.PENDIENTE); // fuerza estado pendiente
+        r.setEstado(EstadoReserva.PENDIENTE);
         model.addAttribute("reserva", r);
         model.addAttribute("clientes", clienteService.obtenerTodos());
         model.addAttribute("paquetes", paqueteService.obtenerTodo());
@@ -120,13 +112,10 @@ public class ReservaController {
         return "reserva/mant";
     }
 
-    // ==========================
-    // EDIT (ADMIN/AGENTE) — TU CÓDIGO ORIGINAL
-    // ==========================
     @GetMapping("/edit/{id}")
     public String edit(@PathVariable Integer id, Model model) {
         Reservas reserva = reservaService.buscarPorId(id)
-                .orElseThrow(() -> new IllegalArgumentException("Reserva no encontrada"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Reserva no encontrada: " + id));
         model.addAttribute("reserva", reserva);
         model.addAttribute("clientes", clienteService.obtenerTodos());
         model.addAttribute("paquetes", paqueteService.obtenerTodo());
@@ -134,51 +123,43 @@ public class ReservaController {
         return "reserva/mant";
     }
 
-    // ==========================
-    // VIEW (ADMIN/AGENTE) — TU CÓDIGO ORIGINAL
-    // ==========================
     @GetMapping("/view/{id}")
     public String view(@PathVariable Integer id, Model model) {
         Reservas reserva = reservaService.buscarPorId(id)
-                .orElseThrow(() -> new IllegalArgumentException("Reserva no encontrada"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Reserva no encontrada: " + id));
         model.addAttribute("reserva", reserva);
         model.addAttribute("action", "view");
         return "reserva/mant";
     }
 
-    // ==========================
-    // DELETE CONFIRM (ADMIN/AGENTE) — TU CÓDIGO ORIGINAL
-    // ==========================
     @GetMapping("/delete/{id}")
     public String deleteConfirm(@PathVariable Integer id, Model model) {
         Reservas reserva = reservaService.buscarPorId(id)
-                .orElseThrow(() -> new IllegalArgumentException("Reserva no encontrada"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Reserva no encontrada: " + id));
         model.addAttribute("reserva", reserva);
         model.addAttribute("action", "delete");
         return "reserva/mant";
     }
 
-    // ==========================
-    // SAVE CREATE (ADMIN/AGENTE) — TU CÓDIGO ORIGINAL
-    // ==========================
     @PostMapping("/create")
-    public String saveNuevo(@ModelAttribute Reservas reserva, BindingResult result,
+    public String saveNuevo(@Valid @ModelAttribute("reserva") Reservas reserva,
+                            BindingResult result,
                             RedirectAttributes redirect, Model model) {
 
         // Reconstruir cliente
         if (reserva.getCliente() != null && reserva.getCliente().getClienteId() != null) {
-            Cliente cliente = clienteService.buscarPorId(reserva.getCliente().getClienteId())
-                    .orElse(null);
-            reserva.setCliente(cliente);
+            Cliente cliente = clienteService.buscarPorId(reserva.getCliente().getClienteId()).orElse(null);
+            if (cliente == null) result.rejectValue("cliente", "error.cliente", "Cliente inválido");
+            else reserva.setCliente(cliente);
         } else {
             result.rejectValue("cliente", "error.cliente", "Debes seleccionar un cliente");
         }
 
         // Reconstruir paquete
         if (reserva.getPaquete() != null && reserva.getPaquete().getPaqueteId() != null) {
-            Paquete paquete = paqueteService.buscarPorId(reserva.getPaquete().getPaqueteId())
-                    .orElse(null);
-            reserva.setPaquete(paquete);
+            Paquete paquete = paqueteService.buscarPorId(reserva.getPaquete().getPaqueteId()).orElse(null);
+            if (paquete == null) result.rejectValue("paquete", "error.paquete", "Paquete inválido");
+            else reserva.setPaquete(paquete);
         } else {
             result.rejectValue("paquete", "error.paquete", "Debes seleccionar un paquete");
         }
@@ -190,22 +171,23 @@ public class ReservaController {
             return "reserva/mant";
         }
 
+        if (reserva.getEstado() == null) reserva.setEstado(EstadoReserva.PENDIENTE);
+        if (reserva.getFechaReserva() == null) reserva.setFechaReserva(LocalDateTime.now());
+
         reservaService.crearOeditar(reserva);
         redirect.addFlashAttribute("msg", "Reserva creada correctamente");
         return "redirect:/reservas";
     }
 
-    // ==========================
-    // SAVE EDIT (ADMIN/AGENTE) — TU CÓDIGO ORIGINAL
-    // ==========================
     @PostMapping("/edit")
-    public String saveEditado(@ModelAttribute Reservas reserva, BindingResult result,
+    public String saveEditado(@Valid @ModelAttribute("reserva") Reservas reserva,
+                              BindingResult result,
                               RedirectAttributes redirect, Model model) {
 
-        if (reserva.getCliente() == null)
+        if (reserva.getCliente() == null || reserva.getCliente().getClienteId() == null)
             result.rejectValue("cliente", "error.cliente", "Debes seleccionar un cliente");
 
-        if (reserva.getPaquete() == null)
+        if (reserva.getPaquete() == null || reserva.getPaquete().getPaqueteId() == null)
             result.rejectValue("paquete", "error.paquete", "Debes seleccionar un paquete");
 
         if (result.hasErrors()) {
@@ -220,24 +202,23 @@ public class ReservaController {
         return "redirect:/reservas";
     }
 
-    // ==========================
-    // DELETE (ADMIN/AGENTE) — TU CÓDIGO ORIGINAL
-    // ==========================
     @PostMapping("/delete")
     public String deleteReserva(@ModelAttribute Reservas reserva, RedirectAttributes redirect) {
+        if (reserva.getReservaId() == null)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "ID de reserva requerido");
+
         reservaService.eliminarPorId(reserva.getReservaId());
         redirect.addFlashAttribute("msg", "Reserva eliminada correctamente");
         return "redirect:/reservas";
     }
 
     // =======================================
-    // NUEVO: CREATE (CLIENTE) — AUTOSELECCIÓN
+    // CREATE (CLIENTE) — AUTOSELECCIÓN
     // =======================================
-    // Vista: templates/Cliente/reservas/create.html
-    // Enlázalo desde Cliente/paquetes/index.html con ?paqueteId=...
+    // -> templates/cliente/reservas/create.html
+    // Enlázalo desde cliente/paquetes/index.html con ?paqueteId=...
     @GetMapping("/create-cliente")
-    public String createCliente(@RequestParam(required = false) Integer paqueteId,
-                                Model model) {
+    public String createCliente(@RequestParam(required = false) Integer paqueteId, Model model) {
         Cliente cli = securityUtils.getClienteActual();
         if (cli == null) return "redirect:/login";
 
@@ -252,27 +233,40 @@ public class ReservaController {
         }
 
         model.addAttribute("reserva", r);
-        return "Cliente/reservas/create";
+        return "cliente/reservas/create";
     }
 
     @PostMapping("/create-cliente")
-    public String saveCliente(@ModelAttribute Reservas reserva,
-                              RedirectAttributes redirect) {
+    public String saveCliente(@ModelAttribute("reserva") Reservas reserva,
+                              BindingResult result,
+                              RedirectAttributes redirect,
+                              Model model) {
         Cliente cli = securityUtils.getClienteActual();
         if (cli == null) return "redirect:/login";
 
-        // Blindaje: forzamos el cliente logueado
+        // Blindaje: siempre el cliente logueado
         reserva.setCliente(cli);
-        if (reserva.getEstado() == null) {
-            reserva.setEstado(EstadoReserva.PENDIENTE);
+
+        // Validar paquete (obligatorio en este flujo)
+        if (reserva.getPaquete() == null || reserva.getPaquete().getPaqueteId() == null) {
+            result.rejectValue("paquete", "error.paquete", "Debes seleccionar un paquete");
+        } else {
+            Paquete p = paqueteService.buscarPorId(reserva.getPaquete().getPaqueteId()).orElse(null);
+            if (p == null) result.rejectValue("paquete", "error.paquete", "Paquete inválido");
+            else reserva.setPaquete(p);
         }
-        if (reserva.getFechaReserva() == null) {
-            reserva.setFechaReserva(LocalDateTime.now());
+
+        if (result.hasErrors()) {
+            model.addAttribute("reserva", reserva);
+            return "cliente/reservas/create";
         }
+
+        if (reserva.getEstado() == null) reserva.setEstado(EstadoReserva.PENDIENTE);
+        if (reserva.getFechaReserva() == null) reserva.setFechaReserva(LocalDateTime.now());
 
         Reservas guardada = reservaService.crearOeditar(reserva);
-
-        // Enlazar con pagos
+        redirect.addFlashAttribute("msg", "Reserva creada correctamente");
+        // Siguiente paso del funnel: pago del cliente
         return "redirect:/pagos/create?reservaId=" + guardada.getReservaId();
     }
 }
