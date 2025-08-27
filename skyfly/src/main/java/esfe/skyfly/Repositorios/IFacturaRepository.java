@@ -13,6 +13,12 @@ public interface IFacturaRepository extends JpaRepository<Factura, Integer> {
     Optional<Factura> findFirstByReservaOrderByIdFacturaDesc(Reservas reserva);
     boolean existsByReserva(Reservas reserva);
 
+    // Para el índice: trae 'reserva' y evita lazy en la tabla
+    @Override
+    @EntityGraph(attributePaths = {
+        "reserva"
+    })
+    List<Factura> findAll();
     @Override
     @EntityGraph(attributePaths = {
             "reserva",

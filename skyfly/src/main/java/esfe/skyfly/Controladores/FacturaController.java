@@ -26,11 +26,14 @@ public class FacturaController {
         this.facturaService = facturaService;
     }
 
-    @GetMapping
-    public String index(Model model) {
-        model.addAttribute("facturas", facturaService.listar());
-        return "facturas/index";
-    }
+   @GetMapping
+@Transactional(readOnly = true)
+public String index(Model model) {
+    var lista = facturaService.listar();
+    System.out.println("DEBUG :: facturas.size = " + (lista != null ? lista.size() : -1));
+    model.addAttribute("facturas", lista);
+    return "factura/index";
+}
 
     @GetMapping("/{id}")
     @Transactional(readOnly = true)
@@ -38,7 +41,7 @@ public class FacturaController {
         Factura factura = facturaService.buscarPorId(id)
                 .orElseThrow(() -> new IllegalArgumentException("Factura no encontrada"));
         model.addAttribute("factura", factura);
-        return "facturas/detalle";
+        return "factura/detalle";
     }
 
     @GetMapping("/{id}/pdf")
