@@ -1,0 +1,15 @@
+package esfe.skyfly.Repositorios;
+
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import esfe.skyfly.Modelos.Factura;
+import esfe.skyfly.Modelos.Reservas;
+
+public interface IFacturaRepository extends JpaRepository<Factura, Integer> {
+    List<Factura> findByReserva(Reservas reserva);
+    Optional<Factura> findFirstByReservaOrderByIdFacturaDesc(Reservas reserva);
+    boolean existsByReserva(Reservas reserva);
+}

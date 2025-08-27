@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Facturas</title>
+  <link th:href="@{/css/style.css}" rel="stylesheet"/>
+</head>
+<body>
+<h1>Facturas</h1>
+
+<table>
+  <thead>
+  <tr>
+    <th>#</th>
+    <th>Fecha emisión</th>
+    <th>Reserva</th>
+    <th>Monto</th>
+    <th>Impuestos</th>
+    <th>Total</th>
+    <th>Acciones</th>
+  </tr>
+  </thead>
+  <tbody>
+  <tr th:each="f : ${facturas}">
+    <td th:text="${f.idFactura}">1</td>
+    <td th:text="${#temporals.format(f.fechaEmision,'dd/MM/yyyy')}">01/08/2025</td>
+
+    <!-- Ajusta el getter real del ID de reserva -->
+    <td th:text="${f.reserva.reservaId}">100</td>
+
+    <td th:text="${#numbers.formatDecimal(f.montoTotal,1,2)}">$0.00</td>
+    <td th:text="${#numbers.formatDecimal(f.impuestos,1,2)}">$0.00</td>
+    <td th:text="${#numbers.formatDecimal(f.totalAPagar,1,2)}">$0.00</td>
+    <td>
+      <a th:href="@{|/facturas/${f.idFactura}|}">Ver</a> |
+      <a th:href="@{|/facturas/${f.idFactura}/pdf|}">PDF</a> |
+      <form th:action="@{|/facturas/${f.idFactura}/eliminar|}" method="post" style="display:inline">
+        <button type="submit" onclick="return confirm('¿Eliminar factura?')">Eliminar</button>
+      </form>
+    </td>
+  </tr>
+  </tbody>
+</table>
+</body>
+</html>
