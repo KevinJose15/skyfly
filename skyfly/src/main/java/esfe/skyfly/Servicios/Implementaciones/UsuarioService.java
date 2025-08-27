@@ -82,16 +82,22 @@ public class UsuarioService implements IUsuarioService, UserDetailsService {
         return passwordEncoder.encode(passwordHash);
     }
 
-    // ✅ Implementación de Spring Security
- @Override
+    // ✅ NUEVO: implementación para SecurityUtils
+    @Override
+    public Optional<Usuario> buscarPorEmail(String email) {
+        return usuarioRepository.findByEmail(email);
+    }
+
+    // ✅ Spring Security (sin cambios de fondo)
+    @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado con email: " + email));
 
         return User.builder()
-                .username(usuario.getEmail())  // usamos email como username
+                .username(usuario.getEmail())        // usamos email como username
                 .password(usuario.getPasswordHash()) // contraseña ya encriptada
-                .roles(usuario.getRol().name()) // asignamos el rol
+                .roles(usuario.getRol().name())      // asignamos el rol (ROLE_XYZ)
                 .build();
     }
 }

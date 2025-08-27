@@ -22,4 +22,7 @@ public interface IUsuarioService {
     List<Usuario> findByRol(Rol rol);
 
     String encodePassword(String passwordHash);
+
+    // 👉 NUEVO: requerido por SecurityUtils para obtener el usuario logueado
+    Optional<Usuario> buscarPorEmail(String email);
 }

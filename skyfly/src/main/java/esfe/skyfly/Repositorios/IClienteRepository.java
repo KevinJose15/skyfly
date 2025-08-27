@@ -1,10 +1,12 @@
 package esfe.skyfly.Repositorios;
 
 import esfe.skyfly.Modelos.Cliente;
-import esfe.skyfly.Modelos.Rol;
 import org.springframework.data.jpa.repository.JpaRepository;
-import java.util.List;
+
+import java.util.Optional;
 
 public interface IClienteRepository extends JpaRepository<Cliente, Integer> {
-    List<Cliente> findByUsuario_Rol(Rol rol);
+
+    // Consulta por la FK de usuario: asumiendo Cliente.usuario (ManyToOne) → Usuario.id
+    Optional<Cliente> findByUsuario_Id(Integer usuarioId);
 }

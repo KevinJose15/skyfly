@@ -23,17 +23,14 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
         for (GrantedAuthority authority : authentication.getAuthorities()) {
             String role = authority.getAuthority();
 
-            if (role.equals("Administrador")) {
-                // 👉 Vista para administrador
-                redirectURL = "/admin/main";
+            if ("Administrador".equals(role)) {
+                redirectURL = "/admin/main";   // _MainLayout.html
                 break;
-            } else if (role.equals("Agente")) {
-                // 👉 Vista para agente
-                redirectURL = "/agente/main";
+            } else if ("Agente".equals(role)) {
+                redirectURL = "/agente/main";  // _MainLayout.html
                 break;
-            } else if (role.equals("Cliente")) {
-                // 👉 Vista para cliente
-                redirectURL = "/cliente/index";
+            } else if ("Cliente".equals(role)) {
+                redirectURL = "/cliente/index"; // Cliente/index.html
                 break;
             }
         }

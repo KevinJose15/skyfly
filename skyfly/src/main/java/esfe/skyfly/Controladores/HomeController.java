@@ -19,41 +19,27 @@ public class HomeController {
     @Autowired
     private IClienteService clienteService;
 
-    // Redirección inicial
     @GetMapping("/")
-    public String redirectToBienvenida() {
-        return "redirect:/bienvenida";
-    }
+    public String redirectToBienvenida() { return "redirect:/bienvenida"; }
 
     @GetMapping("/bienvenida")
-    public String bienvenida() {
-        return "Home/bienvenida";
-    }
+    public String bienvenida() { return "Home/bienvenida"; }
 
     @GetMapping("/login")
-    public String login() {
-        return "Home/formLogin";
-    }
+    public String login() { return "Home/formLogin"; }
 
-    // 👉 Vista para administrador
+    // Main de Admin/Agente (sirven el mismo layout)
     @GetMapping("/admin/main")
-    public String mainAdmin() {
-        return "_MainLayout"; // esta es tu vista para admin/agente
-    }
+    public String mainAdmin() { return "_MainLayout"; }
 
-    // 👉 Vista para agente
     @GetMapping("/agente/main")
-    public String mainAgente() {
-        return "_MainLayout"; // misma vista, distinto endpoint
-    }
+    public String mainAgente() { return "_MainLayout"; }
 
-    // 👉 Vista para cliente
+    // Index de Cliente
     @GetMapping("/cliente/index")
-    public String indexCliente() {
-        return "Cliente/index"; // tu index con destinos
-    }
+    public String indexCliente() { return "Cliente/index"; }
 
-    // 👉 Vista de registro
+    // Registro
     @GetMapping("/registro")
     public String mostrarRegistro(Model model) {
         model.addAttribute("usuario", new Usuario());
@@ -61,16 +47,13 @@ public class HomeController {
         return "Home/registro";
     }
 
-    // 👉 Procesar registro
     @PostMapping("/registro")
     public String registrarCuenta(@ModelAttribute Usuario usuario,
                                   @ModelAttribute Cliente cliente) {
-        // Configuramos el usuario
         usuario.setRol(Rol.Cliente);
         usuario.setStatus(true);
         Usuario usuarioGuardado = usuarioService.crearOeditar(usuario);
 
-        // Asociamos cliente a usuario
         cliente.setUsuario(usuarioGuardado);
         clienteService.crearOeditar(cliente);
 

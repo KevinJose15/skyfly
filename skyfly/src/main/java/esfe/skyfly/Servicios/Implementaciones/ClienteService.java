@@ -1,10 +1,8 @@
 package esfe.skyfly.Servicios.Implementaciones;
 
 import esfe.skyfly.Modelos.Cliente;
-import esfe.skyfly.Modelos.Usuario;
 import esfe.skyfly.Repositorios.IClienteRepository;
 import esfe.skyfly.Servicios.Interfaces.IClienteService;
-import esfe.skyfly.Servicios.Interfaces.IUsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -36,12 +34,17 @@ public class ClienteService implements IClienteService {
 
     @Override
     public Cliente crearOeditar(Cliente cliente) {
-        // 👀 Aquí no re-buscamos el usuario, lo recibimos ya listo desde el controlador
         return clienteRepository.save(cliente);
     }
 
     @Override
     public void eliminarPorId(Integer id) {
         clienteRepository.deleteById(id);
+    }
+
+    // ✅ NUEVO: para resolver SecurityUtils.getClienteActual()
+    @Override
+    public Optional<Cliente> buscarPorUsuarioId(Integer usuarioId) {
+        return clienteRepository.findByUsuario_Id(usuarioId);
     }
 }

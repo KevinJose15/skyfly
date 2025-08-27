@@ -20,15 +20,35 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(auth -> auth
+                // Públicas
                 .requestMatchers("/", "/bienvenida", "/login", "/registro",
-                        "/css/", "/js/", "/images/").permitAll()
+                                 "/css/**", "/js/**", "/images/**").permitAll()
+
+                // ADMIN (gestión completa de usuarios)
+                .requestMatchers("/usuarios/**").hasAuthority("Administrador")
+
+                // ADMIN + AGENTE (CRUD de negocio)
+                .requestMatchers("/clientes/mant/**").hasAnyAuthority("Administrador", "Agente")
+                .requestMatchers("/destinos/mant/**").hasAnyAuthority("Administrador", "Agente")
+                .requestMatchers("/paquetes/mant/**").hasAnyAuthority("Administrador", "Agente")
+                .requestMatchers("/reservas/mant/**").hasAnyAuthority("Administrador", "Agente")
+                .requestMatchers("/pagos/mant/**").hasAnyAuthority("Administrador", "Agente")
+
+                // CLIENTE (solo lectura + su información)
+                .requestMatchers("/cliente/**").hasAuthority("Cliente")
+                .requestMatchers("/destinos/index/**").hasAuthority("Cliente")
+                .requestMatchers("/paquetes/index/**").hasAuthority("Cliente")
+                .requestMatchers("/reservas/index/**").hasAuthority("Cliente")
+                .requestMatchers("/pagos/index/**").hasAuthority("Cliente")
+
+                // Resto autenticado
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form
                 .loginPage("/login")
                 .usernameParameter("email")
                 .passwordParameter("password")
-                .successHandler(successHandler) // 👉 Usamos el handler
+                .successHandler(successHandler)   // ← redirección por rol
                 .failureUrl("/login?error=true")
                 .permitAll()
             )
