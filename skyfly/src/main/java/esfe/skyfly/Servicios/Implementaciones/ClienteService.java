@@ -44,4 +44,10 @@ public class ClienteService implements IClienteService {
     public void eliminarPorId(Integer id) {
         clienteRepository.deleteById(id);
     }
+
+   @Override
+   public Cliente buscarPorUsuarioEmail(String email) {
+    return clienteRepository.findByUsuario_Email(email).orElse(null);
+}
+
 }
