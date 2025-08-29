@@ -3,134 +3,232 @@
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layouts/_MainLayout}">
 <head>
-    <title layout:fragment="title">Pago</title>
+  <title layout:fragment="title">Pago</title>
+
+  <!-- 🎨 Minimal UI: limpio y sin ruido -->
+  <style>
+    :root{
+      --bg:#fff; --muted:#7b8696; --text:#1c2a3a; --line:#e6ebf2;
+      --focus:rgba(80,120,255,.15); --brand:#2b6cff; --warn:#ffb020;
+    }
+    .wrap{max-width:860px;margin:0 auto;}
+    .panel{
+      background:var(--bg); border:1px solid var(--line); border-radius:14px;
+      box-shadow:0 4px 16px rgba(0,0,0,.05); overflow:hidden;
+    }
+    .ph{padding:14px 16px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#fafbfd,#fff);}
+    .pb{padding:16px;}
+    h2{margin:0;color:var(--text);font-weight:800;}
+    .sub{color:var(--muted);font-size:.92rem;margin-top:4px;}
+    .row{display:grid;grid-template-columns:1fr;gap:12px}
+    @media(min-width:780px){.row{grid-template-columns:1fr 1fr}}
+    label{display:block;margin:0 0 6px;font-weight:600;color:#2c3b4c}
+    .form-control,.form-select{
+      width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;outline:0;background:#fff;
+    }
+    .form-control:focus,.form-select:focus{box-shadow:0 0 0 3px var(--focus);border-color:#cbd8ff}
+    .muted{color:var(--muted);font-size:.9rem}
+    .pill{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;
+      background:#f4f7ff;border:1px solid #e1e8ff;color:#132238;font-weight:700}
+    .hr{height:1px;background:var(--line);margin:14px 0}
+    .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
+    .btn{padding:10px 14px;border-radius:10px;border:1px solid var(--line);font-weight:700;background:#fff;color:#132238}
+    .btn-primary{background:var(--brand);border-color:var(--brand);color:#fff}
+    .btn-primary:hover{filter:brightness(.95)}
+    .btn-warning{background:var(--warn);border-color:var(--warn);color:#1c2a3a}
+    .btn-secondary:hover{background:#f6f8fb}
+  </style>
 </head>
 <body>
-<section layout:fragment="content">
+<section layout:fragment="content" class="wrap">
 
-<h2 th:text="'Pago - ' + ${#strings.capitalize(action)}"></h2>
-
-<!-- FORMULARIO CREATE / EDIT -->
-<form th:if="${action == 'create' or action == 'edit'}"
-      th:action="@{'/pagos/' + ${action}}"
-      th:object="${pago}" method="post">
-
-    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-    <input type="hidden" th:field="*{pagoId}"/>
-
-    <!-- Reserva -->
-    <div class="mb-3">
-        <label>Reserva</label>
-        <select id="reservaId" th:field="*{reservaId}" class="form-select" required>
-            <option value="">Seleccione</option>
-            <option th:each="r : ${reservas}" th:value="${r.reservaId}"
-                    th:text="'ID: ' + ${r.reservaId} + ' | Cliente: ' + ${r.cliente.usuario.name} + ' | Paquete: ' + ${r.paquete.nombre}">
-            </option>
-        </select>
-        <div th:if="${#fields.hasErrors('reservaId')}" th:errors="*{reservaId}" class="text-danger"></div>
+  <div class="panel">
+    <div class="ph">
+      <h2 th:text="'Pago - ' + ${#strings.capitalize(action)}">Pago</h2>
+      <div class="sub" th:if="${action == 'create'}">Validamos la tarjeta con Luhn y enviamos un código de confirmación.</div>
     </div>
 
-    <!-- Monto (solo lectura) -->
-    <div class="mb-3">
-        <label>Monto</label>
-     <input type="text" id="monto" th:value="${pago.monto}" class="form-control" readonly/>
+    <div class="pb">
+
+      <!-- CREATE / EDIT -->
+      <form th:if="${action == 'create' or action == 'edit'}"
+            th:action="@{'/pagos/' + ${action}}"
+            th:object="${pago}" method="post" id="pagoForm">
+
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+        <input type="hidden" th:field="*{pagoId}"/>
+
+        <div class="row">
+          <!-- RESERVA -->
+          <div>
+            <label>Reserva</label>
+
+            <!-- 🔒 Cliente: reserva fija (hidden + pill), sin edición -->
+            <div th:if="${isCliente}">
+              <input type="hidden" th:field="*{reservaId}" id="reservaIdHidden"/>
+              <div class="pill" style="margin-top:4px;"
+                   th:text="${resumenReserva != null ? resumenReserva : ('ID: ' + pago.reservaId)}">
+                Reserva seleccionada
+              </div>
+              <div class="muted" style="margin-top:8px;">
+                Monto: <span class="pill"><span id="montoBadge">$0.00</span></span>
+              </div>
+            </div>
+
+            <!-- 🧰 Agente/Admin: select editable -->
+            <div th:if="${!isCliente}">
+              <select id="reservaId" th:field="*{reservaId}" class="form-select" required>
+                <option value="">Seleccione</option>
+                <option th:each="r : ${reservas}" th:value="${r.reservaId}"
+                        th:text="'ID: ' + ${r.reservaId} + ' | Cliente: ' + ${r.cliente.usuario.name} + ' | Paquete: ' + ${r.paquete.nombre}">
+                </option>
+              </select>
+              <div th:if="${#fields.hasErrors('reservaId')}" th:errors="*{reservaId}" class="text-danger"></div>
+              <div class="muted" style="margin-top:8px;">
+                Monto: <span class="pill"><span id="montoBadge">$0.00</span></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- MÉTODO -->
+          <div>
+            <label>Método de Pago</label>
+            <select th:field="*{metodoPagoId}" class="form-select" required>
+              <option value="">Seleccione</option>
+              <option th:each="m : ${metodosPago}" th:value="${m.metodoPagoId}" th:text="${m.nombreMetodo}"></option>
+            </select>
+            <div th:if="${#fields.hasErrors('metodoPagoId')}" th:errors="*{metodoPagoId}" class="text-danger"></div>
+          </div>
+        </div>
+
+        <div class="hr"></div>
+
+        <!-- MONTO (readonly visual) -->
+        <div class="row">
+          <div>
+            <label>Monto</label>
+            <input type="text" id="monto" th:value="${pago.monto}" class="form-control" readonly/>
+            <div class="muted">Se toma del precio del paquete asociado a la reserva.</div>
+          </div>
+          <div></div>
+        </div>
+
+        <div class="hr"></div>
+
+        <!-- TARJETA -->
+        <div class="row">
+          <div>
+            <label>Número de Tarjeta</label>
+            <input type="text" th:field="*{numeroTarjeta}" class="form-control"
+                   inputmode="numeric" autocomplete="cc-number"
+                   placeholder="4111 1111 1111 1111" maxlength="19" id="numeroTarjeta">
+            <div th:if="${#fields.hasErrors('numeroTarjeta')}" th:errors="*{numeroTarjeta}" class="text-danger"></div>
+          </div>
+          <div>
+            <label>Últimos 4 dígitos</label>
+            <input type="text" th:field="*{ultimos4Tarjeta}" class="form-control" readonly id="ultimos4Tarjeta"/>
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label>Fecha de Pago</label>
+            <input type="text" th:field="*{fechaPago}" class="form-control" readonly/>
+          </div>
+          <div>
+            <label>Estado</label>
+            <input type="text" th:field="*{estadoPago}" class="form-control" readonly/>
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label>Código de Autorización</label>
+            <input type="text" th:field="*{codigoAutorizacion}" class="form-control" readonly/>
+          </div>
+          <div></div>
+        </div>
+
+        <div class="actions">
+          <a th:href="@{/pagos}" class="btn btn-secondary">Cancelar</a>
+          <button type="submit"
+                  th:text="${action == 'create' ? 'Guardar' : 'Actualizar'}"
+                  th:classappend="${action == 'create' ? ' btn-primary' : ' btn-warning'}"
+                  class="btn">
+          </button>
+        </div>
+      </form>
+
+      <!-- VIEW -->
+      <div th:if="${action == 'view'}" class="pb">
+        <h4 style="margin:0 0 8px;color:#1c2a3a">Detalle del Pago</h4>
+        <div class="hr"></div>
+        <p><strong>Reserva:</strong> <span th:text="${pago.reserva?.reservaId}">---</span></p>
+        <p><strong>Monto:</strong> <span th:text="${pago.monto}">---</span></p>
+        <p><strong>Método de Pago:</strong> <span th:text="${pago.metodoPago?.nombreMetodo}">---</span></p>
+        <p><strong>Fecha de Pago:</strong> <span th:text="${#temporals.format(pago.fechaPago,'yyyy-MM-dd HH:mm')}">---</span></p>
+        <p><strong>Estado:</strong> <span th:text="${pago.estadoPago}">---</span></p>
+        <p><strong>Código de Autorización:</strong> <span th:text="${pago.codigoAutorizacion}">---</span></p>
+        <a th:href="@{/pagos}" class="btn btn-secondary" style="margin-top:8px">Volver</a>
+      </div>
+
+      <!-- DELETE -->
+      <form th:if="${action == 'delete'}" th:action="@{/pagos/delete}" th:object="${pago}" method="post">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+        <input type="hidden" th:field="*{pagoId}" />
+        <p>¿Eliminar pago ID <strong th:text="${pago.pagoId}"></strong>?</p>
+        <div class="actions">
+          <a th:href="@{/pagos}" class="btn btn-secondary">Cancelar</a>
+          <button type="submit" class="btn btn-warning">Eliminar</button>
+        </div>
+      </form>
+
     </div>
+  </div>
 
-    <!-- Método de pago -->
-    <div class="mb-3">
-        <label>Método de Pago</label>
-        <select th:field="*{metodoPagoId}" class="form-select" required>
-            <option value="">Seleccione</option>
-            <option th:each="m : ${metodosPago}" th:value="${m.metodoPagoId}" th:text="${m.nombreMetodo}"></option>
-        </select>
-        <div th:if="${#fields.hasErrors('metodoPagoId')}" th:errors="*{metodoPagoId}" class="text-danger"></div>
-    </div>
+  <!-- ===== JS: soporta hidden (cliente) y select (agente) ===== -->
+  <script th:inline="javascript">
+    (function(){
+      const sel  = document.getElementById('reservaId');        // agentes/admin
+      const hid  = document.getElementById('reservaIdHidden');   // clientes
+      const montoInput = document.getElementById('monto');
+      const montoBadge = document.getElementById('montoBadge');
+      const card = document.getElementById('numeroTarjeta');
+      const last4 = document.getElementById('ultimos4Tarjeta');
+      const form = document.getElementById('pagoForm');
 
-    <!-- Número de tarjeta -->
-    <div class="mb-3">
-        <label>Número de Tarjeta</label>
-        <input type="text" th:field="*{numeroTarjeta}" class="form-control" placeholder="XXXX XXXX XXXX XXXX"/>
-        <div th:if="${#fields.hasErrors('numeroTarjeta')}" th:errors="*{numeroTarjeta}" class="text-danger"></div>
-    </div>
+      function setMonto(txt){
+        if(montoInput) montoInput.value = txt || '';
+        if(montoBadge) montoBadge.textContent = txt || '$0.00';
+      }
+      function fetchMonto(id){
+        if(!id){ setMonto(''); return; }
+        fetch('/pagos/reserva/monto/' + id)
+          .then(r => r.text()).then(setMonto).catch(()=>setMonto('$0.00'));
+      }
 
-    <!-- Últimos 4 dígitos -->
-    <div class="mb-3">
-        <label>Últimos 4 dígitos</label>
-        <input type="text" th:field="*{ultimos4Tarjeta}" class="form-control" readonly/>
-    </div>
+      // Carga inicial
+      if(hid && hid.value){ fetchMonto(hid.value); }
+      if(sel){
+        if(sel.value){ fetchMonto(sel.value); }
+        sel.addEventListener('change', function(){ fetchMonto(this.value); });
+      }
 
-    <!-- Fecha de pago -->
-    <div class="mb-3">
-        <label>Fecha de Pago</label>
-        <input type="text" th:field="*{fechaPago}" class="form-control" readonly/>
-    </div>
-
-    <!-- Estado del pago -->
-    <div class="mb-3">
-        <label>Estado</label>
-        <input type="text" th:field="*{estadoPago}" class="form-control" readonly/>
-    </div>
-
-    <!-- Código de autorización -->
-    <div class="mb-3">
-        <label>Código de Autorización</label>
-        <input type="text" th:field="*{codigoAutorizacion}" class="form-control" readonly/>
-    </div>
-
-    <!-- Botones -->
-    <div class="d-flex gap-2 mt-3">
-        <button type="submit" th:text="${action == 'create' ? 'Guardar' : 'Actualizar'}"
-                th:classappend="${action == 'create' ? 'btn-primary' : 'btn-warning'}" class="btn"></button>
-        <a th:href="@{/pagos}" class="btn btn-secondary">Cancelar</a>
-    </div>
-</form>
-
-<!-- VIEW -->
-<div th:if="${action == 'view'}" class="card p-4 mb-3">
-    <h4>Detalle del Pago</h4>
-    <hr/>
-    <p><strong>Reserva:</strong> <span th:text="${pago.reserva?.reservaId}">---</span></p>
-    <p><strong>Monto:</strong> <span th:text="${pago.monto}">---</span></p>
-    <p><strong>Método de Pago:</strong> <span th:text="${pago.metodoPago?.nombreMetodo}">---</span></p>
-    <p><strong>Fecha de Pago:</strong> <span th:text="${#temporals.format(pago.fechaPago,'yyyy-MM-dd HH:mm')}">---</span></p>
-    <p><strong>Estado:</strong> <span th:text="${pago.estadoPago}">---</span></p>
-    <p><strong>Código de Autorización:</strong> <span th:text="${pago.codigoAutorizacion}">---</span></p>
-    <a th:href="@{/pagos}" class="btn btn-secondary mt-3">Volver</a>
-</div>
-
-<!-- DELETE -->
-<form th:if="${action == 'delete'}" th:action="@{/pagos/delete}" th:object="${pago}" method="post">
-    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-    <input type="hidden" th:field="*{pagoId}" />
-    <p>¿Eliminar pago ID <strong th:text="${pago.pagoId}"></strong>?</p>
-    <button type="submit" class="btn btn-danger">Eliminar</button>
-    <a th:href="@{/pagos}" class="btn btn-secondary">Cancelar</a>
-</form>
-
-<!-- SCRIPT para llenar monto automáticamente -->
-<script>
-    const reservaSelect = document.getElementById('reservaId');
-    const montoInput = document.getElementById('monto');
-
-    reservaSelect.addEventListener('change', function() {
-        const reservaId = this.value;
-        if (!reservaId) {
-            montoInput.value = '';
-            return;
+      // Máscara tarjeta + últimos 4 (solo UX)
+      if(card && last4){
+        card.addEventListener('input', function(){
+          let digits = this.value.replace(/\D/g,'').slice(0,16);
+          this.value = digits.replace(/(.{4})/g,'$1 ').trim();
+          last4.value = digits.length >= 4 ? digits.slice(-4) : '';
+        });
+        if(form){
+          form.addEventListener('submit', function(){
+            card.value = (card.value || '').replace(/\s+/g,'');
+          });
         }
-        fetch(`/pagos/reserva/monto/${reservaId}`)
-            .then(resp => resp.text())
-            .then(data => montoInput.value = data)
-            .catch(err => console.error('Error al obtener monto:', err));
-    });
-
-    // Cargar monto si ya hay reserva seleccionada (en edición)
-    window.addEventListener('DOMContentLoaded', () => {
-        if (reservaSelect.value) {
-            reservaSelect.dispatchEvent(new Event('change'));
-        }
-    });
-</script>
+      }
+    })();
+  </script>
 
 </section>
 </body>
