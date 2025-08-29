@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="es"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/_MainLayout}">
+<head>
+  <title layout:fragment="title">Explora destinos</title>
+
+
+  <style>
+    /* Grid responsivo */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 18px;
+    }
+
+    /* Card con hover sutil */
+    .d-card {
+      position: relative;
+      overflow: hidden;
+      border: 0;
+      border-radius: 16px;
+      box-shadow: 0 8px 22px rgba(0,0,0,.08);
+      background: #fff;
+      transition: transform .22s ease, box-shadow .22s ease;
+    }
+    .d-card:hover { transform: translateY(-4px); box-shadow: 0 16px 36px rgba(0,0,0,.12); }
+
+    /* Imagen con degradado suave arriba (usando pseudo del card) */
+    .d-img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      display: block;
+    }
+    .d-card::before {
+      content: "";
+      position: absolute; inset: 0 0 auto 0; height: 84px;
+      background: linear-gradient(180deg, rgba(0,0,0,.06), rgba(0,0,0,0));
+      pointer-events: none;
+    }
+
+    /* Badge “Desde $” */
+    .price-badge {
+      position: absolute;
+      top: 12px; left: 12px;
+      padding: 6px 10px;
+      font-weight: 700; font-size: .95rem;
+      color: #111;
+      background: rgba(255,255,255,.95);
+      border: 1px solid #eef2f7;
+      border-radius: 999px;
+      box-shadow: 0 6px 16px rgba(0,0,0,.12);
+    }
+
+    /* Body */
+    .d-body { padding: 14px 14px 16px; }
+    .d-title { margin: 0 0 4px; font-size: 1.1rem; font-weight: 800; color: #1b2b4b; }
+    .d-sub { color: #6d7a8d; font-size: .9rem; margin-bottom: 8px; }
+    .d-desc { color: #718096; font-size: .95rem; margin: 8px 0 12px; }
+
+    /* Chips de paquetes (scroll horizontal si hay muchos) */
+    .pkg-wrap { margin-top: 12px; }
+    .pkg-label { color:#8a93a3; font-size:.86rem; margin-bottom:6px; }
+    .chip-row {
+      display: flex; gap: 8px; overflow-x: auto; padding-bottom: 2px;
+      scrollbar-width: thin;
+    }
+    .pkg-chip {
+      flex: 0 0 auto;
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 6px 10px; font-size: .86rem; font-weight: 600;
+      color: #1a2b4b; text-decoration: none;
+      background: #f7f9fc; border: 1px solid #e9edf3; border-radius: 999px;
+      transition: background .18s ease, border-color .18s ease, transform .18s ease;
+      white-space: nowrap;
+    }
+    .pkg-chip:hover { background:#eef3ff; border-color:#d7e2ff; transform: translateY(-1px); }
+    .pkg-price { font-weight: 800; }
+    .sep { opacity: .35; }
+
+    /* Botones */
+    .btn-cta {
+      border-radius: 10px;
+      font-weight: 700;
+      border: 1px solid #e9edf3;
+      background: #fff;
+      color: #1a2b4b;
+      padding: 8px 12px;
+      transition: background .2s, border-color .2s, transform .2s;
+    }
+    .btn-cta:hover { background:#f5f8ff; border-color:#cfdcff; transform: translateY(-1px); }
+  </style>
+</head>
+<body>
+<section layout:fragment="content">
+  <h2 class="mb-3">Explora destinos</h2>
+
+
+  <!-- Empty state -->
+  <div th:if="${destinos == null || #lists.isEmpty(destinos)}" class="alert alert-info">
+    No hay destinos disponibles por ahora.
+  </div>
+
+  <!-- Grid de destinos -->
+  <div th:if="${destinos != null && !#lists.isEmpty(destinos)}" class="grid">
+
+    <!-- Card -->
+    <div class="d-card" th:each="d : ${destinos}">
+      <!-- Imagen -->
+      <img class="d-img"
+           th:src="@{|/cliente/destinos/${d.destinoId}/img|}"
+           alt="Destino"
+           onerror="this.onerror=null;this.src='data:image/svg+xml;utf8,&lt;svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;1200&quot; height=&quot;600&quot;&gt;&lt;defs&gt;&lt;linearGradient id=&quot;g&quot; x1=&quot;0&quot; x2=&quot;0&quot; y1=&quot;0&quot; y2=&quot;1&quot;&gt;&lt;stop stop-color=&quot;%23eef2f7&quot; offset=&quot;0%&quot;/&gt;&lt;stop stop-color=&quot;%23f7f9fc&quot; offset=&quot;100%&quot;/&gt;&lt;/linearGradient&gt;&lt;/defs&gt;&lt;rect width=&quot;100%&quot; height=&quot;100%&quot; fill=&quot;url(%23g)&quot;/&gt;&lt;text x=&quot;50%&quot; y=&quot;50%&quot; dominant-baseline=&quot;middle&quot; text-anchor=&quot;middle&quot; fill=&quot;%239aa4b2&quot; font-family=&quot;Arial&quot; font-size=&quot;28&quot;&gt;Sin imagen&lt;/text&gt;&lt;/svg&gt;'">
+
+      <!-- Precio Desde -->
+      <div class="price-badge"
+           th:if="${precioDesde != null && precioDesde[d.destinoId] != null}">
+        Desde $<span th:text="${#numbers.formatDecimal(precioDesde[d.destinoId], 1, 2)}">0.00</span>
+      </div>
+
+      <div class="d-body">
+        <h5 class="d-title" th:text="${d.nombre}">Destino</h5>
+        <div class="d-sub" th:text="${d.pais}">País</div>
+
+        <p class="d-desc" th:text="${#strings.abbreviate(d.descripcion, 120)}">Descripción</p>
+
+        <!-- CTA por destino (misma funcionalidad) -->
+        <a class="btn btn-sm btn-primary btn-cta"
+           th:href="@{|/cliente/reservas?destinoId=${d.destinoId}|}">
+          Reservar destino
+        </a>
+
+        <!-- Paquetes (chips: nombre + precio + duración) -->
+        <div class="pkg-wrap">
+          <div class="pkg-label">Paquetes:</div>
+          <div class="chip-row">
+            <a class="pkg-chip"
+               th:each="p : ${paquetes}"
+               th:if="${p.destino != null and p.destino.destinoId == d.destinoId}"
+               th:href="@{|/cliente/reservas?paqueteId=${p.paqueteId}|}">
+              <span th:text="${#strings.abbreviate(p.nombre, 28)}">Paquete</span>
+              <span class="sep">·</span>
+              <span class="pkg-price" th:text="${'$' + #numbers.formatDecimal(p.precio,1,2)}">$0.00</span>
+              <span class="sep">·</span>
+              <span th:text="${p.duracionDias + 'd'}">5d</span>
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- /Card -->
+
+  </div>
+  <!-- /Grid -->
+</section>
+</body>
+</html>
