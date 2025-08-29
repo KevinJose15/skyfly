@@ -18,28 +18,29 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/", "/bienvenida", "/login", "/registro",
-                        "/css/", "/js/", "/images/").permitAll()
-                .anyRequest().authenticated()
-            )
-            .formLogin(form -> form
-                .loginPage("/login")
-                .usernameParameter("email")
-                .passwordParameter("password")
-                .successHandler(successHandler) // 👉 Usamos el handler
-                .failureUrl("/login?error=true")
-                .permitAll()
-            )
-            .logout(logout -> logout
-                .logoutUrl("/logout")
-                .logoutSuccessUrl("/login?logout")
-                .permitAll()
-            );
+    http
+        .authorizeHttpRequests(auth -> auth
+            .requestMatchers("/", "/bienvenida", "/login", "/registro",
+                             "/css/**", "/js/**", "/images/**", "/assets/**").permitAll()
+            .anyRequest().authenticated()
+        )
+        .formLogin(form -> form
+            .loginPage("/login")
+            .usernameParameter("email")
+            .passwordParameter("password")
+            .defaultSuccessUrl("/main", true) // 👉 siempre aterriza aquí
+            .failureUrl("/login?error=true")
+            .permitAll()
+        )
+        .logout(logout -> logout
+            .logoutUrl("/logout")
+            .logoutSuccessUrl("/login?logout")
+            .permitAll()
+        );
 
-        return http.build();
-    }
+    return http.build();
+}
+
 
     @Bean
     public PasswordEncoder passwordEncoder() {
