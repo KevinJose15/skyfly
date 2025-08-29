@@ -20,4 +20,7 @@ public interface IPaqueteService {
     Paquete crearOeditar(Paquete paquete);
 
     void eliminarPorId(Integer id);
+    
+
+    List<Paquete> buscarPorDestinoId(Integer destinoId);
 }

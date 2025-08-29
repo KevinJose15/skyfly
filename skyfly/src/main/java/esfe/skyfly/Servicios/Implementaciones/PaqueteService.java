@@ -47,5 +47,8 @@ public class PaqueteService implements IPaqueteService {
     public List<Paquete> buscarTodos() {
         return paqueteRepository.findAll();
     }
+        @Override 
+    public List<Paquete> buscarPorDestinoId(Integer destinoId) { return 
+        paqueteRepository.findByDestino_DestinoId(destinoId); }
     
 }
