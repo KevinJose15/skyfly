@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="es"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/_MainLayout}">
+<head>
+  <title layout:fragment="title">Panel Agente</title>
+</head>
+<body>
+<section layout:fragment="content">
+  <h2 class="mb-3">Panel • Agente</h2>
+
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;">
+    <a th:href="@{/destinos}"     class="card" style="text-decoration:none;border:1px solid #eee;border-radius:12px;padding:16px;display:block;"><h5>Destinos</h5><p class="text-muted">Catálogo y CRUD.</p></a>
+    <a th:href="@{/paquetes}"     class="card" style="text-decoration:none;border:1px solid #eee;border-radius:12px;padding:16px;display:block;"><h5>Paquetes</h5><p class="text-muted">Configuración de paquetes.</p></a>
+    <a th:href="@{/reservas}"     class="card" style="text-decoration:none;border:1px solid #eee;border-radius:12px;padding:16px;display:block;"><h5>Reservas</h5><p class="text-muted">Gestión de reservas.</p></a>
+    <a th:href="@{/pagos/index}"    class="card" style="text-decoration:none;border:1px solid #eee;border-radius:12px;padding:16px;display:block;"><h5>Pagos</h5><p class="text-muted">Administración de pagos.</p></a>
+    <a th:href="@{/metodopago}"   class="card" style="text-decoration:none;border:1px solid #eee;border-radius:12px;padding:16px;display:block;"><h5>Métodos de Pago</h5><p class="text-muted">Altas y cambios.</p></a>
+    <a th:href="@{/codigo}"       class="card" style="text-decoration:none;border:1px solid #eee;border-radius:12px;padding:16px;display:block;"><h5>Códigos</h5><p class="text-muted">Confirmaciones y validación.</p></a>
+    <a th:href="@{/facturas}"     class="card" style="text-decoration:none;border:1px solid #eee;border-radius:12px;padding:16px;display:block;"><h5>Facturas</h5><p class="text-muted">Emisión y consulta.</p></a>
+  </div>
+</section>
+</body>
+</html>
