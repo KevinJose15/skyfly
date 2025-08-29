@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="es"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/_MainLayout}">
+<head>
+  <title layout:fragment="title">Panel Administrador</title>
+</head>
+<body>
+<section layout:fragment="content">
+  <h2 class="mb-3">Panel • Administrador</h2>
+  <p class="text-muted">Acceso a entidades de gobierno de usuarios.</p>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;">
+    <a class="card" th:href="@{/usuarios}" style="text-decoration:none;border:1px solid #eee;border-radius:12px;padding:16px;display:block;">
+      <h5>Usuarios</h5>
+      <p class="text-muted">Alta, edición y control de acceso.</p>
+    </a>
+
+    <a class="card" th:href="@{/clientes}" style="text-decoration:none;border:1px solid #eee;border-radius:12px;padding:16px;display:block;">
+      <h5>Clientes</h5>
+      <p class="text-muted">Gestión del perfil de clientes.</p>
+    </a>
+  </div>
+</section>
+</body>
+</html>
