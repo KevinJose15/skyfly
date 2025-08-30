@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/_MainLayout}">
+<head>
+  <title layout:fragment="title">Mis pagos</title>
+  <style>
+    :root{--line:#e6ebf2;--text:#1c2a3a;--muted:#7b8696;--bg:#fff;--chip:#f4f7ff}
+    .wrap{max-width:980px;margin:0 auto}
+    .head{display:flex;justify-content:space-between;align-items:end;gap:12px;margin-bottom:12px}
+    h2{margin:0;color:var(--text);font-weight:800}
+    .muted{color:var(--muted);font-size:.92rem}
+    .card{border:1px solid var(--line);border-radius:12px;background:#fff}
+    .list{width:100%;border-collapse:collapse}
+    .list thead th{font-weight:700;color:#2c3b4c;text-align:left;border-bottom:1px solid var(--line);padding:12px}
+    .list tbody td{border-bottom:1px solid var(--line);padding:10px 12px;vertical-align:middle}
+    .badge{display:inline-block;padding:4px 8px;border-radius:999px;background:var(--chip);font-weight:700}
+    .right{text-align:right}
+    .total{margin-top:10px;display:flex;justify-content:flex-end;gap:8px}
+    .pill{display:inline-flex;gap:6px;align-items:center;padding:6px 10px;border:1px solid var(--line);border-radius:999px;background:#fff}
+    .empty{border:1px dashed var(--line);border-radius:12px;padding:20px;text-align:center;color:var(--muted)}
+    .actions a{margin-right:6px}
+    @media(max-width:720px){
+      .hide-md{display:none}
+      .list tbody td, .list thead th{padding:10px}
+    }
+  </style>
+</head>
+<body>
+<section layout:fragment="content" class="wrap">
+
+  <div class="head">
+    <div>
+      <h2>Mis pagos</h2>
+      <div class="muted">Resumen de tus pagos realizados y pendientes.</div>
+    </div>
+    <a th:href="@{/cliente/destinos}" class="pill">Explorar destinos</a>
+  </div>
+
+  <div th:if="${#lists.isEmpty(pagos)}" class="empty">
+    Aún no tienes pagos registrados. Empieza reservando un paquete ✈️
+  </div>
+
+  <div th:if="${!#lists.isEmpty(pagos)}" class="card">
+    <table class="list">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Reserva</th>
+          <th class="hide-md">Paquete</th>
+          <th>Método</th>
+          <th>Monto</th>
+          <th class="hide-md">Últimos 4</th>
+          <th>Estado</th>
+          <th class="hide-md">Fecha</th>
+          <th>Factura</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr th:each="p : ${pagos}"
+            th:with="fid=${(facturaPorReservaId != null and p.reserva != null) ? facturaPorReservaId[p.reserva.reservaId] : null}">
+          <td th:text="${p.pagoId}">1</td>
+          <td th:text="${p.reserva != null ? p.reserva.reservaId : '—'}">R</td>
+          <td class="hide-md" th:text="${p.reserva != null && p.reserva.paquete != null ? p.reserva.paquete.nombre : '—'}">Paquete</td>
+          <td th:text="${p.metodoPago != null ? p.metodoPago.nombreMetodo : '—'}">Tarjeta</td>
+          <td class="right">$<span th:text="${#numbers.formatDecimal(p.monto,1,2)}">0.00</span></td>
+          <td class="hide-md" th:text="${p.ultimos4Tarjeta != null ? p.ultimos4Tarjeta : '—'}">1234</td>
+          <td><span class="badge" th:text="${p.estadoPago}">PENDIENTE</span></td>
+          <td class="hide-md" th:text="${p.fechaPago != null ? #temporals.format(p.fechaPago, 'yyyy-MM-dd HH:mm') : '—'}">2025-01-01</td>
+
+          <!-- Nueva columna: Factura -->
+          <td class="text-center actions">
+            <a class="btn btn-sm btn-outline-primary" th:if="${fid != null}"
+               th:href="@{|/facturas/${fid}|}">
+              Ver
+            </a>
+            <a class="btn btn-sm btn-primary" th:if="${fid != null}"
+               th:href="@{|/facturas/${fid}/pdf|}">
+              PDF
+            </a>
+            <span th:if="${fid == null}" class="muted">—</span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="total">
+      <div class="muted">Total</div>
+      <div class="pill">$<span th:text="${#numbers.formatDecimal(total,1,2)}">0.00</span></div>
+    </div>
+  </div>
+
+</section>
+</body>
+</html>
