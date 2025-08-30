@@ -76,17 +76,7 @@
                 <a th:href="@{/bienvenida}">
                   <i class="fas fa-home"></i>
                   <p>Dashboard</p>
-                  <span class="caret"></span>
                 </a>
-                <div class="collapse" id="dashboard">
-                  <ul class="nav nav-collapse">
-                    <li>
-                      <a href="../demo1/index.html">
-                        <span class="sub-item">Dashboard 1</span>
-                      </a>
-                    </li>
-                  </ul>
-                </div>
               </li>
 
               <!-- ===================== -->
@@ -101,9 +91,28 @@
 
                 <div class="collapse" id="modulos">
                   <ul class="nav nav-collapse">
-                    <li>
-                      <a href="components/avatars.html">
-                        <span class="sub-item">Usuarios</span>
+
+                    <!-- ===== ADMINISTRADOR ===== -->
+                    <li sec:authorize="hasRole('Administrador')">
+                      <a th:href="@{/usuarios}">
+                        <i class="fas fa-users-cog me-2"></i><span class="sub-item">Usuarios</span>
+                      </a>
+                    </li>
+                    <li sec:authorize="hasRole('Administrador')">
+                      <a th:href="@{/clientes}">
+                        <i class="fas fa-user-friends me-2"></i><span class="sub-item">Clientes</span>
+                      </a>
+                    </li>
+
+                    <!-- ===== AGENTE (Back-office) ===== -->
+                    <li sec:authorize="hasRole('Agente')">
+                      <a th:href="@{/destinos}">
+                        <i class="fas fa-map-marker-alt me-2"></i><span class="sub-item">Destinos</span>
+                      </a>
+                    </li>
+                    <li sec:authorize="hasRole('Agente')">
+                      <a th:href="@{/paquetes}">
+                        <i class="fas fa-box-open me-2"></i><span class="sub-item">Paquetes</span>
                       </a>
                     </li>
                     <li sec:authorize="hasRole('Agente')">
