@@ -74,17 +74,13 @@
           <td class="hide-md" th:text="${p.ultimos4Tarjeta != null ? p.ultimos4Tarjeta : '—'}">1234</td>
 
           <!-- ==== MODIFICADO: Estado con color ==== -->
-          <td>
-            <span class="badge"
-                  th:text="${p.estadoPago}"
-                  th:classappend="${p.estadoPago == 'CONFIRMADA'} ? ' estado-confirmada' : (p.estadoPago == 'PENDIENTE' ? ' estado-pendiente' : '')">
-              PENDIENTE
-              <style>
-                .estado-confirmada { color: green; }
-                .estado-pendiente { color: red; }
-              </style>
-            </span>
-          </td>
+         <td>
+  <span class="badge js-estado"
+        th:text="${p.estadoPago}"
+        th:attr="data-status=${p.estadoPago}">
+    PENDIENTE
+  </span>
+</td>
 
           <td class="hide-md" th:text="${p.fechaPago != null ? #temporals.format(p.fechaPago, 'yyyy-MM-dd HH:mm') : '—'}">2025-01-01</td>
 
@@ -109,6 +105,25 @@
       <div class="pill">$<span th:text="${#numbers.formatDecimal(total,1,2)}">0.00</span></div>
     </div>
   </div>
+  <script>
+document.addEventListener('DOMContentLoaded', function () {
+  document.querySelectorAll('.js-estado').forEach(function (el) {
+    const status = (el.dataset.status || el.textContent || '')
+      .trim().toUpperCase();
+
+    el.classList.remove('text-success','text-warning','text-danger','text-dark');
+
+    if (status === 'CONFIRMADA') {
+      el.classList.add('text-success');
+    } else if (status === 'PENDIENTE') {
+      el.classList.add('text-warning','text-dark'); // warning es amarillo: mejor con texto oscuro
+    } else if (status === 'CANCELADA') {
+      el.classList.add('text-danger');
+    }
+  });
+});
+</script>
+
 
 </section>
 </body>
