@@ -4,11 +4,13 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 @Entity
+@Table(name = "Cliente")
 public class Cliente {
-  @Id
+    @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "clienteId")
+    @Column(name = "clienteId") // esto debe coincidir con @JoinColumn(name="clienteId")
     private Integer clienteId;
+
 
     @NotBlank(message = "El número de teléfono es requerido")
     @Size(max = 20, message = "El número no puede exceder los 20 caracteres")
