@@ -28,4 +28,6 @@ public interface IFacturaRepository extends JpaRepository<Factura, Integer> {
             "reserva.paquete.destino"
     })
     Optional<Factura> findById(Integer id);
+      // Caso 1: una factura por reserva
+    Optional<Factura> findByReserva_ReservaId(Integer reservaId);
 }

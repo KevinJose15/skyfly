@@ -1,4 +1,3 @@
-
 package esfe.skyfly.Servicios.Implementaciones;
 
 import java.math.BigDecimal;
@@ -81,5 +80,10 @@ public class FacturaService implements IFacturaService {
 public Optional<Factura> buscarDetallePorId(Integer id) {
     // ahora este findById está anotado con @EntityGraph
     return facturaRepository.findById(id);
+
 }
+ @Override
+    public Optional<Factura> buscarPorReservaId(Integer reservaId) {
+        return facturaRepository.findByReserva_ReservaId(reservaId);
+    }
 }

@@ -15,4 +15,6 @@ public interface IFacturaService {
     void eliminar(Integer id);
     byte[] generarPdf(Factura factura);
     Optional<Factura> buscarDetallePorId(Integer id);
+    Optional<Factura> buscarPorReservaId(Integer reservaId);
+
 }
