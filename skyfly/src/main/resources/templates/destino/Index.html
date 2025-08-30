@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/_MainLayout}">
+<head>
+    <title>Listado de Destinos</title>
+</head>
+<body>
+<section layout:fragment="content">
+    <!-- Mensaje de éxito -->
+    <div th:if="${msg != null}">
+        <script>
+            swal({
+                title: "Confirmación",
+                text: '[[ ${msg} ]]',
+                icon: "success"
+            });
+        </script>
+    </div>
+
+    <!-- Mensaje de error -->
+    <div th:if="${error != null}">
+        <script>
+            swal({
+                title: "Error",
+                text: '[[ ${error} ]]',
+                icon: "error"
+            });
+        </script>
+    </div>
+
+    <div class="container mt-4">
+        <h2>Listado de Destinos</h2>
+
+        <!-- Botón para crear -->
+        <div class="mb-3">
+            <a th:href="@{/destinos/create}" class="btn btn-primary">Agregar Nuevo Destino</a>
+        </div>
+
+        <!-- Tabla -->
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>País</th>
+                <th>Descripción</th>
+                <th>Imagen</th>
+                <th>Acciones</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="destino : ${destinos.content}">
+                <td th:text="${destino.destinoId}"></td>
+                <td th:text="${destino.nombre}"></td>
+                <td th:text="${destino.pais}"></td>
+                <td th:text="${destino.descripcion}"></td>
+                <td>
+                    <img th:if="${destino.imagen != null}" 
+                         th:src="@{'/destinos/imagen/' + ${destino.destinoId}}" 
+                         alt="Imagen" width="100">
+                </td>
+                <td>
+                    <a th:href="@{'/destinos/view/' + ${destino.destinoId}}" class="btn btn-info btn-sm">Ver</a>
+                    <a th:href="@{'/destinos/edit/' + ${destino.destinoId}}" class="btn btn-warning btn-sm">Editar</a>
+                    <a th:href="@{'/destinos/delete/' + ${destino.destinoId}}" class="btn btn-danger">Eliminar</a>
+                </td>
+            </tr>
+
+            <!-- Si no hay destinos -->
+            <tr th:if="${#lists.isEmpty(destinos.content)}">
+                <td colspan="6" class="text-center">No hay destinos registrados</td>
+            </tr>
+            </tbody>
+        </table>
+
+        <!-- Paginación -->
+        <nav th:if="${pageNumbers != null}">
+            <ul class="pagination">
+                <li th:each="pageNum : ${pageNumbers}" 
+                    th:classappend="${pageNum == destinos.number + 1} ? 'active'" 
+                    class="page-item">
+                    <a class="page-link" 
+                       th:href="@{|/destinos?page=${pageNum}&size=${destinos.size}|}" 
+                       th:text="${pageNum}"></a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</section>
+</body>
+</html>

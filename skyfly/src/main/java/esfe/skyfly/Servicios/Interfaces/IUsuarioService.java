@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+
+import esfe.skyfly.Modelos.Rol;
 import esfe.skyfly.Modelos.Usuario;
 
 public interface IUsuarioService {
@@ -16,4 +18,8 @@ public interface IUsuarioService {
     Usuario crearOeditar(Usuario usuario);
 
     void eliminarPorId(Integer id);
+    
+    List<Usuario> findByRol(Rol rol);
+
+    String encodePassword(String passwordHash);
 }

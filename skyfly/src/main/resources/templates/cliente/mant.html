@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/_mainLayout}">
+<head>
+    <title layout:fragment="title">Cliente</title>
+</head>
+<body>
+<section layout:fragment="content">
+
+    <h2 th:text="'Cliente - ' + ${#strings.capitalize(action)}"></h2>
+
+    <!-- CREAR / EDITAR -->
+    <form th:if="${action == 'create' or action == 'edit'}"
+          th:action="@{'/clientes/' + ${action}}"
+          th:object="${cliente}" method="post">
+
+        <input type="hidden" th:field="*{clienteId}"/>
+
+        <div class="mb-3">
+            <label for="telefono" class="form-label">Teléfono</label>
+            <input type="text" id="telefono" th:field="*{telefono}" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="direccion" class="form-label">Dirección</label>
+            <input type="text" id="direccion" th:field="*{direccion}" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="usuario" class="form-label">Usuario</label>
+            <select id="usuario" th:field="*{usuario.id}" class="form-select" required>
+                <option th:each="u : ${usuarios}"
+                        th:value="${u.id}"
+                        th:text="${u.name}"
+                        th:selected="${cliente.usuario != null and cliente.usuario.id == u.id}">
+                </option>
+            </select>
+        </div>
+
+        <button type="submit" th:text="${action == 'create' ? 'Guardar' : 'Actualizar'}"
+                th:classappend="${action == 'create' ? 'btn-primary' : 'btn-warning'}"
+                class="btn"></button>
+        <a th:href="@{/clientes}" class="btn btn-secondary">Cancelar</a>
+    </form>
+
+    <!-- VER -->
+    <div th:if="${action == 'view'}">
+        <p><strong>Teléfono:</strong> <span th:text="${cliente.telefono}"></span></p>
+        <p><strong>Dirección:</strong> <span th:text="${cliente.direccion}"></span></p>
+        <p><strong>Usuario:</strong> <span th:text="${cliente.usuario != null ? cliente.usuario.name : '---'}"></span></p>
+        <a th:href="@{/clientes}" class="btn btn-secondary">Volver</a>
+    </div>
+
+    <!-- BORRAR -->
+    <form th:if="${action == 'delete'}"
+          th:action="@{/clientes/delete}" th:object="${cliente}" method="post">
+        <input type="hidden" th:field="*{clienteId}"/>
+        <p>¿Estás seguro que deseas eliminar al cliente
+            <strong th:text="${cliente.usuario != null ? cliente.usuario.name : '---'}"></strong>?</p>
+        <button type="submit" class="btn btn-danger">Eliminar</button>
+        <a th:href="@{/clientes}" class="btn btn-secondary">Cancelar</a>
+    </form>
+
+</section>
+</body>
+</html>

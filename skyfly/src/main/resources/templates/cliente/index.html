@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/_mainLayout}">
+<head>
+    <title layout:fragment="title">Clientes</title>
+</head>
+<body>
+<section layout:fragment="content">
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2>Listado de Clientes</h2>
+            <a th:href="@{/clientes/create}" class="btn btn-primary">Nuevo Cliente</a>
+        </div>
+
+        <!-- Tabla de clientes -->
+        <table class="table table-striped table-bordered">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Teléfono</th>
+                    <th>Dirección</th>
+                    <th>Usuario</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+<tr th:each="c : ${clientes}">
+    <td th:text="${c.clienteId}"></td>
+    <td th:text="${c.usuario != null ? c.usuario.name : '---'}"></td>
+    <td th:text="${c.telefono}"></td>
+    <td th:text="${c.direccion}"></td>
+    <td th:text="${c.usuario != null ? c.usuario.name : '---'}"></td>
+    <td>
+        <a th:href="@{'/clientes/view/' + ${c.clienteId}}" class="btn btn-info btn-sm">Ver</a>
+        <a th:href="@{'/clientes/edit/' + ${c.clienteId}}" class="btn btn-warning btn-sm">Editar</a>
+        <a th:href="@{'/clientes/delete/' + ${c.clienteId}}" class="btn btn-danger btn-sm">Eliminar</a>
+    </td>
+</tr>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Paginación -->
+        <nav th:if="${clientes.totalPages > 1}">
+            <ul class="pagination">
+                <li th:classappend="${clientes.first} ? 'disabled'" class="page-item">
+                    <a th:href="@{/clientes(page=${clientes.number - 1})}" class="page-link">Anterior</a>
+                </li>
+                <li class="page-item" th:each="pageNum : ${#numbers.sequence(0, clientes.totalPages - 1)}"
+                    th:classappend="${pageNum == clientes.number} ? 'active'">
+                    <a th:href="@{/clientes(page=${pageNum})}" class="page-link" th:text="${pageNum + 1}"></a>
+                </li>
+                <li th:classappend="${clientes.last} ? 'disabled'" class="page-item">
+                    <a th:href="@{/clientes(page=${clientes.number + 1})}" class="page-link">Siguiente</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</section>
+</body>
+</html>

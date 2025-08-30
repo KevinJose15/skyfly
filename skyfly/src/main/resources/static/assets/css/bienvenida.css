@@ -1,0 +1,131 @@
+/*
+   Estilos para la página de bienvenida
+*/
+
+:root{
+  --bg:#f9fafb;
+  --text:#1e293b;
+  --muted:#64748b;
+  --brand:#2563eb;
+  --dark:#0f172a;
+  --danger:#dc2626;
+  --card:#ffffff;
+  --ring: rgba(37,99,235,0.35);
+}
+
+body{
+  margin:0; 
+  background:var(--bg); 
+  color:var(--text);
+  font-family: 'Roboto', system-ui, -apple-system, sans-serif;
+}
+
+/* Títulos */
+h1,h2,h3,h4{
+  font-family: 'Poppins', sans-serif;
+}
+
+
+/* Navbar */
+.navbar {
+  background: var(--brand);
+  color: white;
+  padding: 1rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.navbar .logo {
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -1px;
+}
+
+.navbar nav a {
+  color: white;
+  margin-left: 1.5rem;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.navbar nav a:hover {
+  text-decoration: underline;
+}
+
+/* Botón login */
+.login-btn {
+  background: white;
+  color: var(--brand);
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-weight: 600;
+  transition: 0.2s ease;
+}
+.login-btn:hover {
+  background: var(--brand-dark);
+  color: white;
+}
+
+/* Hero */
+.hero {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  padding: 4rem 2rem;
+}
+
+.hero h1 {
+  font-size: 2.5rem;
+  color: var(--brand-dark);
+  margin-bottom: 1rem;
+}
+
+.hero p {
+  font-size: 1.2rem;
+  color: var(--muted);
+  max-width: 500px;
+}
+
+/* Destinos destacados */
+.destinos {
+  padding: 3rem 2rem;
+}
+
+.destinos h2 {
+  text-align: center;
+  font-size: 2rem;
+  margin-bottom: 2rem;
+  color: var(--brand-dark);
+}
+
+.destinos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.card {
+  background: var(--card);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  transition: transform 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-6px);
+}
+
+.card img {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+}
+
+.card h3 {
+  padding: 1rem;
+  margin: 0;
+  font-size: 1.2rem;
+  color: var(--brand);
+}

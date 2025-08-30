@@ -19,7 +19,7 @@ CREATE TABLE Cliente (
 
 -- Tabla: Destinos
 CREATE TABLE Destino (
-    destinoId INT PRIMARY KEY AUTO_INCREMENT,
+    destino_id INT PRIMARY KEY AUTO_INCREMENT,
     nombre VARCHAR(100),
     pais VARCHAR(100),
     descripcion TEXT,
@@ -41,10 +41,10 @@ CREATE TABLE Paquete (
 
 -- Tabla: Reservas
 CREATE TABLE Reservas (
-    reservaId INT PRIMARY KEY AUTO_INCREMENT,
-    clienteId INT,
-    paqueteId INT,
-    fechaReserva DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, -- <- corregido
+    reserva_id INT PRIMARY KEY AUTO_INCREMENT,
+    cliente_id INT,
+    paquete_id INT,
+    fecha_reserva DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, -- <- corregido
     estado ENUM('Pendiente', 'Confirmada', 'Cancelada') DEFAULT 'Pendiente',
     FOREIGN KEY (clienteId) REFERENCES Cliente(clienteId),
     FOREIGN KEY (paqueteId) REFERENCES Paquete(paqueteId)
@@ -57,15 +57,15 @@ CREATE TABLE MetodoPago (
 ) ENGINE=InnoDB;
 
 -- Tabla: Pagos
-CREATE TABLE Pago (
-    pagoId INT PRIMARY KEY AUTO_INCREMENT,
-    reservaId INT,
+CREATE TABLE pago (
+    pago_id INT PRIMARY KEY AUTO_INCREMENT,
+    reserva_id INT,
     monto DECIMAL(10,2),
-    metodoPagoId INT,
-    fechaPago DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, -- <- corregido
+    metodo_pago_id INT,
+    fecha_pago DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, -- <- corregido
     ultimos4Tarjeta VARCHAR(4),
-    estadoPago VARCHAR(20) DEFAULT 'Pendiente',
-    codigoAutorizacion VARCHAR(20),
+    estado_pago VARCHAR(20) DEFAULT 'Pendiente',
+    codigo_autorizacion VARCHAR(20),
     FOREIGN KEY (reservaId) REFERENCES Reservas(reservaId),
     FOREIGN KEY (metodoPagoId) REFERENCES MetodoPago(metodoPagoId)
 ) ENGINE=InnoDB;
@@ -79,19 +79,19 @@ INSERT INTO MetodoPago (nombreMetodo) VALUES
 -- Tabla: Factura
 CREATE TABLE Factura (
     idFactura INT PRIMARY KEY AUTO_INCREMENT,
-    reservaId INT NOT NULL UNIQUE,
-    fechaEmision DATE NOT NULL,
-    montoTotal DECIMAL(10,2) NOT NULL,
+    reserva_id INT NOT NULL UNIQUE,
+    fecha_emision DATE NOT NULL,
+    monto_total DECIMAL(10,2) NOT NULL,
     impuestos DECIMAL(10,2) DEFAULT 0.00,
-    descuentoAplicado DECIMAL(10,2) DEFAULT 0.00,
+    descuento_aplicado DECIMAL(10,2) DEFAULT 0.00,
     FOREIGN KEY (reservaId) REFERENCES Reservas(reservaId)
 ) ENGINE=InnoDB;
 
 -- Tabla: CodigoConfirmacion
 CREATE TABLE CodigoConfirmacion (
-    idCodigo INT PRIMARY KEY AUTO_INCREMENT,
+    id_codigo INT PRIMARY KEY AUTO_INCREMENT,
     email VARCHAR(200) NOT NULL,
     codigo VARCHAR(10) NOT NULL,
-    fechaGeneracion DATETIME DEFAULT CURRENT_TIMESTAMP,
+    fecha_generacion DATETIME DEFAULT CURRENT_TIMESTAMP,
     usado TINYINT DEFAULT 0
 ) ENGINE=InnoDB;

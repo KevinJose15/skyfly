@@ -1,0 +1,119 @@
+
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+     >
+<head>
+  <meta charset="UTF-8">
+  <title th:text="'Factura #' + ${factura.idFactura}">Factura</title>
+
+  <!-- ✨ Solo estilos: no cambia la funcionalidad -->
+  <style>
+    :root{
+      --bg:#f1f5f9; --text:#0f172a; --muted:#64748b; --line:#e2e8f0;
+      --card:#ffffff; --accent:#2563eb; --accent2:#0ea5e9; --ok:#16a34a;
+    }
+    html,body{background:var(--bg); color:var(--text); margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,Helvetica,Arial;}
+    .wrap{max-width:980px; margin:40px auto; padding:0 16px;}
+    .crumbs{font-size:.9rem; color:var(--muted); margin-bottom:10px}
+    .crumbs a{color:var(--accent); text-decoration:none}
+    .card{background:var(--card); border:1px solid var(--line); border-radius:16px; box-shadow:0 8px 24px rgba(2,6,23,.06); overflow:hidden}
+    .card-head{display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:16px 20px; border-bottom:1px solid var(--line)}
+    h1{margin:0; font-size:clamp(1.1rem,2.2vw,1.6rem)}
+    .badge{display:inline-block; background:#eef2ff; color:#3730a3; border:1px solid #c7d2fe; padding:.25rem .6rem; border-radius:999px; font-size:.85rem}
+    .content{padding:18px 20px}
+    .kv{display:flex; gap:.5rem; align-items:baseline; padding:.35rem 0; margin:0}
+    .kv b{min-width:140px; color:#0f172a}
+    .muted{color:var(--muted)}
+    .money{font-variant-numeric:tabular-nums}
+    .actions{padding:14px 20px; display:flex; gap:.5rem; border-top:1px solid var(--line)}
+    .btn{display:inline-flex; align-items:center; gap:.35rem; padding:.55rem .9rem; border-radius:10px; border:1px solid var(--line); background:#fff; color:var(--text); text-decoration:none; font-weight:600; transition:transform .08s ease, box-shadow .2s ease}
+    .btn:hover{transform:translateY(-1px); box-shadow:0 6px 18px rgba(2,6,23,.08)}
+    .btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff; border-color:transparent}
+    .btn-outline{color:var(--accent); border-color:#bfdbfe; background:#fff}
+  </style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="crumbs">
+    <a th:href="@{/facturas}">← Volver al listado</a>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <h1 th:text="'Factura #' + ${factura.idFactura}">Factura</h1>
+      <span class="badge" th:text="${#temporals.format(factura.fechaEmision,'dd/MM/yyyy')}">01/08/2025</span>
+    </div>
+
+    <div class="content">
+      <p class="kv"><b>Fecha emisión:</b>
+        <span class="muted" th:text="${#temporals.format(factura.fechaEmision,'dd/MM/yyyy')}">01/08/2025</span>
+      </p>
+
+      <p class="kv"><b>Reserva:</b>
+        <span class="badge" th:text="${factura.reserva.reservaId}">100</span>
+      </p>
+
+      <!-- ==== NUEVO: Datos enriquecidos ==== -->
+      <p class="kv"><b>Cliente:</b>
+        <span th:text="${factura.reserva != null && factura.reserva.cliente != null && factura.reserva.cliente.usuario != null
+                        ? ( #strings.isEmpty(factura.reserva.cliente.usuario.name)
+                              ? factura.reserva.cliente.usuario.email
+                              : factura.reserva.cliente.usuario.name )
+                        : 'N/D'}">N/D</span>
+      </p>
+
+      <p class="kv"><b>Paquete:</b>
+        <span th:text="${factura.reserva != null && factura.reserva.paquete != null
+                        ? factura.reserva.paquete.nombre : 'N/D'}">N/D</span>
+      </p>
+
+      <p class="kv"><b>Destino:</b>
+        <span th:text="${factura.reserva != null && factura.reserva.paquete != null && factura.reserva.paquete.destino != null
+                        ? factura.reserva.paquete.destino.nombre : 'N/D'}">N/D</span>
+      </p>
+      <!-- =================================== -->
+
+      <p class="kv"><b>Monto base:</b> $<span class="money" th:text="${#numbers.formatDecimal(factura.montoTotal,1,2)}">0.00</span></p>
+      <p class="kv"><b>Impuestos:</b> $<span class="money" th:text="${#numbers.formatDecimal(factura.impuestos,1,2)}">0.00</span></p>
+      <p class="kv"><b>Total a pagar:</b> $<span class="money" th:text="${#numbers.formatDecimal(factura.totalAPagar,1,2)}">0.00</span></p>
+    </div>
+
+    <div class="actions">
+      <a class="btn btn-primary" th:href="@{|/facturas/${factura.idFactura}/pdf|}">Descargar PDF</a>
+      <a class="btn btn-outline" th:href="@{/facturas}">Volver</a>
+    </div>
+  </div>
+</div>
+
+<!-- Contenido original sin estilos (no necesario, pero mantenemos la funcionalidad intacta) -->
+<h1 style="display:none" th:text="'Factura #' + ${factura.idFactura}">Factura</h1>
+<p style="display:none"><b>Fecha emisión:</b>
+  <span th:text="${#temporals.format(factura.fechaEmision,'dd/MM/yyyy')}">01/08/2025</span>
+</p>
+<p style="display:none"><b>Reserva:</b> <span th:text="${factura.reserva.reservaId}">100</span></p>
+<p style="display:none"><b>Cliente:</b>
+  <span th:text="${factura.reserva != null && factura.reserva.cliente != null && factura.reserva.cliente.usuario != null
+                  ? ( #strings.isEmpty(factura.reserva.cliente.usuario.name)
+                        ? factura.reserva.cliente.usuario.email
+                        : factura.reserva.cliente.usuario.name )
+                  : 'N/D'}">N/D</span>
+</p>
+<p style="display:none"><b>Paquete:</b>
+  <span th:text="${factura.reserva != null && factura.reserva.paquete != null
+                  ? factura.reserva.paquete.nombre : 'N/D'}">N/D</span>
+</p>
+<p style="display:none"><b>Destino:</b>
+  <span th:text="${factura.reserva != null && factura.reserva.paquete != null && factura.reserva.paquete.destino != null
+                  ? factura.reserva.paquete.destino.nombre : 'N/D'}">N/D</span>
+</p>
+<p style="display:none"><b>Monto base:</b> $<span th:text="${#numbers.formatDecimal(factura.montoTotal,1,2)}">0.00</span></p>
+<p style="display:none"><b>Impuestos:</b> $<span th:text="${#numbers.formatDecimal(factura.impuestos,1,2)}">0.00</span></p>
+<p style="display:none"><b>Total a pagar:</b> $<span th:text="${#numbers.formatDecimal(factura.totalAPagar,1,2)}">0.00</span></p>
+<p style="display:none">
+  <a th:href="@{|/facturas/${factura.idFactura}/pdf|}">Descargar PDF</a> |
+  <a th:href="@{/facturas}">Volver</a>
+</p>
+
+</body>
+</html>
