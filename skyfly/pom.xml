@@ -76,6 +76,11 @@
             <artifactId>thymeleaf-layout-dialect</artifactId>
             <version>3.4.0</version>
         </dependency>
+        <dependency>
+  <groupId>org.thymeleaf.extras</groupId>
+  <artifactId>thymeleaf-extras-springsecurity6</artifactId>
+</dependency>
+
         <!-- PDF (OpenPDF: iText 4.x libre) -->
 <dependency>
   <groupId>com.github.librepdf</groupId>
