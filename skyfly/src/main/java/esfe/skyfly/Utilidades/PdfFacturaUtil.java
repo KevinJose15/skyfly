@@ -33,17 +33,17 @@ public class PdfFacturaUtil {
             document.open();
 
             // ====== Fuentes ======
-            Font h1     = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18, Color.BLACK);
-            Font h2     = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12, Color.BLACK);
+            Font h1 = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18, Color.BLACK);
+            Font h2 = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12, Color.BLACK);
             Font normal = FontFactory.getFont(FontFactory.HELVETICA, 10, Color.DARK_GRAY);
-            Font bold   = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10, Color.BLACK);
-            Font small  = FontFactory.getFont(FontFactory.HELVETICA, 8, Color.GRAY);
+            Font bold = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10, Color.BLACK);
+            Font small = FontFactory.getFont(FontFactory.HELVETICA, 8, Color.GRAY);
             Font whiteB = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10, Color.WHITE);
 
             // ====== HEADER (Logo + Marca + Meta) ======
             PdfPTable header = new PdfPTable(2);
             header.setWidthPercentage(100);
-            header.setWidths(new float[]{60, 40});
+            header.setWidths(new float[] { 60, 40 });
 
             // Columna izquierda: logo + marca
             PdfPCell left = noBorderCell();
@@ -60,13 +60,52 @@ public class PdfFacturaUtil {
             left.addElement(new Phrase("Comprobante de pago", normal));
             header.addCell(left);
 
-            // Columna derecha: meta de factura
+            // Columna derecha: meta de factura (card vertical, sin saltos feos)
             PdfPCell right = noBorderCell();
-            PdfPTable meta = new PdfPTable(2);
+
+            PdfPTable meta = new PdfPTable(new float[] { 55, 45 }); // etiqueta | valor
             meta.setWidthPercentage(100);
-            meta.setWidths(new float[]{55, 45});
-            meta.addCell(kv("N° Factura:", String.valueOf(factura.getIdFactura()), bold, normal));
-            meta.addCell(kv("Fecha emisión:", safeDate(factura), bold, normal));
+
+            // Fila 1: N° Factura
+            PdfPCell fLbl = new PdfPCell(new Phrase("N° Factura:", bold));
+            fLbl.setBorder(Rectangle.BOX);
+            fLbl.setBorderColor(new Color(226, 232, 240));
+            fLbl.setBackgroundColor(new Color(248, 250, 252));
+            fLbl.setPadding(6);
+            fLbl.setNoWrap(true);
+
+            PdfPCell fVal = new PdfPCell(new Phrase(String.valueOf(factura.getIdFactura()), normal));
+            fVal.setBorder(Rectangle.BOX);
+            fVal.setBorderColor(new Color(226, 232, 240));
+            fVal.setHorizontalAlignment(Element.ALIGN_RIGHT);
+            fVal.setPadding(6);
+            fVal.setNoWrap(true);
+
+            // Fila 2: Fecha emisión
+            PdfPCell dLbl = new PdfPCell(new Phrase("Fecha emisión:", bold));
+            dLbl.setBorder(Rectangle.BOX);
+            dLbl.setBorderColor(new Color(226, 232, 240));
+            dLbl.setBackgroundColor(new Color(248, 250, 252));
+            dLbl.setPadding(6);
+            dLbl.setNoWrap(true);
+
+            PdfPCell dVal = new PdfPCell(new Phrase(safeDate(factura), normal));
+            dVal.setBorder(Rectangle.BOX);
+            dVal.setBorderColor(new Color(226, 232, 240));
+            dVal.setHorizontalAlignment(Element.ALIGN_RIGHT);
+            dVal.setPadding(6);
+            dVal.setNoWrap(true);
+
+            // Armar tabla
+            meta.addCell(fLbl);
+            meta.addCell(fVal);
+            meta.addCell(dLbl);
+            meta.addCell(dVal);
+
+            // Borde suave tipo “card”
+            styleAsCard(meta);
+
+            // Insertar en el header
             header.addCell(wrap(meta));
 
             document.add(header);
@@ -81,7 +120,8 @@ public class PdfFacturaUtil {
             String clienteNombre = leerNombreUsuario(r);
             String paqueteNombre = (r != null && r.getPaquete() != null) ? nz(r.getPaquete().getNombre()) : "N/D";
             String destinoNombre = (r != null && r.getPaquete() != null && r.getPaquete().getDestino() != null)
-                    ? nz(r.getPaquete().getDestino().getNombre()) : "N/D";
+                    ? nz(r.getPaquete().getDestino().getNombre())
+                    : "N/D";
 
             // ====== BLOQUE: Información de la operación ======
             Paragraph opTitle = new Paragraph("Información de la operación", h2);
@@ -90,7 +130,7 @@ public class PdfFacturaUtil {
 
             PdfPTable info = new PdfPTable(2);
             info.setWidthPercentage(100);
-            info.setWidths(new float[]{28, 72});
+            info.setWidths(new float[] { 28, 72 });
             addRow(info, "Reserva ID:", trySafeReservaId(r), bold, normal);
             addRow(info, "Cliente:", clienteNombre, bold, normal);
             addRow(info, "Paquete:", paqueteNombre, bold, normal);
@@ -106,27 +146,23 @@ public class PdfFacturaUtil {
             document.add(sumTitle);
             document.add(space(6));
 
-            PdfPTable totals = new PdfPTable(3);
+            PdfPTable totals = new PdfPTable(2);
             totals.setWidthPercentage(100);
-            totals.setWidths(new float[]{50, 25, 25});
+            // Más aire visual al concepto; importes compactos a la derecha
+            totals.setWidths(new float[] { 70, 30 });
 
             // Encabezados
             totals.addCell(headerCell("Concepto", whiteB));
-            PdfPCell baseImpuestoHeader = headerCell("Base/Impuesto", whiteB);
-            baseImpuestoHeader.setHorizontalAlignment(Element.ALIGN_RIGHT);
-            totals.addCell(baseImpuestoHeader);
             PdfPCell importeHeader = headerCell("Importe", whiteB);
             importeHeader.setHorizontalAlignment(Element.ALIGN_RIGHT);
             totals.addCell(importeHeader);
 
             // Monto base
             totals.addCell(bodyCell("Monto base"));
-            totals.addCell(bodyCellRight("—"));
             totals.addCell(bodyCellRight("$ " + money(factura.getMontoTotal())));
 
             // Impuestos
             totals.addCell(bodyCell("Impuestos"));
-            totals.addCell(bodyCellRight("—"));
             totals.addCell(bodyCellRight("$ " + money(factura.getImpuestos())));
 
             // Total a pagar (destacado)
@@ -135,18 +171,15 @@ public class PdfFacturaUtil {
             totalLbl.setBorderColor(new Color(186, 230, 253));
             totals.addCell(totalLbl);
 
-            PdfPCell totalMid = bodyCellRight("—");
-            totalMid.setBackgroundColor(new Color(236, 254, 255));
-            totalMid.setBorderColor(new Color(186, 230, 253));
-            totals.addCell(totalMid);
-
             PdfPCell totalVal = bodyCellRight("$ " + money(factura.getTotalAPagar()));
             totalVal.setBackgroundColor(new Color(236, 254, 255));
             totalVal.setBorderColor(new Color(186, 230, 253));
-            totalVal.setPhrase(new Phrase("$ " + money(factura.getTotalAPagar()),
+            totalVal.setPhrase(new Phrase(
+                    "$ " + money(factura.getTotalAPagar()),
                     FontFactory.getFont(FontFactory.HELVETICA_BOLD, 11, Color.BLACK)));
             totals.addCell(totalVal);
 
+            // Borde suave tipo “card”
             styleAsCard(totals);
             document.add(totals);
 
@@ -202,7 +235,8 @@ public class PdfFacturaUtil {
     }
 
     private PdfPCell bodyCell(String text) {
-        PdfPCell c = new PdfPCell(new Phrase(nz(text), FontFactory.getFont(FontFactory.HELVETICA, 10, Color.DARK_GRAY)));
+        PdfPCell c = new PdfPCell(
+                new Phrase(nz(text), FontFactory.getFont(FontFactory.HELVETICA, 10, Color.DARK_GRAY)));
         c.setPadding(8);
         c.setBorderColor(new Color(226, 232, 240));
         return c;
@@ -248,7 +282,10 @@ public class PdfFacturaUtil {
 
     private PdfPTable kv(String k, String v, Font kFont, Font vFont) {
         PdfPTable kv = new PdfPTable(2);
-        try { kv.setWidths(new float[]{46, 54}); } catch (DocumentException ignored) {}
+        try {
+            kv.setWidths(new float[] { 46, 54 });
+        } catch (DocumentException ignored) {
+        }
         kv.setWidthPercentage(100);
 
         PdfPCell c1 = new PdfPCell(new Phrase(nz(k), kFont));
@@ -290,10 +327,13 @@ public class PdfFacturaUtil {
         try {
             if (r != null && r.getCliente() != null && r.getCliente().getUsuario() != null) {
                 var u = r.getCliente().getUsuario();
-                if (u.getName() != null && !u.getName().isBlank()) return u.getName();
-                if (u.getEmail() != null && !u.getEmail().isBlank()) return u.getEmail();
+                if (u.getName() != null && !u.getName().isBlank())
+                    return u.getName();
+                if (u.getEmail() != null && !u.getEmail().isBlank())
+                    return u.getEmail();
             }
-        } catch (Exception ignore) {}
+        } catch (Exception ignore) {
+        }
         return "N/D";
     }
 
@@ -302,11 +342,16 @@ public class PdfFacturaUtil {
     }
 
     private String money(BigDecimal v) {
-        if (v == null) return "0.00";
+        if (v == null)
+            return "0.00";
         return v.setScale(2, RoundingMode.HALF_UP).toPlainString();
     }
 
     private String safeDate(Factura f) {
-        try { return f.getFechaEmision().format(DF); } catch (Exception e) { return "N/D"; }
+        try {
+            return f.getFechaEmision().format(DF);
+        } catch (Exception e) {
+            return "N/D";
+        }
     }
 }

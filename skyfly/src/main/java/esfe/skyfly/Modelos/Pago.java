@@ -3,6 +3,7 @@ package esfe.skyfly.Modelos;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 
 @Entity
@@ -29,7 +30,11 @@ public class Pago {
     @Column(length = 4)
     private String ultimos4Tarjeta;
 
-    
+    @Transient
+    private BigDecimal iva;   // 13% del monto (no se persiste)
+    @Transient
+    private BigDecimal total; // monto + iva   (no se persiste)
+
 
     @Enumerated(EnumType.STRING)
     private EstadoReserva estadoPago = EstadoReserva.PENDIENTE;
@@ -49,7 +54,24 @@ public class Pago {
     public Pago() {
     }
 
+  public BigDecimal getIva() {
+        if (iva == null && monto != null) {
+            iva = monto.multiply(new BigDecimal("0.13"))
+                       .setScale(2, RoundingMode.HALF_UP);
+        }
+        return iva;
+    }
+    public void setIva(BigDecimal iva) { this.iva = iva; }
 
+    public BigDecimal getTotal() {
+        if (total == null) {
+            BigDecimal base = (monto != null) ? monto : BigDecimal.ZERO;
+            BigDecimal ivaCalc = (getIva() != null) ? getIva() : BigDecimal.ZERO;
+            total = base.add(ivaCalc).setScale(2, RoundingMode.HALF_UP);
+        }
+        return total;
+    }
+    public void setTotal(BigDecimal total) { this.total = total; }
 
     public Pago(Integer pagoId, @NotNull(message = "La reserva es requerida") Integer reservaId,
             @NotNull(message = "El monto es requerido") BigDecimal monto,

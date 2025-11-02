@@ -115,6 +115,23 @@
 
         <div class="hr"></div>
 
+        <div class="row">
+  <div>
+    <label>IVA (13%)</label>
+    <input type="text" id="ivaView" class="form-control" readonly/>
+    <!-- Se envía al servidor como BigDecimal (sin $) -->
+    <input type="hidden" th:field="*{iva}" id="iva"/>
+  </div>
+  <div>
+    <label>Total</label>
+    <input type="text" id="totalView" class="form-control" readonly/>
+    <!-- Se envía al servidor como BigDecimal (sin $) -->
+    <input type="hidden" th:field="*{total}" id="total"/>
+  </div>
+</div>
+
+<div class="hr"></div>
+
         <!-- TARJETA -->
         <div class="row">
           <div>
@@ -169,7 +186,7 @@
         <p><strong>Fecha de Pago:</strong> <span th:text="${#temporals.format(pago.fechaPago,'yyyy-MM-dd HH:mm')}">---</span></p>
         <p><strong>Estado:</strong> <span th:text="${pago.estadoPago}">---</span></p>
         <p><strong>Código de Autorización:</strong> <span th:text="${pago.codigoAutorizacion}">---</span></p>
-        <a th:href="@{/pagos}" class="btn btn-secondary" style="margin-top:8px">Volver</a>
+        <a th:href="@{/pagos/index}" class="btn btn-secondary" style="margin-top:8px">Volver</a>
       </div>
 
       <!-- DELETE -->
@@ -187,48 +204,86 @@
   </div>
 
   <!-- ===== JS: soporta hidden (cliente) y select (agente) ===== -->
-  <script th:inline="javascript">
-    (function(){
-      const sel  = document.getElementById('reservaId');        // agentes/admin
-      const hid  = document.getElementById('reservaIdHidden');   // clientes
-      const montoInput = document.getElementById('monto');
-      const montoBadge = document.getElementById('montoBadge');
-      const card = document.getElementById('numeroTarjeta');
-      const last4 = document.getElementById('ultimos4Tarjeta');
-      const form = document.getElementById('pagoForm');
+<script th:inline="javascript">
+  (function(){
+    const sel  = document.getElementById('reservaId');        // agentes/admin
+    const hid  = document.getElementById('reservaIdHidden');   // clientes
+    const montoInput = document.getElementById('monto');
+    const montoBadge = document.getElementById('montoBadge');
+    const card  = document.getElementById('numeroTarjeta');
+    const last4 = document.getElementById('ultimos4Tarjeta');
+    const form  = document.getElementById('pagoForm');
 
-      function setMonto(txt){
-        if(montoInput) montoInput.value = txt || '';
-        if(montoBadge) montoBadge.textContent = txt || '$0.00';
-      }
-      function fetchMonto(id){
-        if(!id){ setMonto(''); return; }
-        fetch('/pagos/reserva/monto/' + id)
-          .then(r => r.text()).then(setMonto).catch(()=>setMonto('$0.00'));
-      }
+    // NUEVO: referencias IVA/TOTAL
+    const ivaView    = document.getElementById('ivaView');
+    const totalView  = document.getElementById('totalView');
+    const ivaHidden  = document.getElementById('iva');
+    const totalHidden= document.getElementById('total');
 
-      // Carga inicial
-      if(hid && hid.value){ fetchMonto(hid.value); }
-      if(sel){
-        if(sel.value){ fetchMonto(sel.value); }
-        sel.addEventListener('change', function(){ fetchMonto(this.value); });
-      }
+    const IVA_RATE = 0.13;
 
-      // Máscara tarjeta + últimos 4 (solo UX)
-      if(card && last4){
-        card.addEventListener('input', function(){
-          let digits = this.value.replace(/\D/g,'').slice(0,16);
-          this.value = digits.replace(/(.{4})/g,'$1 ').trim();
-          last4.value = digits.length >= 4 ? digits.slice(-4) : '';
+    function formatMoney(n){
+      if (isNaN(n)) return '$0.00';
+      return '$' + Number(n).toFixed(2);
+    }
+    function parseMoney(str){
+      // Admite "$700.00", "700.00", "700", etc.
+      const v = parseFloat(String(str||'').replace(/[^0-9.]/g, ''));
+      return isNaN(v) ? 0 : v;
+    }
+    function round2(v){ return Math.round((v + Number.EPSILON) * 100) / 100; }
+
+    function recalc(){
+      const raw = (montoInput && montoInput.value) || (montoBadge && montoBadge.textContent) || '';
+      const base = parseMoney(raw);
+      const iva  = round2(base * IVA_RATE);
+      const tot  = round2(base + iva);
+
+      if (ivaView)    ivaView.value    = formatMoney(iva);
+      if (totalView)  totalView.value  = formatMoney(tot);
+      if (ivaHidden)  ivaHidden.value  = iva.toFixed(2);   // sin símbolo
+      if (totalHidden)totalHidden.value= tot.toFixed(2);   // sin símbolo
+    }
+
+    function setMonto(txt){
+      if (montoInput) montoInput.value = txt || '';
+      if (montoBadge) montoBadge.textContent = txt || '$0.00';
+      recalc(); // <-- recalcula IVA/TOTAL cada vez que cambia el monto
+    }
+    function fetchMonto(id){
+      if(!id){ setMonto(''); return; }
+      fetch('/pagos/reserva/monto/' + id)
+        .then(r => r.text())
+        .then(setMonto)
+        .catch(()=>setMonto('$0.00'));
+    }
+
+    // Carga inicial
+    if(hid && hid.value){ fetchMonto(hid.value); }
+    if(sel){
+      if(sel.value){ fetchMonto(sel.value); }
+      sel.addEventListener('change', function(){ fetchMonto(this.value); });
+    }
+
+    // Si el monto ya venía seteado por el modelo, calcula al arrancar
+    recalc();
+
+    // Máscara tarjeta + últimos 4 (solo UX)
+    if(card && last4){
+      card.addEventListener('input', function(){
+        let digits = this.value.replace(/\D/g,'').slice(0,16);
+        this.value = digits.replace(/(.{4})/g,'$1 ').trim();
+        last4.value = digits.length >= 4 ? digits.slice(-4) : '';
+      });
+      if(form){
+        form.addEventListener('submit', function(){
+          card.value = (card.value || '').replace(/\s+/g,''); // limpia espacios
         });
-        if(form){
-          form.addEventListener('submit', function(){
-            card.value = (card.value || '').replace(/\s+/g,'');
-          });
-        }
       }
-    })();
-  </script>
+    }
+  })();
+</script>
+
 
 </section>
 </body>
