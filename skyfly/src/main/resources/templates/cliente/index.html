@@ -25,37 +25,60 @@
                 </tr>
             </thead>
             <tbody>
-<tr th:each="c : ${clientes}">
-    <td th:text="${c.clienteId}"></td>
-    <td th:text="${c.usuario != null ? c.usuario.name : '---'}"></td>
-    <td th:text="${c.telefono}"></td>
-    <td th:text="${c.direccion}"></td>
-    <td th:text="${c.usuario != null ? c.usuario.name : '---'}"></td>
-    <td>
-        <a th:href="@{'/clientes/view/' + ${c.clienteId}}" class="btn btn-info btn-sm">Ver</a>
-        <a th:href="@{'/clientes/edit/' + ${c.clienteId}}" class="btn btn-warning btn-sm">Editar</a>
-        <a th:href="@{'/clientes/delete/' + ${c.clienteId}}" class="btn btn-danger btn-sm">Eliminar</a>
-    </td>
-</tr>
+                <tr th:each="c : ${clientes}">
+                    <td th:text="${c.clienteId}"></td>
+                    <td th:text="${c.telefono}"></td>
+                    <td th:text="${c.direccion}"></td>
+                    <td th:text="${c.usuario != null ? c.usuario.name : '---'}"></td>
+                    <td>
+                        <a th:href="@{'/clientes/view/' + ${c.clienteId}}" class="btn btn-info btn-sm">Ver</a>
+                        <a th:href="@{'/clientes/edit/' + ${c.clienteId}}" class="btn btn-warning btn-sm">Editar</a>
+                        <a th:href="@{'/clientes/delete/' + ${c.clienteId}}" class="btn btn-danger btn-sm">Eliminar</a>
+                    </td>
                 </tr>
             </tbody>
         </table>
 
-        <!-- Paginación -->
-        <nav th:if="${clientes.totalPages > 1}">
-            <ul class="pagination">
-                <li th:classappend="${clientes.first} ? 'disabled'" class="page-item">
-                    <a th:href="@{/clientes(page=${clientes.number - 1})}" class="page-link">Anterior</a>
-                </li>
-                <li class="page-item" th:each="pageNum : ${#numbers.sequence(0, clientes.totalPages - 1)}"
-                    th:classappend="${pageNum == clientes.number} ? 'active'">
-                    <a th:href="@{/clientes(page=${pageNum})}" class="page-link" th:text="${pageNum + 1}"></a>
-                </li>
-                <li th:classappend="${clientes.last} ? 'disabled'" class="page-item">
-                    <a th:href="@{/clientes(page=${clientes.number + 1})}" class="page-link">Siguiente</a>
-                </li>
-            </ul>
-        </nav>
+<!-- Paginación 1-based (para controladores que hacen page-1) -->
+<nav th:if="${clientes.totalPages > 1}"
+     th:with="last1=${clientes.totalPages},
+              curr1=${clientes.number + 1},
+              prev1=${curr1 > 1 ? curr1 - 1 : 1},
+              next1=${curr1 < last1 ? curr1 + 1 : last1}">
+  <ul class="pagination">
+
+    <!-- Primera -->
+    <li class="page-item" th:classappend="${curr1 == 1} ? 'disabled'">
+      <a class="page-link" th:href="${curr1 == 1} ? '#' : @{/clientes(page=${1})}">Primera</a>
+    </li>
+
+    <!-- Anterior -->
+    <li class="page-item" th:classappend="${curr1 == 1} ? 'disabled'">
+      <a class="page-link" th:href="${curr1 == 1} ? '#' : @{/clientes(page=${prev1})}">Anterior</a>
+    </li>
+
+    <!-- Números 1..N -->
+    <li class="page-item"
+        th:each="p : ${#numbers.sequence(1, last1)}"
+        th:classappend="${p == curr1} ? 'active'">
+      <a class="page-link"
+         th:href="@{/clientes(page=${p})}"
+         th:text="${p}"></a>
+    </li>
+
+    <!-- Siguiente -->
+    <li class="page-item" th:classappend="${curr1 == last1} ? 'disabled'">
+      <a class="page-link" th:href="${curr1 == last1} ? '#' : @{/clientes(page=${next1})}">Siguiente</a>
+    </li>
+
+    <!-- Última -->
+    <li class="page-item" th:classappend="${curr1 == last1} ? 'disabled'">
+      <a class="page-link" th:href="${curr1 == last1} ? '#' : @{/clientes(page=${last1})}">Última</a>
+    </li>
+
+  </ul>
+</nav>
+
     </div>
 </section>
 </body>

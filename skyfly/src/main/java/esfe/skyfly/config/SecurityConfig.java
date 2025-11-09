@@ -9,6 +9,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher; // <-- IMPORTANTE
 
 @Configuration
 @EnableWebSecurity
@@ -30,30 +31,35 @@ public class SecurityConfig {
                                  "/css/**", "/js/**", "/images/**", "/assets/**", "/webjars/**", "/favicon.ico")
                     .permitAll()
 
+                // 🔓 Travel Copilot (Gemini) público
+                .requestMatchers("/api/ai/**").permitAll()
+
                 // Portal Cliente (B2C)
                 .requestMatchers("/cliente/**").hasRole("Cliente")
 
-                // Pagos y Código: abiertos a Cliente, Agente y Administrador
-                // 👇 IMPORTANTE: antes que el bloque de Agente
-                .requestMatchers("/pagos/**", "/codigo", "/codigo/**","/facturas/**")
+                // Pagos y Código: Cliente/Agente/Admin
+                .requestMatchers("/pagos/**", "/codigo", "/codigo/**", "/facturas/**")
                     .hasAnyRole("Cliente", "Agente", "Administrador")
 
                 // Administración: Usuarios y Clientes
                 .requestMatchers("/usuarios/**", "/clientes/**").hasRole("Administrador")
 
-                // Back-office Agente (sin /pagos ni /codigo aquí)
-                .requestMatchers("/destinos/**", "/paquetes/**", "/reservas/**",
-                                 "/metodopago/**")
+                // Back-office Agente
+                .requestMatchers("/destinos/**", "/paquetes/**", "/reservas/**", "/metodopago/**")
                     .hasRole("Agente")
 
                 // Resto autenticado
                 .anyRequest().authenticated()
             )
+            // ❗ Ignoramos CSRF solo para /api/ai/** (POST desde fetch)
+            .csrf(csrf -> csrf
+                .ignoringRequestMatchers(new AntPathRequestMatcher("/api/ai/**"))
+            )
             .formLogin(form -> form
                 .loginPage("/login").permitAll()
                 .usernameParameter("email")
                 .passwordParameter("password")
-                .successHandler(successHandler) // usamos tu success handler
+                .successHandler(successHandler)
                 .failureUrl("/login?error=true")
             )
             .logout(logout -> logout
@@ -62,7 +68,6 @@ public class SecurityConfig {
                 .permitAll()
             );
 
-        // CSRF habilitado por defecto (Spring Security 6)
         return http.build();
     }
 
