@@ -1,150 +1,627 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      lang="es"
-      layout:decorate="~{layouts/_MainLayout}">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" lang="es"
+  layout:decorate="~{layouts/_MainLayout}">
+
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Travel Copilot</title>
+
   <style>
-    :root{--bg:#f5f7fb;--card:#fff;--muted:#6b7280;--line:#e5e7eb;--primary:#2563eb;--primary-600:#1d4ed8;--radius:16px}
-    .wrap{max-width:1200px;margin:28px auto;padding:0 16px}
-    .layout{display:grid;gap:18px;grid-template-columns:1fr} @media(min-width:980px){.layout{grid-template-columns:480px 1fr}}
-    .card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 10px 30px rgba(2,6,23,.08)}
-    .card__body{padding:18px}
-    .grid{display:grid;gap:12px}.g2{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:repeat(3,1fr)}
-    @media(max-width:680px){.g2,.g3{grid-template-columns:1fr}}
-    label{font-size:.92rem;color:#4b5563;margin-bottom:6px;display:block}
-    input,select{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:#fff}
-    input:focus,select:focus{border-color:var(--primary);box-shadow:0 0 0 4px rgba(37,99,235,.12)}
-    .checks{display:flex;flex-wrap:wrap;gap:16px}
-    button{padding:12px 16px;border:0;border-radius:12px;color:#fff;background:var(--primary);font-weight:600}
-    button:hover{background:var(--primary-600)} button[disabled]{opacity:.6;cursor:wait}
-    pre{white-space:pre-wrap;margin:0;padding:14px;min-height:240px;border:1px dashed var(--line);border-radius:12px;background:#fafbfe}
-    .header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:10px}
-    .pill{padding:8px 12px;border-radius:999px;background:#eef2ff;color:#1d4ed8;text-decoration:none;font-weight:600}
+    :root {
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --line: #e5e7eb;
+      --primary: #2563eb;
+      --primary-600: #1d4ed8;
+      --radius: 16px;
+    }
+
+    .wrap {
+      max-width: 1200px;
+      margin: 28px auto;
+      padding: 0 16px
+    }
+
+    .layout {
+      display: grid;
+      gap: 18px;
+      grid-template-columns: 1fr
+    }
+
+    @media (min-width:980px) {
+      .layout {
+        grid-template-columns: 480px 1fr;
+      }
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: 0 10px 30px rgba(2, 6, 23, .08)
+    }
+
+    .card__body {
+      padding: 18px
+    }
+
+    .grid {
+      display: grid;
+      gap: 12px
+    }
+
+    .g2 {
+      grid-template-columns: repeat(2, minmax(0, 1fr))
+    }
+
+    .g3 {
+      grid-template-columns: repeat(3, minmax(0, 1fr))
+    }
+
+    @media(max-width:680px) {
+
+      .g2,
+      .g3 {
+        grid-template-columns: 1fr
+      }
+    }
+
+    label {
+      font-size: .92rem;
+      color: #4b5563;
+      margin: 0 0 6px;
+      display: block
+    }
+
+    input,
+    select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+      outline: none
+    }
+
+    input:focus,
+    select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, .12)
+    }
+
+    .checks {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px
+    }
+
+    .row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap
+    }
+
+    button {
+      padding: 12px 16px;
+      border: 0;
+      border-radius: 12px;
+      color: #fff;
+      background: var(--primary);
+      cursor: pointer;
+      font-weight: 600;
+      letter-spacing: .2px
+    }
+
+    button:hover {
+      background: var(--primary-600)
+    }
+
+    button[disabled] {
+      opacity: .7;
+      cursor: wait
+    }
+
+    pre {
+      white-space: pre-wrap;
+      margin: 0;
+      padding: 14px;
+      min-height: 160px;
+      max-height: 560px;
+      overflow: auto;
+      border: 1px dashed var(--line);
+      border-radius: 12px;
+      background: #fafbfe;
+      font-family: ui-monospace, Consolas, Menlo, monospace
+    }
+
+    .header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: #eef2ff;
+      color: #1d4ed8;
+      border: 1px solid #dbeafe;
+      text-decoration: none;
+      font-weight: 600
+    }
+
+    .pill:hover {
+      background: #e0e7ff
+    }
+
+    .muted {
+      color: #6b7280
+    }
+
+    .spin {
+      display: inline-block;
+      width: 1em;
+      height: 1em;
+      border: .18em solid rgba(255, 255, 255, .45);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+      vertical-align: -.2em;
+      margin-right: .5em
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg)
+      }
+    }
+
+    /* Tarjetas */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(1, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    @media (min-width: 720px) {
+      .cards {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (min-width: 1100px) {
+      .cards {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    .dest-card {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: #fff;
+      box-shadow: 0 10px 30px rgba(2, 6, 23, .06);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .dest-img {
+      position: relative;
+      aspect-ratio: 16/9;
+      overflow: hidden;
+    }
+
+    .dest-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .badge {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      background: #fff;
+      color: #111;
+      font-weight: 800;
+      padding: 8px 12px;
+      border-radius: 999px;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, .15);
+      border: 1px solid #e5e7eb;
+    }
+
+    .dest-body {
+      padding: 16px;
+      display: grid;
+      gap: 8px
+    }
+
+    .dest-title {
+      margin: 0;
+      font-size: 1.125rem;
+      font-weight: 800
+    }
+
+    .dest-sub {
+      margin: 0;
+      color: #6b7280
+    }
+
+    .btn-sm {
+      display: inline-block;
+      text-decoration: none;
+      background: var(--primary);
+      color: #fff;
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-weight: 700;
+      box-shadow: 0 10px 20px rgba(37, 99, 235, .18);
+    }
+
+    .btn-sm:hover {
+      background: var(--primary-600)
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 6px
+    }
+
+    .chip {
+      font-size: .85rem;
+      color: #1f2937;
+      background: #f3f4f6;
+      border: 1px solid #e5e7eb;
+      padding: 6px 10px;
+      border-radius: 999px;
+    }
   </style>
 </head>
 
 <body>
-<!-- 👇 Este es el ÚNICO bloque que el layout va a insertar -->
-<div layout:fragment="content">
-  <main class="wrap">
-    <div class="header">
-      <div>
-        <h1 style="margin:0 0 6px">Travel Copilot</h1>
-        <p class="muted" style="margin:0">Completa tu brief y te recomendamos destinos usando tu base de datos.</p>
-      </div>
-      <a th:href="@{/cliente/destinos}" class="pill">Explorar destinos</a>
-    </div>
-
-    <section class="layout">
-      <!-- ===== FORM ===== -->
-      <div class="card">
-        <div class="card__body">
-          <form id="chat" onsubmit="sendAI(event)">
-            <div class="grid g2">
-              <div>
-                <label for="origen">Origen IATA</label>
-                <input id="origen" value="SAL" maxlength="3" pattern="[A-Za-z]{3}"
-                       oninput="this.value=this.value.toUpperCase()" placeholder="Ej: SAL" required/>
-              </div>
-              <div>
-                <label for="fecha">Mes (YYYY-MM)</label>
-                <input id="fecha" value="2026-01" placeholder="2026-01" required/>
-              </div>
-            </div>
-
-            <div class="grid g3" style="margin-top:10px">
-              <div><label for="dias">Días</label><input id="dias" type="number" value="7" min="1" required/></div>
-              <div><label for="presu">Presupuesto USD</label><input id="presu" type="number" value="1200" min="100" required/></div>
-              <div>
-                <label for="clima">Clima preferido</label>
-                <select id="clima"><option>templado</option><option>calor</option><option>frío</option></select>
-              </div>
-            </div>
-
-            <div style="margin-top:10px">
-              <label>Tipo de viaje</label>
-              <div class="checks">
-                <label><input type="checkbox" name="tipo" value="playa" checked> playa</label>
-                <label><input type="checkbox" name="tipo" value="cultura"> cultura</label>
-                <label><input type="checkbox" name="tipo" value="naturaleza"> naturaleza</label>
-                <label><input type="checkbox" name="tipo" value="vidaNocturna"> vida nocturna</label>
-                <label><input type="checkbox" name="tipo" value="gastronomía" checked> gastronomía</label>
-              </div>
-            </div>
-
-            <div class="grid g2" style="margin-top:10px">
-              <div>
-                <label for="companeros">Compañía</label>
-                <select id="companeros"><option>solo</option><option selected>pareja</option><option>familia</option><option>amigos</option></select>
-              </div>
-              <div><label for="nota">Notas (opcional)</label><input id="nota" placeholder="Evitar escalas, celebrar aniversario, etc."/></div>
-            </div>
-
-            <div style="margin-top:14px;display:flex;gap:10px;align-items:center">
-              <button id="btn" type="submit">Buscar recomendaciones</button>
-              <span id="hint" class="muted"></span>
-            </div>
-          </form>
+  <div layout:fragment="content">
+    <main class="wrap">
+      <div class="header">
+        <div>
+          <h1 style="margin:0 0 6px">Sky Bot</h1>
+          <p class="muted" style="margin:0">No sabes a dónde viajar, busca tu destino favorito.</p>
         </div>
+        <a th:href="@{/cliente/destinos}" class="pill">Explorar destinos</a>
       </div>
 
-      <!-- ===== RESULTADOS ===== -->
-      <div class="card">
-        <div class="card__body">
-          <h3 style="margin:0 0 4px">Resultados</h3>
-          <p class="muted" style="margin:0 0 10px">Los datos no se guardan; se usan sólo para esta recomendación.</p>
-          <pre id="out">(listo para recomendar… completa el brief y pulsa el botón)</pre>
+      <section class="layout">
+        <!-- ===== FORM ===== -->
+        <div class="card">
+          <div class="card__body">
+            <form id="chat" onsubmit="sendAI(event)">
+              <div class="grid g2">
+                <div>
+                  <label for="origen">Origen Aeropuerto</label>
+                  <input id="origen" list="airports" maxlength="3" pattern="[A-Za-z]{3}"
+                    oninput="this.value=this.value.toUpperCase()" placeholder="Ej: SAL" required>
+                  <datalist id="airports">
+                    <option value="SAL">San Salvador — El Salvador Intl</option>
+                    <option value="MEX">Ciudad de México — MEX</option>
+                    <option value="GUA">Guatemala — La Aurora</option>
+                    <option value="LAX">Los Ángeles — LAX</option>
+                    <option value="MIA">Miami — MIA</option>
+                    <option value="MAD">Madrid — Barajas</option>
+                  </datalist>
+                </div>
+              </div>
+
+              <div class="grid g3" style="margin-top:10px">
+                <div>
+                  <label for="dias">Días</label>
+                  <input id="dias" type="number" value="7" min="1" required />
+                </div>
+                <div>
+                  <label for="presuMin">Presupuesto mínimo</label>
+                  <input id="presuMin" type="number" value="800" min="50" required />
+                </div>
+                <div>
+                  <label for="presuMax">Presupuesto máximo</label>
+                  <input id="presuMax" type="number" value="1500" min="50" required />
+                </div>
+              </div>
+
+              <div style="margin-top:10px">
+                <label>Tipo de viaje</label>
+                <div class="checks">
+                  <label><input type="checkbox" name="tipo" value="playa" checked> playa</label>
+                  <label><input type="checkbox" name="tipo" value="cultura"> cultura</label>
+                  <label><input type="checkbox" name="tipo" value="naturaleza"> naturaleza</label>
+                  <label><input type="checkbox" name="tipo" value="vida nocturna"> vida nocturna</label>
+                  <label><input type="checkbox" name="tipo" value="gastronomía"> gastronomía</label>
+                </div>
+              </div>
+
+              <div class="grid g2" style="margin-top:10px">
+                <div>
+                  <label for="companeros">Compañía</label>
+                  <select id="companeros">
+                    <option>solo</option>
+                    <option selected>pareja</option>
+                    <option>familia</option>
+                    <option>amigos</option>
+                  </select>
+                </div>
+                <div>
+                  <label for="nota">Notas (opcional)</label>
+                  <input id="nota" placeholder="Evitar escalas, celebrar aniversario, etc." />
+                </div>
+              </div>
+
+              <div class="row" style="margin-top:14px">
+                <button id="btn" type="submit">Buscar recomendaciones</button>
+                <span id="hint" class="muted"></span>
+              </div>
+            </form>
+          </div>
         </div>
-      </div>
-    </section>
-  </main>
 
-  <!-- 👇 OJO: el script queda DENTRO del fragmento -->
-  <script th:inline="javascript">
-    const API_URL = /*[[@{/api/ai/destinos}]]*/ '/api/ai/destinos';
+        <!-- ===== RESULTADOS ===== -->
+        <div class="card">
+          <div class="card__body">
+            <h3 class="card__title" style="margin:0 0 6px">Resultados</h3>
+            <p class="muted" style="margin:0 0 10px">Los datos no se guardan; se usan sólo para esta recomendación.</p>
 
-    async function sendAI(e){
-      e.preventDefault();
-      const btn  = document.getElementById('btn');
-      const hint = document.getElementById('hint');
-      const out  = document.getElementById('out');
+            <div id="cards" class="cards"></div>
+            <pre id="out">(listo para recomendar… completa el brief y pulsa el botón)</pre>
+          </div>
+        </div>
+      </section>
+    </main>
 
-      const tipo = [...document.querySelectorAll('input[name="tipo"]:checked')].map(i => i.value);
+    <script th:inline="javascript">
+      // Intento JSON primero; si no, fallback texto
+      const API_URL_JSON = /*[[@{/api/ai/destinos/json}]]*/ '/api/ai/destinos/json';
+      const API_URL_TEXT = /*[[@{/api/ai/destinos}]]*/ '/api/ai/destinos';
 
-      const body = {
-        origenIATA:     document.getElementById('origen').value.trim(),
-        fechaViaje:     document.getElementById('fecha').value.trim(),
-        duracionDias:   Number(document.getElementById('dias').value),
-        presupuestoUSD: Number(document.getElementById('presu').value),
-        clima:          document.getElementById('clima').value,
-        tipo,
-        companeros:     document.getElementById('companeros').value
-      };
-
-      btn.disabled = true; hint.textContent = 'Consultando al copilot…'; out.textContent = '';
-
-      try{
-        const res  = await fetch(API_URL, {
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          credentials:'same-origin',
-          body: JSON.stringify(body)
+      (function persistPrefs() {
+        const ids = ['origen', 'dias', 'presuMin', 'presuMax', 'companeros', 'nota'];
+        document.addEventListener('DOMContentLoaded', () => {
+          ids.forEach(id => {
+            const el = document.getElementById(id);
+            const v = localStorage.getItem('tc_' + id);
+            if (el && v !== null) el.value = v;
+          });
+          document.querySelectorAll('input[name="tipo"]').forEach(ch => {
+            const v = localStorage.getItem('tc_tipo_' + ch.value);
+            if (v !== null) ch.checked = (v === '1');
+          });
         });
-        const data = await res.json();
-        if(!res.ok) throw new Error(data?.text || ('HTTP '+res.status));
-        out.textContent = data.text || '(sin respuesta)';
-      }catch(err){
-        out.textContent = 'Error: ' + (err?.message || err);
-        console.error('[Copilot] fetch error', err);
-      }finally{
-        btn.disabled = false; hint.textContent = '';
+        document.addEventListener('input', (e) => {
+          const t = e.target;
+          if (ids.includes(t.id)) localStorage.setItem('tc_' + t.id, t.value);
+          if (t.name === 'tipo') localStorage.setItem('tc_tipo_' + t.value, t.checked ? '1' : '0');
+        });
+      })();
+
+      // Normaliza "vida nocturna" -> vidaNocturna para enviar al backend
+      function collectBody() {
+        const tipo = [...document.querySelectorAll('input[name="tipo"]:checked')]
+          .map(i => {
+            const v = i.value.trim().toLowerCase();
+            if (v.replace(/\s+/g, '') === 'vidanocturna') return 'vidaNocturna';
+            return i.value;
+          });
+
+        return {
+          origenIATA: document.getElementById('origen').value.trim(),
+          duracionDias: Number(document.getElementById('dias').value),
+          presupuestoMinUSD: Number(document.getElementById('presuMin').value),
+          presupuestoMaxUSD: Number(document.getElementById('presuMax').value),
+          tipo,
+          companeros: document.getElementById('companeros').value,
+          notas: document.getElementById('nota').value.trim()
+        };
       }
-    }
-  </script>
-</div>
+
+      // Helpers UI
+      const money = new Intl.NumberFormat('es-SV', { style: 'currency', currency: 'USD' });
+      const esc = s => String(s ?? '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+
+      // Placeholder por tags si no viene imagen
+      function guessImage(tags = []) {
+        const t = tags.map(x => (x || '').toLowerCase());
+        let q = 'travel';
+        if (t.some(s => s.includes('playa'))) q = 'beach';
+        else if (t.some(s => s.includes('natur'))) q = 'forest';
+        else if (t.some(s => s.includes('vida') && s.includes('noct'))) q = 'night city';
+        else if (t.some(s => s.includes('gastron'))) q = 'food market';
+        else if (t.some(s => s.includes('cultur'))) q = 'historic city';
+        return `https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=60&sig=${encodeURIComponent(q)}`;
+      }
+
+      // Parser robusto del fallback en texto
+      function parseFallback(text) {
+        const items = [];
+        if (!text) return items;
+
+        const lineRe = /^\d+\)\s*(.+?)\s*(?:—|–|-)\s*(.+?)\s*(?:—|–|-)\s*costo\s*~?\s*USD\s*([0-9][0-9\.,]*)/i;
+        const lines = text.split('\n');
+        let current = null;
+
+        for (const raw of lines) {
+          const line = raw.trim();
+          const m = line.match(lineRe);
+          if (m) {
+            const precioNum = parseNumber(m[3]);
+            current = { nombre: m[1].trim(), pais: m[2].trim(), precio: precioNum, tags: [] };
+            items.push(current);
+            continue;
+          }
+          const t = line.match(/Coincidenc(?:ia|ias)\s*:\s*\[([^\]]*)\]/i);
+          if (t && current) {
+            current.tags = t[1].split(',').map(s => s.trim()).filter(Boolean);
+          }
+        }
+        return items;
+      }
+
+      function parseNumber(s) {
+        if (!s) return 0;
+        const clean = s.replace(/\s/g, '').replace(/(\.|,)(?=[0-9]{3}\b)/g, '').replace(',', '.');
+        const n = Number(clean);
+        return isFinite(n) ? n : 0;
+      }
+
+      // Filtrado en cliente por los "tipo" marcados (match cualquiera)
+      function applyClientFilter(items, requiredTags) {
+        const req = (requiredTags || []).map(t => t.toLowerCase());
+        if (!req.length) return items;
+        return items.filter(it => (it.tags || []).some(tag => req.includes(String(tag).toLowerCase())));
+      }
+
+      function renderCards(items, requiredTags) {
+        const wrap = document.getElementById('cards');
+        const pre = document.getElementById('out');
+
+        const filtered = applyClientFilter(items, requiredTags);
+
+        if (!filtered || filtered.length === 0) {
+          wrap.innerHTML = '';
+          pre.style.display = 'block';
+          pre.textContent = '(sin coincidencias con los filtros)';
+          return;
+        }
+
+        wrap.innerHTML = filtered.map(it => {
+          // >>>>>>>>>> CAMBIO CLAVE: usar 'imagen' del backend
+          const chosen = pickImage(it);
+          const img = chosen || guessImage(it.tags);
+          return `
+          <article class="dest-card">
+            <div class="dest-img">
+<img loading="lazy"
+     src="${esc(img)}"
+     alt="${esc(it.nombre)}"
+     onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=60';">
+              <span class="badge">Desde ${money.format(it.precio || 0)}</span>
+            </div>
+            <div class="dest-body">
+              <h4 class="dest-title">${esc(it.nombre)}</h4>
+              <p class="dest-sub">${esc(it.pais || '')}</p>
+              <a href="/cliente/destinos" class="btn-sm">Reservar destino</a>
+              <div class="chips">
+                ${(it.tags || []).map(t => `<span class="chip">${esc(t)}</span>`).join('')}
+              </div>
+            </div>
+          </article>
+        `;
+        }).join('');
+
+        pre.style.display = 'none';
+      }
+
+      async function sendAI(e) {
+        e.preventDefault();
+        const btn = document.getElementById('btn');
+        const hint = document.getElementById('hint');
+        const out = document.getElementById('out');
+        const cards = document.getElementById('cards');
+
+        const payload = collectBody();
+
+        const original = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spin"></span>Consultando…';
+        hint.textContent = 'Consultando al copilot…';
+        out.textContent = '(consultando…)';
+        out.style.display = 'block';
+        cards.innerHTML = '';
+
+        try {
+          // 1) JSON (ideal: trae 'imagen')
+          let res = await fetch(API_URL_JSON, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
+            body: JSON.stringify(payload)
+          });
+
+          let body = await res.text();
+          let json = null;
+          try { json = JSON.parse(body); } catch { }
+
+          const itemsJson = json?.items ?? (Array.isArray(json) ? json : null);
+
+          if (res.ok && Array.isArray(itemsJson)) {
+            renderCards(itemsJson, payload.tipo);
+            return;
+          }
+
+          // 2) Fallback: texto plano
+          res = await fetch(API_URL_TEXT, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
+            body: JSON.stringify(payload)
+          });
+
+          const raw = await res.text();
+          let data; try { data = JSON.parse(raw); } catch { data = { text: raw }; }
+          if (!res.ok) throw new Error(data?.text || ('HTTP ' + res.status));
+
+          const text = data.text || raw || '(sin respuesta)';
+          out.textContent = text;
+          renderCards(parseFallback(text), payload.tipo);
+
+        } catch (err) {
+          out.textContent = 'Error: ' + (err?.message || err);
+          console.error('[Copilot] fetch error', err);
+          renderCards([], payload.tipo);
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = original;
+          hint.textContent = '';
+        }
+      }
+      // ¿Es una URL absoluta (http, https, data, //)?
+      function isAbsoluteUrl(u) {
+        return /^https?:\/\//i.test(u) || /^data:/i.test(u) || /^\/\//.test(u);
+      }
+
+      // Arma URL absoluta si en BD guardaste una ruta relativa (p. ej. /uploads/… o uploads/…)
+      function toAbsolute(u) {
+        if (!u) return u;
+        if (isAbsoluteUrl(u)) return u;
+        const base = window.location.origin;
+        return u.startsWith('/') ? (base + u) : (base + '/' + u);
+      }
+
+      // Toma imagen del backend usando alias: imageUrl | imagen | imagenUrl | urlImagen | fotoPortada | foto
+function pickImage(it){
+  const raw =
+    it.imageUrl || it.imagen || it.imagenUrl ||
+    it.urlImagen || it.fotoPortada || it.foto || null;
+
+  if (!raw) return null;
+  const r = String(raw).trim();
+
+  // URLs válidas que el navegador puede abrir directamente
+  const isWebUrl = /^https?:\/\//i.test(r) || r.startsWith('data:') || r.startsWith('//');
+
+  // Si algún registro ya tuviera /uploads/ configurado en tu server (en el futuro)
+  const isAppUploads = r.startsWith('/uploads/');
+
+  return (isWebUrl || isAppUploads) ? r : null; // todo lo demás -> ignorar (evita 404)
+}
+    </script>
+  </div>
 </body>
+
 </html>
