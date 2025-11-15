@@ -548,50 +548,59 @@
     }
 
     // ===== Render =====
-    function renderCards(items, requiredTags){
-      const wrap = document.getElementById('cards');
-      const pre  = document.getElementById('out');
+   function renderCards(items, requiredTags){
+  const wrap = document.getElementById('cards');
+  const pre  = document.getElementById('out');
 
-      const safeItems = Array.isArray(items) ? items : [];
-      const filteredList = applyClientFilter(safeItems, requiredTags);
+  const safeItems = Array.isArray(items) ? items : [];
+  const filteredList = applyClientFilter(safeItems, requiredTags);
 
-      if (!filteredList.length){
-        wrap.innerHTML = '';
-        pre.style.display = 'block';
-        pre.textContent = '(sin coincidencias con los filtros)';
-        return;
-      }
+  if (!filteredList.length){
+    wrap.innerHTML = '';
+    pre.style.display = 'block';
+    pre.textContent = '(sin coincidencias con los filtros)';
+    return;
+  }
 
-      try {
-        console.debug('[Copilot] render', filteredList.map(x => ({
-          id: x.id, img: x.imagen, tags: x.tags
-        })));
-      } catch {}
+  try {
+    console.debug('[Copilot] render', filteredList.map(x => ({
+      id: x.id,
+      img: x.imagen || x.imageUrl || x.imagenUrl || x.urlImagen,
+      tags: x.tags
+    })));
+  } catch {}
 
-      wrap.innerHTML = filteredList.map(it => {
-        const img = pickImage(it) || guessImage(it.tags);
-        return `
-          <article class="dest-card">
-            <div class="dest-img">
-              <img loading="lazy"
-                   src="${esc(img)}"
-                   alt="${esc(it.nombre)}"
-                   onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=60';">
-              <span class="badge">Desde ${money.format(it.precio || 0)}</span>
-            </div>
-            <div class="dest-body">
-              <h4 class="dest-title">${esc(it.nombre)}</h4>
-              <p class="dest-sub">${esc(it.pais||'')}</p>
-              <a href="/cliente/destinos" class="btn-sm">Reservar destino</a>
-              <div class="chips">
-                ${(it.tags||[]).map(t => `<span class="chip">${esc(t)}</span>`).join('')}
-              </div>
-            </div>
-          </article>`;
-      }).join('');
+  wrap.innerHTML = filteredList.map(it => {
+    const img = pickImage(it) || guessImage(it.tags);
 
-      pre.style.display = 'none';
-    }
+    // 👉 URL a reservas/create con el destinoId
+    const reservaUrl = toAbsolute(
+      `cliente/reservas?destinoId=${encodeURIComponent(it.id)}`
+    );
+
+    return `
+      <article class="dest-card">
+        <div class="dest-img">
+          <img loading="lazy"
+               src="${esc(img)}"
+               alt="${esc(it.nombre)}"
+               onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=60';">
+          <span class="badge">Desde ${money.format(it.precio || 0)}</span>
+        </div>
+        <div class="dest-body">
+          <h4 class="dest-title">${esc(it.nombre)}</h4>
+          <p class="dest-sub">${esc(it.pais||'')}</p>
+          <a href="${esc(reservaUrl)}" class="btn-sm">Reservar destino</a>
+          <div class="chips">
+            ${(it.tags||[]).map(t => `<span class="chip">${esc(t)}</span>`).join('')}
+          </div>
+        </div>
+      </article>`;
+  }).join('');
+
+  pre.style.display = 'none';
+}
+
 
     // ===== Acción principal =====
     async function sendAI(e) {
