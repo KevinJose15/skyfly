@@ -1,6 +1,8 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" lang="es"
-  layout:decorate="~{layouts/_MainLayout}">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      lang="es"
+      layout:decorate="~{layouts/_MainLayout}">
 
 <head>
   <meta charset="UTF-8" />
@@ -33,7 +35,7 @@
 
     @media (min-width:980px) {
       .layout {
-        grid-template-columns: 480px 1fr;
+        grid-template-columns: 480px 1fr
       }
     }
 
@@ -189,18 +191,18 @@
     .cards {
       display: grid;
       grid-template-columns: repeat(1, minmax(0, 1fr));
-      gap: 14px;
+      gap: 14px
     }
 
-    @media (min-width: 720px) {
+    @media (min-width:720px) {
       .cards {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: repeat(2, minmax(0, 1fr))
       }
     }
 
-    @media (min-width: 1100px) {
+    @media (min-width:1100px) {
       .cards {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: repeat(2, minmax(0, 1fr))
       }
     }
 
@@ -211,20 +213,20 @@
       box-shadow: 0 10px 30px rgba(2, 6, 23, .06);
       overflow: hidden;
       display: flex;
-      flex-direction: column;
+      flex-direction: column
     }
 
     .dest-img {
       position: relative;
       aspect-ratio: 16/9;
-      overflow: hidden;
+      overflow: hidden
     }
 
     .dest-img img {
       width: 100%;
       height: 100%;
       object-fit: cover;
-      display: block;
+      display: block
     }
 
     .badge {
@@ -237,7 +239,7 @@
       padding: 8px 12px;
       border-radius: 999px;
       box-shadow: 0 6px 18px rgba(0, 0, 0, .15);
-      border: 1px solid #e5e7eb;
+      border: 1px solid #e5e7eb
     }
 
     .dest-body {
@@ -265,7 +267,7 @@
       padding: 10px 14px;
       border-radius: 12px;
       font-weight: 700;
-      box-shadow: 0 10px 20px rgba(37, 99, 235, .18);
+      box-shadow: 0 10px 20px rgba(37, 99, 235, .18)
     }
 
     .btn-sm:hover {
@@ -285,343 +287,374 @@
       background: #f3f4f6;
       border: 1px solid #e5e7eb;
       padding: 6px 10px;
-      border-radius: 999px;
+      border-radius: 999px
     }
   </style>
 </head>
 
 <body>
-  <div layout:fragment="content">
-    <main class="wrap">
-      <div class="header">
-        <div>
-          <h1 style="margin:0 0 6px">Sky Bot</h1>
-          <p class="muted" style="margin:0">No sabes a dónde viajar, busca tu destino favorito.</p>
+<div layout:fragment="content">
+  <main class="wrap">
+    <div class="header">
+      <div>
+        <h1 style="margin:0 0 6px">Sky Bot</h1>
+        <p class="muted" style="margin:0">No sabes a dónde viajar, busca tu destino favorito.</p>
+      </div>
+      <a th:href="@{/cliente/destinos}" class="pill">Explorar destinos</a>
+    </div>
+
+    <section class="layout">
+      <!-- ===== FORM ===== -->
+      <div class="card">
+        <div class="card__body">
+          <form id="chat" onsubmit="sendAI(event)">
+            <div class="grid g2">
+              <div>
+                <label for="origen">Origen Aeropuerto</label>
+                <input id="origen" list="airports" maxlength="3" pattern="[A-Za-z]{3}"
+                       oninput="this.value=this.value.toUpperCase()" placeholder="Ej: SAL" required>
+                <datalist id="airports">
+                  <option value="SAL">San Salvador — El Salvador Intl</option>
+                  <option value="MEX">Ciudad de México — MEX</option>
+                  <option value="GUA">Guatemala — La Aurora</option>
+                  <option value="LAX">Los Ángeles — LAX</option>
+                  <option value="MIA">Miami — MIA</option>
+                  <option value="MAD">Madrid — Barajas</option>
+                </datalist>
+              </div>
+            </div>
+
+            <div class="grid g3" style="margin-top:10px">
+              <div>
+                <label for="dias">Días</label>
+                <input id="dias" type="number" value="7" min="1" required />
+              </div>
+              <div>
+                <label for="presuMin">Presupuesto mínimo</label>
+                <input id="presuMin" type="number" value="800" min="50" required />
+              </div>
+              <div>
+                <label for="presuMax">Presupuesto máximo</label>
+                <input id="presuMax" type="number" value="1500" min="50" required />
+              </div>
+            </div>
+
+            <div style="margin-top:10px">
+              <label>Tipo de viaje</label>
+              <div class="checks">
+                <label><input type="checkbox" name="tipo" value="playa" checked> playa</label>
+                <label><input type="checkbox" name="tipo" value="cultura"> cultura</label>
+                <label><input type="checkbox" name="tipo" value="naturaleza"> naturaleza</label>
+                <label><input type="checkbox" name="tipo" value="vida nocturna"> vida nocturna</label>
+                <label><input type="checkbox" name="tipo" value="gastronomía"> gastronomía</label>
+              </div>
+            </div>
+
+            <div class="grid g2" style="margin-top:10px">
+              <div>
+                <label for="companeros">Compañía</label>
+                <select id="companeros">
+                  <option>solo</option>
+                  <option selected>pareja</option>
+                  <option>familia</option>
+                  <option>amigos</option>
+                </select>
+              </div>
+              <div>
+                <label for="nota">Notas (opcional)</label>
+                <input id="nota" placeholder="Evitar escalas, celebrar aniversario, etc." />
+              </div>
+            </div>
+
+            <div class="row" style="margin-top:14px">
+              <button id="btn" type="submit">Buscar recomendaciones</button>
+              <span id="hint" class="muted"></span>
+            </div>
+          </form>
         </div>
-        <a th:href="@{/cliente/destinos}" class="pill">Explorar destinos</a>
       </div>
 
-      <section class="layout">
-        <!-- ===== FORM ===== -->
-        <div class="card">
-          <div class="card__body">
-            <form id="chat" onsubmit="sendAI(event)">
-              <div class="grid g2">
-                <div>
-                  <label for="origen">Origen Aeropuerto</label>
-                  <input id="origen" list="airports" maxlength="3" pattern="[A-Za-z]{3}"
-                    oninput="this.value=this.value.toUpperCase()" placeholder="Ej: SAL" required>
-                  <datalist id="airports">
-                    <option value="SAL">San Salvador — El Salvador Intl</option>
-                    <option value="MEX">Ciudad de México — MEX</option>
-                    <option value="GUA">Guatemala — La Aurora</option>
-                    <option value="LAX">Los Ángeles — LAX</option>
-                    <option value="MIA">Miami — MIA</option>
-                    <option value="MAD">Madrid — Barajas</option>
-                  </datalist>
-                </div>
-              </div>
+      <!-- ===== RESULTADOS ===== -->
+      <div class="card">
+        <div class="card__body">
+          <h3 class="card__title" style="margin:0 0 6px">Resultados</h3>
+          <p class="muted" style="margin:0 0 10px">
+            Los datos no se guardan; se usan sólo para esta recomendación.
+          </p>
 
-              <div class="grid g3" style="margin-top:10px">
-                <div>
-                  <label for="dias">Días</label>
-                  <input id="dias" type="number" value="7" min="1" required />
-                </div>
-                <div>
-                  <label for="presuMin">Presupuesto mínimo</label>
-                  <input id="presuMin" type="number" value="800" min="50" required />
-                </div>
-                <div>
-                  <label for="presuMax">Presupuesto máximo</label>
-                  <input id="presuMax" type="number" value="1500" min="50" required />
-                </div>
-              </div>
-
-              <div style="margin-top:10px">
-                <label>Tipo de viaje</label>
-                <div class="checks">
-                  <label><input type="checkbox" name="tipo" value="playa" checked> playa</label>
-                  <label><input type="checkbox" name="tipo" value="cultura"> cultura</label>
-                  <label><input type="checkbox" name="tipo" value="naturaleza"> naturaleza</label>
-                  <label><input type="checkbox" name="tipo" value="vida nocturna"> vida nocturna</label>
-                  <label><input type="checkbox" name="tipo" value="gastronomía"> gastronomía</label>
-                </div>
-              </div>
-
-              <div class="grid g2" style="margin-top:10px">
-                <div>
-                  <label for="companeros">Compañía</label>
-                  <select id="companeros">
-                    <option>solo</option>
-                    <option selected>pareja</option>
-                    <option>familia</option>
-                    <option>amigos</option>
-                  </select>
-                </div>
-                <div>
-                  <label for="nota">Notas (opcional)</label>
-                  <input id="nota" placeholder="Evitar escalas, celebrar aniversario, etc." />
-                </div>
-              </div>
-
-              <div class="row" style="margin-top:14px">
-                <button id="btn" type="submit">Buscar recomendaciones</button>
-                <span id="hint" class="muted"></span>
-              </div>
-            </form>
-          </div>
+          <div id="cards" class="cards"></div>
+          <pre id="out">(listo para recomendar… completa el brief y pulsa el botón)</pre>
         </div>
+      </div>
+    </section>
+  </main>
 
-        <!-- ===== RESULTADOS ===== -->
-        <div class="card">
-          <div class="card__body">
-            <h3 class="card__title" style="margin:0 0 6px">Resultados</h3>
-            <p class="muted" style="margin:0 0 10px">Los datos no se guardan; se usan sólo para esta recomendación.</p>
+  <script th:inline="javascript">
+    // Endpoints correctos
+    const API_URL_JSON = /*[[@{/api/ai/destinos/json}]]*/ '/api/ai/destinos/json';
+    const API_URL_TEXT = /*[[@{/api/ai/destinos/text}]]*/ '/api/ai/destinos/text';
 
-            <div id="cards" class="cards"></div>
-            <pre id="out">(listo para recomendar… completa el brief y pulsa el botón)</pre>
-          </div>
-        </div>
-      </section>
-    </main>
+    // === Base de la app (incluye context path) ===
+    const APP_CTX = /*[[@{/}]]*/ '/';
 
-    <script th:inline="javascript">
-      // Intento JSON primero; si no, fallback texto
-      const API_URL_JSON = /*[[@{/api/ai/destinos/json}]]*/ '/api/ai/destinos/json';
-      const API_URL_TEXT = /*[[@{/api/ai/destinos}]]*/ '/api/ai/destinos';
+    // ===== Persistencia de formulario =====
+    (function persistPrefs() {
+      const ids = ['origen','dias','presuMin','presuMax','companeros','nota'];
 
-      (function persistPrefs() {
-        const ids = ['origen', 'dias', 'presuMin', 'presuMax', 'companeros', 'nota'];
-        document.addEventListener('DOMContentLoaded', () => {
-          ids.forEach(id => {
-            const el = document.getElementById(id);
-            const v = localStorage.getItem('tc_' + id);
-            if (el && v !== null) el.value = v;
-          });
-          document.querySelectorAll('input[name="tipo"]').forEach(ch => {
-            const v = localStorage.getItem('tc_tipo_' + ch.value);
-            if (v !== null) ch.checked = (v === '1');
-          });
+      document.addEventListener('DOMContentLoaded', () => {
+        ids.forEach(id => {
+          const el = document.getElementById(id);
+          const v = localStorage.getItem('tc_'+id);
+          if (el && v !== null) el.value = v;
         });
-        document.addEventListener('input', (e) => {
-          const t = e.target;
-          if (ids.includes(t.id)) localStorage.setItem('tc_' + t.id, t.value);
-          if (t.name === 'tipo') localStorage.setItem('tc_tipo_' + t.value, t.checked ? '1' : '0');
+        document.querySelectorAll('input[name="tipo"]').forEach(ch => {
+          const v = localStorage.getItem('tc_tipo_'+ch.value);
+          if (v !== null) ch.checked = (v === '1');
         });
-      })();
+      });
 
-      // Normaliza "vida nocturna" -> vidaNocturna para enviar al backend
-      function collectBody() {
-        const tipo = [...document.querySelectorAll('input[name="tipo"]:checked')]
-          .map(i => {
-            const v = i.value.trim().toLowerCase();
-            if (v.replace(/\s+/g, '') === 'vidanocturna') return 'vidaNocturna';
-            return i.value;
-          });
+      document.addEventListener('input', (e) => {
+        const t = e.target;
+        if (ids.includes(t.id)) localStorage.setItem('tc_'+t.id, t.value);
+        if (t.name === 'tipo') localStorage.setItem('tc_tipo_'+t.value, t.checked ? '1' : '0');
+      });
+    })();
 
-        return {
-          origenIATA: document.getElementById('origen').value.trim(),
-          duracionDias: Number(document.getElementById('dias').value),
-          presupuestoMinUSD: Number(document.getElementById('presuMin').value),
-          presupuestoMaxUSD: Number(document.getElementById('presuMax').value),
-          tipo,
-          companeros: document.getElementById('companeros').value,
-          notas: document.getElementById('nota').value.trim()
-        };
-      }
+    // ===== Payload =====
+    function collectBody(){
+      const tipo = [...document.querySelectorAll('input[name="tipo"]:checked')].map(i => {
+        const v = i.value.trim().toLowerCase();
+        // normalizamos "vida nocturna" -> "vidaNocturna"
+        return (v.replace(/\s+/g,'') === 'vidanocturna') ? 'vidaNocturna' : i.value;
+      });
+      return {
+        origenIATA: document.getElementById('origen').value.trim(),
+        duracionDias: Number(document.getElementById('dias').value),
+        presupuestoMinUSD: Number(document.getElementById('presuMin').value),
+        presupuestoMaxUSD: Number(document.getElementById('presuMax').value),
+        tipo,
+        companeros: document.getElementById('companeros').value,
+        notas: document.getElementById('nota').value.trim()
+      };
+    }
 
-      // Helpers UI
-      const money = new Intl.NumberFormat('es-SV', { style: 'currency', currency: 'USD' });
-      const esc = s => String(s ?? '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+    // ===== Helpers =====
+    const money = new Intl.NumberFormat('es-SV', { style:'currency', currency:'USD' });
+    const esc = s => String(s ?? '').replace(/[&<>"']/g, m => (
+      {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]
+    ));
+    const norm = s => String(s||'')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g,'')
+      .toLowerCase()
+      .replace(/\s+/g,'');
 
-      // Placeholder por tags si no viene imagen
-      function guessImage(tags = []) {
-        const t = tags.map(x => (x || '').toLowerCase());
-        let q = 'travel';
-        if (t.some(s => s.includes('playa'))) q = 'beach';
-        else if (t.some(s => s.includes('natur'))) q = 'forest';
-        else if (t.some(s => s.includes('vida') && s.includes('noct'))) q = 'night city';
-        else if (t.some(s => s.includes('gastron'))) q = 'food market';
-        else if (t.some(s => s.includes('cultur'))) q = 'historic city';
-        return `https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=60&sig=${encodeURIComponent(q)}`;
-      }
+    function guessImage(tags = []){
+      const t = tags.map(x => (x||'').toLowerCase());
+      let q = 'travel';
+      if (t.some(s => s.includes('playa'))) q = 'beach';
+      else if (t.some(s => s.includes('natur'))) q = 'forest';
+      else if (t.some(s => s.includes('vida') && s.includes('noct'))) q = 'night city';
+      else if (t.some(s => s.includes('gastron'))) q = 'food market';
+      else if (t.some(s => s.includes('cultur'))) q = 'historic city';
+      return `https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=60&sig=${encodeURIComponent(q)}`;
+    }
 
-      // Parser robusto del fallback en texto
-      function parseFallback(text) {
-        const items = [];
-        if (!text) return items;
+    // Fallback (texto plano) -> items (por si quieres usar /text alguna vez)
+    function parseNumber(s){
+      if (!s) return 0;
+      const clean = s.replace(/\s/g,'')
+                     .replace(/(\.|,)(?=[0-9]{3}\b)/g,'')
+                     .replace(',', '.');
+      const n = Number(clean);
+      return isFinite(n) ? n : 0;
+    }
 
-        const lineRe = /^\d+\)\s*(.+?)\s*(?:—|–|-)\s*(.+?)\s*(?:—|–|-)\s*costo\s*~?\s*USD\s*([0-9][0-9\.,]*)/i;
-        const lines = text.split('\n');
-        let current = null;
-
-        for (const raw of lines) {
-          const line = raw.trim();
-          const m = line.match(lineRe);
-          if (m) {
-            const precioNum = parseNumber(m[3]);
-            current = { nombre: m[1].trim(), pais: m[2].trim(), precio: precioNum, tags: [] };
-            items.push(current);
-            continue;
-          }
-          const t = line.match(/Coincidenc(?:ia|ias)\s*:\s*\[([^\]]*)\]/i);
-          if (t && current) {
-            current.tags = t[1].split(',').map(s => s.trim()).filter(Boolean);
-          }
+    function parseFallback(text){
+      const items = [];
+      if (!text) return items;
+      const lineRe = /^\d+\)\s*(.+?)\s*(?:—|–|-)\s*(.+?)\s*(?:—|–|-)\s*costo\s*~?\s*USD\s*([0-9][0-9\.,]*)/i;
+      const lines = String(text).split('\n');
+      let current = null;
+      for (const raw of lines){
+        const line = raw.trim();
+        const m = line.match(lineRe);
+        if (m){
+          const precio = parseNumber(m[3]);
+          current = { nombre: m[1].trim(), pais: m[2].trim(), precio, tags: [] };
+          items.push(current);
+          continue;
         }
+        const t = line.match(/Coincidenc(?:ia|ias)\s*:\s*\[([^\]]*)\]/i);
+        if (t && current){
+          current.tags = t[1].split(',').map(s => s.trim()).filter(Boolean);
+        }
+      }
+      return items;
+    }
+
+    // Filtrado robusto (si algo falla, no filtramos)
+    function applyClientFilter(items, requiredTags){
+      try{
+        const req = (requiredTags||[]).map(norm).filter(Boolean);
+        if (!req.length) return items;
+        return items.filter(it => {
+          const tags = (it.tags||[]).map(norm);
+          if (!tags.length) return true; // no descartar si no hay tags
+          return tags.some(t => req.includes(t));
+        });
+      }catch{
         return items;
       }
+    }
 
-      function parseNumber(s) {
-        if (!s) return 0;
-        const clean = s.replace(/\s/g, '').replace(/(\.|,)(?=[0-9]{3}\b)/g, '').replace(',', '.');
-        const n = Number(clean);
-        return isFinite(n) ? n : 0;
+    // ===== URLs de imágenes =====
+    function isAbsoluteUrl(u){
+      return /^https?:\/\//i.test(u) || /^data:/i.test(u) || /^\/\//.test(u);
+    }
+
+    // Convierte a URL absoluta respetando el context path
+    function toAbsolute(u){
+      if (!u) return u;
+      if (isAbsoluteUrl(u)) return u;
+
+      const base = window.location.origin + (APP_CTX.endsWith('/') ? APP_CTX : APP_CTX + '/');
+      if (u.startsWith('/')) u = u.slice(1);
+      return base + u;
+    }
+
+    function pickImage(it){
+      if (!it) return null;
+
+      const raw =
+        it.imagen || it.imageUrl || it.imagenUrl || it.urlImagen ||
+        it.fotoPortada || it.foto || it.rutaImagen || it.pathImagen;
+
+      let r = raw ? String(raw).trim() : null;
+
+      if (!r && it.id != null){
+        r = `/media/destinos/${it.id}`;
+      }
+      if (!r) return null;
+
+      // "media/..." o "uploads/..." relativos
+      if (/^(media|uploads)\//i.test(r)) {
+        return toAbsolute(r);
+      }
+      if (r.startsWith('/')) {
+        return toAbsolute(r);
+      }
+      return toAbsolute(r);
+    }
+
+    // ===== Render =====
+    function renderCards(items, requiredTags){
+      const wrap = document.getElementById('cards');
+      const pre  = document.getElementById('out');
+
+      const safeItems = Array.isArray(items) ? items : [];
+      const filteredList = applyClientFilter(safeItems, requiredTags);
+
+      if (!filteredList.length){
+        wrap.innerHTML = '';
+        pre.style.display = 'block';
+        pre.textContent = '(sin coincidencias con los filtros)';
+        return;
       }
 
-      // Filtrado en cliente por los "tipo" marcados (match cualquiera)
-      function applyClientFilter(items, requiredTags) {
-        const req = (requiredTags || []).map(t => t.toLowerCase());
-        if (!req.length) return items;
-        return items.filter(it => (it.tags || []).some(tag => req.includes(String(tag).toLowerCase())));
-      }
+      try {
+        console.debug('[Copilot] render', filteredList.map(x => ({
+          id: x.id, img: x.imagen, tags: x.tags
+        })));
+      } catch {}
 
-      function renderCards(items, requiredTags) {
-        const wrap = document.getElementById('cards');
-        const pre = document.getElementById('out');
-
-        const filtered = applyClientFilter(items, requiredTags);
-
-        if (!filtered || filtered.length === 0) {
-          wrap.innerHTML = '';
-          pre.style.display = 'block';
-          pre.textContent = '(sin coincidencias con los filtros)';
-          return;
-        }
-
-        wrap.innerHTML = filtered.map(it => {
-          // >>>>>>>>>> CAMBIO CLAVE: usar 'imagen' del backend
-          const chosen = pickImage(it);
-          const img = chosen || guessImage(it.tags);
-          return `
+      wrap.innerHTML = filteredList.map(it => {
+        const img = pickImage(it) || guessImage(it.tags);
+        return `
           <article class="dest-card">
             <div class="dest-img">
-<img loading="lazy"
-     src="${esc(img)}"
-     alt="${esc(it.nombre)}"
-     onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=60';">
+              <img loading="lazy"
+                   src="${esc(img)}"
+                   alt="${esc(it.nombre)}"
+                   onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=60';">
               <span class="badge">Desde ${money.format(it.precio || 0)}</span>
             </div>
             <div class="dest-body">
               <h4 class="dest-title">${esc(it.nombre)}</h4>
-              <p class="dest-sub">${esc(it.pais || '')}</p>
+              <p class="dest-sub">${esc(it.pais||'')}</p>
               <a href="/cliente/destinos" class="btn-sm">Reservar destino</a>
               <div class="chips">
-                ${(it.tags || []).map(t => `<span class="chip">${esc(t)}</span>`).join('')}
+                ${(it.tags||[]).map(t => `<span class="chip">${esc(t)}</span>`).join('')}
               </div>
             </div>
-          </article>
-        `;
-        }).join('');
+          </article>`;
+      }).join('');
 
-        pre.style.display = 'none';
-      }
+      pre.style.display = 'none';
+    }
 
-      async function sendAI(e) {
-        e.preventDefault();
-        const btn = document.getElementById('btn');
-        const hint = document.getElementById('hint');
-        const out = document.getElementById('out');
-        const cards = document.getElementById('cards');
+    // ===== Acción principal =====
+    async function sendAI(e) {
+      e.preventDefault();
 
-        const payload = collectBody();
+      const btn  = document.getElementById('btn');
+      const out  = document.getElementById('out');
+      const wrap = document.getElementById('cards');
 
-        const original = btn.innerHTML;
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spin"></span>Consultando…';
-        hint.textContent = 'Consultando al copilot…';
-        out.textContent = '(consultando…)';
-        out.style.display = 'block';
-        cards.innerHTML = '';
+      const payload = collectBody(); // usa tus ids reales
 
-        try {
-          // 1) JSON (ideal: trae 'imagen')
-          let res = await fetch(API_URL_JSON, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'same-origin',
-            body: JSON.stringify(payload)
-          });
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spin"></span>Buscando...';
 
-          let body = await res.text();
-          let json = null;
-          try { json = JSON.parse(body); } catch { }
+      out.style.display = 'block';
+      out.textContent   = 'Consultando recomendaciones...';
+      wrap.innerHTML    = '';
 
-          const itemsJson = json?.items ?? (Array.isArray(json) ? json : null);
+      try {
+        const res = await fetch(API_URL_JSON, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
 
-          if (res.ok && Array.isArray(itemsJson)) {
-            renderCards(itemsJson, payload.tipo);
-            return;
-          }
-
-          // 2) Fallback: texto plano
-          res = await fetch(API_URL_TEXT, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'same-origin',
-            body: JSON.stringify(payload)
-          });
-
-          const raw = await res.text();
-          let data; try { data = JSON.parse(raw); } catch { data = { text: raw }; }
-          if (!res.ok) throw new Error(data?.text || ('HTTP ' + res.status));
-
-          const text = data.text || raw || '(sin respuesta)';
-          out.textContent = text;
-          renderCards(parseFallback(text), payload.tipo);
-
-        } catch (err) {
-          out.textContent = 'Error: ' + (err?.message || err);
-          console.error('[Copilot] fetch error', err);
-          renderCards([], payload.tipo);
-        } finally {
-          btn.disabled = false;
-          btn.innerHTML = original;
-          hint.textContent = '';
+        const bodyText = await res.text();
+        if (!res.ok) {
+          throw new Error(bodyText || ('HTTP ' + res.status));
         }
+
+        let json;
+        try {
+          json = JSON.parse(bodyText);
+        } catch {
+          throw new Error('Respuesta JSON inválida desde el backend.');
+        }
+
+        let items = json?.items;
+        if (!Array.isArray(items)) {
+          if (Array.isArray(json)) items = json;
+          else items = [];
+        }
+
+        // Safety extra: si imagen viene null pero hay id
+        items = items.map(it => ({
+          ...it,
+          imagen: (it.imagen && it.imagen.trim)
+            ? it.imagen.trim()
+            : (it.id != null ? (`/media/destinos/${it.id}`) : null)
+        }));
+
+        renderCards(items, payload.tipo);
+
+      } catch (err) {
+        console.error('Error llamando a /api/ai/destinos/json', err);
+        out.style.display = 'block';
+        out.textContent   = 'Error al obtener recomendaciones: ' + err.message;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Buscar recomendaciones';
       }
-      // ¿Es una URL absoluta (http, https, data, //)?
-      function isAbsoluteUrl(u) {
-        return /^https?:\/\//i.test(u) || /^data:/i.test(u) || /^\/\//.test(u);
-      }
-
-      // Arma URL absoluta si en BD guardaste una ruta relativa (p. ej. /uploads/… o uploads/…)
-      function toAbsolute(u) {
-        if (!u) return u;
-        if (isAbsoluteUrl(u)) return u;
-        const base = window.location.origin;
-        return u.startsWith('/') ? (base + u) : (base + '/' + u);
-      }
-
-      // Toma imagen del backend usando alias: imageUrl | imagen | imagenUrl | urlImagen | fotoPortada | foto
-function pickImage(it){
-  const raw =
-    it.imageUrl || it.imagen || it.imagenUrl ||
-    it.urlImagen || it.fotoPortada || it.foto || null;
-
-  if (!raw) return null;
-  const r = String(raw).trim();
-
-  // URLs válidas que el navegador puede abrir directamente
-  const isWebUrl = /^https?:\/\//i.test(r) || r.startsWith('data:') || r.startsWith('//');
-
-  // Si algún registro ya tuviera /uploads/ configurado en tu server (en el futuro)
-  const isAppUploads = r.startsWith('/uploads/');
-
-  return (isWebUrl || isAppUploads) ? r : null; // todo lo demás -> ignorar (evita 404)
-}
-    </script>
-  </div>
+    }
+  </script>
+</div>
 </body>
-
 </html>

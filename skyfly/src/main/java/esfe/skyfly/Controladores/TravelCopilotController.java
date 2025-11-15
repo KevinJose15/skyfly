@@ -3,13 +3,15 @@ package esfe.skyfly.Controladores;
 import esfe.skyfly.ai.TravelCopilotService;
 import esfe.skyfly.ai.dto.PreferenciasViaje;
 import esfe.skyfly.ai.dto.RecomendacionDTO;
-import org.springframework.http.*;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
 
 @RestController
+@RequestMapping("/api/ai/destinos")
 public class TravelCopilotController {
 
   private final TravelCopilotService copilot;
@@ -18,9 +20,9 @@ public class TravelCopilotController {
     this.copilot = copilot;
   }
 
-  // Texto plano (fallback del frontend) — misma ruta SIN conflicto
+  /** Fallback en TEXTO PLANO (ruta dedicada /text) */
   @PostMapping(
-      path = "/api/ai/destinos",
+      path = "/text",
       consumes = MediaType.APPLICATION_JSON_VALUE,
       produces = MediaType.TEXT_PLAIN_VALUE
   )
@@ -28,9 +30,9 @@ public class TravelCopilotController {
     return ResponseEntity.ok(copilot.recomendar(prefs));
   }
 
-  // JSON estructurado para las tarjetas
+  /** Respuesta ESTRUCTURADA en JSON */
   @PostMapping(
-      path = "/api/ai/destinos/json",
+      path = "/json",
       consumes = MediaType.APPLICATION_JSON_VALUE,
       produces = MediaType.APPLICATION_JSON_VALUE
   )

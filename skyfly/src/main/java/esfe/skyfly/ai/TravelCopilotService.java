@@ -66,10 +66,21 @@ public class TravelCopilotService {
     return buildFallbackText(prefs, candidatos);
   }
 
-  /** Devuelve lista estructurada para el endpoint JSON. */
+  /** Devuelve lista estructurada para el endpoint JSON (con imagen correcta). */
   public List<RecomendacionDTO> recomendarEstructurado(PreferenciasViaje prefs) {
-    // Usa el pipeline actual (ya filtra por tipo y presupuesto)
-    List<Cand> cand = obtenerCandidatos(prefs);
+    List<Cand> cand;
+    try {
+      cand = obtenerCandidatos(prefs);
+    } catch (Exception any) {
+      log.error("Error recuperando candidatos (JSON), usando fallback listado", any);
+      try {
+        cand = obtenerCandidatosSoloListado();
+      } catch (Exception still) {
+        log.error("Fallback listado también falló (JSON)", still);
+        cand = List.of();
+      }
+    }
+
     String descBase = buildDescripcion(prefs);
 
     return cand.stream().map(c -> {
@@ -80,7 +91,7 @@ public class TravelCopilotService {
       dto.setPrecio(c.precio);
       dto.setDescripcion(descBase);
       dto.setTags(c.tags);
-      dto.setImagen(c.imagen);  // <-- URL real desde tu BD
+      dto.setImagen(c.imagen); // http(s), data:, /uploads/**, /media/destinos/{id}
       return dto;
     }).toList();
   }
@@ -93,7 +104,7 @@ public class TravelCopilotService {
     final String pais;
     final BigDecimal precio;
     final List<String> tags;
-    final String imagen;  // <-- ahora se llama imagen
+    final String imagen; // URL absoluta/relativa, data URL, o /media/destinos/{id}
 
     Cand(Integer id, String nombre, String pais, BigDecimal precio, List<String> tags, String imagen) {
       this.id = id;
@@ -103,14 +114,15 @@ public class TravelCopilotService {
       this.tags = (tags != null ? List.copyOf(tags) : List.of());
       this.imagen = (imagen != null && !imagen.isBlank()) ? imagen.trim() : null;
     }
-    Map<String,Object> toMap() {
-      Map<String,Object> m = new LinkedHashMap<>();
+
+    Map<String, Object> toMap() {
+      Map<String, Object> m = new LinkedHashMap<>();
       m.put("id", id);
       m.put("nombre", nombre);
       m.put("pais", pais);
       m.put("costoMedioUSD", precio);
       m.put("tags", tags);
-      m.put("imagen", imagen); // útil si en algún momento pasas candidatos a IA
+      m.put("imagen", imagen);
       return m;
     }
   }
@@ -121,21 +133,30 @@ public class TravelCopilotService {
     Pageable pageReq = PageRequest.of(0, 200, Sort.by("nombre").ascending());
     Page<Destino> page;
 
-    boolean tieneFinder = hasFinderMethod();
-    boolean tieneFiltroTipo = prefs.getTipo() != null && !prefs.getTipo().isEmpty();
+    try {
+      boolean tieneFinder = hasFinderMethod();
+      boolean tieneFiltroTipo = prefs.getTipo() != null && !prefs.getTipo().isEmpty();
 
-    if (tieneFiltroTipo && tieneFinder) {
-      String kw = String.join(" ", prefs.getTipo());
-      page = destinoRepo
-          .findByNombreContainingIgnoreCaseOrDescripcionContainingIgnoreCase(kw, kw, pageReq);
-      if (page.isEmpty()) page = destinoRepo.findAll(pageReq);
-    } else {
+      if (tieneFiltroTipo && tieneFinder) {
+        String kw = String.join(" ", prefs.getTipo());
+        page = destinoRepo
+            .findByNombreContainingIgnoreCaseOrDescripcionContainingIgnoreCase(kw, kw, pageReq);
+        if (page.isEmpty()) {
+          page = destinoRepo.findAll(pageReq);
+        }
+      } else {
+        page = destinoRepo.findAll(pageReq);
+      }
+    } catch (Exception ex) {
+      // Si el finder truena por cualquier cosa, usamos findAll
+      log.error("Error usando finder de destinos, usando findAll()", ex);
       page = destinoRepo.findAll(pageReq);
     }
 
-    List<Cand> base = page.getContent().stream().map(this::toCandidate).collect(Collectors.toList());
+    List<Cand> base = page.getContent().stream()
+        .map(this::toCandidate)
+        .collect(Collectors.toList());
 
-    // Presupuesto: acepta DTO nuevo (min/max) o viejo (presupuestoUSD único)
     final BigDecimal min = readBudget(prefs, true);
     final BigDecimal max = readBudget(prefs, false);
 
@@ -145,7 +166,6 @@ public class TravelCopilotService {
         .map(TravelCopilotService::norm)
         .toList();
 
-    // Filtro REAL (tags + presupuesto)
     List<Cand> filtrados = base.stream()
         .filter(c -> min == null || c.precio.compareTo(min) >= 0)
         .filter(c -> max == null || c.precio.compareTo(max) <= 0)
@@ -185,7 +205,7 @@ public class TravelCopilotService {
     }
 
     List<String> tags = inferirTags(nombre, desc);
-    String imagen = resolveImageUrl(d); // <-- toma la imagen del registro (campo 'imagen')
+    String imagen = resolveImagenDataUrl(d); // NO tocamos el BLOB, sólo ruta segura
 
     return new Cand(id, nombre, pais, precioReal, tags, imagen);
   }
@@ -217,24 +237,31 @@ public class TravelCopilotService {
     }
   }
 
-  /** Resuelve la URL de imagen probando getters; prioriza 'getImagen()'. */
-  private String resolveImageUrl(Object d) {
-    return firstNonBlank(
-        safeInvoke(d, "getImagen"),       // <-- tu campo real
+  /**
+   * Resolver de imagen sin tocar el BLOB (a prueba de LAZY):
+   * 1) Usa cualquier URL/ruta guardada en la entidad.
+   * 2) Si no hay, construye /media/destinos/{id}.
+   * 3) Si no hay id, devuelve null (el FE pondrá placeholder).
+   */
+  private String resolveImagenDataUrl(Object d) {
+    String url = firstNonBlank(
         safeInvoke(d, "getImagenUrl"),
         safeInvoke(d, "getImageUrl"),
         safeInvoke(d, "getUrlImagen"),
         safeInvoke(d, "getFotoPortada"),
         safeInvoke(d, "getFoto"),
-        safeInvoke(d, "getImagenPrincipal")
+        safeInvoke(d, "getRutaImagen"),
+        safeInvoke(d, "getPathImagen")
     );
+    if (url != null && !url.isBlank()) return url.trim();
+
+    Integer id = resolveDestinoId(d);
+    return (id != null) ? ("/media/destinos/" + id) : null;
   }
 
   private static String firstNonBlank(String... vals) {
     if (vals == null) return null;
-    for (String v : vals) {
-      if (v != null && !v.isBlank()) return v.trim();
-    }
+    for (String v : vals) if (v != null && !v.isBlank()) return v.trim();
     return null;
   }
 
@@ -244,6 +271,7 @@ public class TravelCopilotService {
     if (n == null) n = (Number) reflectGet(prefs, "getPresupuestoUSD");
     return (n == null) ? null : new BigDecimal(n.toString());
   }
+
   private static Object reflectGet(Object obj, String method) {
     try { return obj.getClass().getMethod(method).invoke(obj); }
     catch (Exception e) { return null; }
@@ -291,7 +319,6 @@ public class TravelCopilotService {
         .map(TravelCopilotService::norm)
         .toList();
 
-    // Blindaje: si hay wish, volver a filtrar aquí también
     List<Cand> base = (wish.isEmpty())
         ? cand
         : cand.stream().filter(c -> hasAnyTag(c.tags, wish)).toList();
@@ -306,8 +333,7 @@ public class TravelCopilotService {
     int i = 1;
     for (Cand c : ordenados) {
       sb.append(i++).append(") ")
-        .append(c.nombre != null ? c.nombre : "(sin nombre)")
-        .append(" — ")
+        .append(c.nombre != null ? c.nombre : "(sin nombre)").append(" — ")
         .append(c.pais != null ? c.pais : "");
       if (c.precio != null) sb.append(" — costo ~USD ").append(c.precio.stripTrailingZeros().toPlainString());
       sb.append("\n   • Coincidencia: ").append(c.tags).append("\n");
@@ -352,7 +378,7 @@ public class TravelCopilotService {
     return n.toLowerCase(Locale.ROOT).replace(" ", "");
   }
 
-  // Descripción sencilla y estable (no IA)
+  // Descripción estable (no IA).
   private static String buildDescripcion(PreferenciasViaje prefs){
     String tipos = (prefs.getTipo()==null || prefs.getTipo().isEmpty())
         ? "viaje general"

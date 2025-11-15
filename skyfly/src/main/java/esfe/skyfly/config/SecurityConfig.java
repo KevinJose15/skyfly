@@ -2,6 +2,7 @@ package esfe.skyfly.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -9,7 +10,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher; // <-- IMPORTANTE
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
@@ -31,7 +32,12 @@ public class SecurityConfig {
                                  "/css/**", "/js/**", "/images/**", "/assets/**", "/webjars/**", "/favicon.ico")
                     .permitAll()
 
-                // 🔓 Travel Copilot (Gemini) público
+                // 🔓 Media público (sirve imágenes de BLOB/FS)
+.requestMatchers(HttpMethod.GET,     "/media/**").permitAll()
+.requestMatchers(HttpMethod.HEAD,    "/media/**").permitAll()
+.requestMatchers(HttpMethod.OPTIONS, "/media/**").permitAll()
+
+                // 🔓 Travel Copilot (JSON/texto)
                 .requestMatchers("/api/ai/**").permitAll()
 
                 // Portal Cliente (B2C)
@@ -51,7 +57,7 @@ public class SecurityConfig {
                 // Resto autenticado
                 .anyRequest().authenticated()
             )
-            // ❗ Ignoramos CSRF solo para /api/ai/** (POST desde fetch)
+            // ❗ Ignoramos CSRF para /api/ai/** (POST desde fetch)
             .csrf(csrf -> csrf
                 .ignoringRequestMatchers(new AntPathRequestMatcher("/api/ai/**"))
             )
