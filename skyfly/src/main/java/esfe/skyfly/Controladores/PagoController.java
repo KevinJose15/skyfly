@@ -10,9 +10,11 @@ import esfe.skyfly.Servicios.Interfaces.IPagoService;
 import esfe.skyfly.Servicios.Interfaces.IReservaService;
 import esfe.skyfly.Servicios.Interfaces.IMetodoPagoService;
 import esfe.skyfly.Servicios.Interfaces.CodigoConfirmacionService;
+import esfe.skyfly.Servicios.Implementaciones.CodigoConfirmacionServiceImpl;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -20,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -42,6 +45,10 @@ public class PagoController {
 
     @Autowired
     private IMetodoPagoService metodoPagoService;
+
+    // IVA configurable (por ejemplo: 0.13 = 13%)
+    @Value("${app.tax.rate:0.13}")
+    private BigDecimal taxRate;
 
     // -----------------------------
     // LISTAR PAGOS (INDEX)
@@ -67,7 +74,7 @@ public String index(Authentication authentication, Model model) {
 
 
     // -----------------------------
-    // OBTENER MONTO DE RESERVA
+    // OBTENER MONTO DE RESERVA (AHORA INCLUYE IVA)
     // -----------------------------
     @GetMapping("/reserva/monto/{reservaId}")
     @ResponseBody
@@ -75,12 +82,15 @@ public String index(Authentication authentication, Model model) {
         Reservas reserva = reservaService.buscarPorId(reservaId)
                 .orElseThrow(() -> new IllegalArgumentException("Reserva no encontrada"));
 
-        BigDecimal monto = (reserva.getPaquete() != null && reserva.getPaquete().getPrecio() != null)
+        BigDecimal montoBase = (reserva.getPaquete() != null && reserva.getPaquete().getPrecio() != null)
                 ? reserva.getPaquete().getPrecio()
                 : BigDecimal.ZERO;
 
+        BigDecimal iva = calcularIva(montoBase);
+        BigDecimal total = montoBase.add(iva).setScale(2, RoundingMode.HALF_UP);
+
         NumberFormat formatoDolar = NumberFormat.getCurrencyInstance(Locale.US);
-        return formatoDolar.format(monto);
+        return formatoDolar.format(total);
     }
 
     // -----------------------------
@@ -209,15 +219,17 @@ public String saveNuevo(@ModelAttribute Pago pago, BindingResult result, Model m
     }
 
     // Hidratar reserva + validación de pertenencia si es Cliente
+    Reservas reserva = null;
     if (pago.getReservaId() != null) {
-        Reservas reserva = reservaService.buscarPorId(pago.getReservaId())
+        reserva = reservaService.buscarPorId(pago.getReservaId())
                 .orElseThrow(() -> new IllegalArgumentException("Reserva no encontrada"));
 
         // 🔐 Bloqueo: el cliente solo puede pagar reservas suyas
         if (isCliente) {
-            String email = auth.getName();
+            String email = auth != null ? auth.getName() : null;
             boolean propia = (reserva.getCliente() != null
                     && reserva.getCliente().getUsuario() != null
+                    && email != null
                     && email.equalsIgnoreCase(reserva.getCliente().getUsuario().getEmail()));
             if (!propia) {
                 result.rejectValue("reservaId", "error.reservaId", "No puedes pagar reservas de otro cliente");
@@ -225,11 +237,17 @@ public String saveNuevo(@ModelAttribute Pago pago, BindingResult result, Model m
         }
 
         pago.setReserva(reserva);
-        if (reserva.getPaquete() != null && reserva.getPaquete().getPrecio() != null) {
-            pago.setMonto(reserva.getPaquete().getPrecio());
-        } else {
-            pago.setMonto(java.math.BigDecimal.ZERO);
-        }
+
+        // Aquí calculamos monto base + IVA y guardamos el monto TOTAL en pago.setMonto(...)
+        BigDecimal montoBase = (reserva.getPaquete() != null && reserva.getPaquete().getPrecio() != null)
+                ? reserva.getPaquete().getPrecio()
+                : BigDecimal.ZERO;
+
+        BigDecimal iva = calcularIva(montoBase);
+        BigDecimal montoTotal = montoBase.add(iva).setScale(2, RoundingMode.HALF_UP);
+
+        // Guardamos el monto total (base + IVA) para que se muestre en "Mis pagos" y en el email
+        pago.setMonto(montoTotal);
     } else {
         result.rejectValue("reservaId", "error.reservaId", "Debes seleccionar una reserva");
     }
@@ -247,10 +265,11 @@ public String saveNuevo(@ModelAttribute Pago pago, BindingResult result, Model m
         // reconstruimos el contexto visible
         java.util.List<Reservas> visibles = reservaService.obtenerTodos();
         if (isCliente) {
-            String email = auth.getName();
+            String email = auth != null ? auth.getName() : null;
             visibles = visibles.stream()
                     .filter(r -> r.getCliente() != null
                             && r.getCliente().getUsuario() != null
+                            && email != null
                             && email.equalsIgnoreCase(r.getCliente().getUsuario().getEmail()))
                     .collect(Collectors.toList());
         }
@@ -289,11 +308,75 @@ public String saveNuevo(@ModelAttribute Pago pago, BindingResult result, Model m
 
     pagoService.crearOeditar(pago);
 
-    String emailCliente = pago.getReserva().getCliente().getUsuario().getEmail();
-    CodigoConfirmacion codigo = codigoConfirmacionService.crearCodigo(emailCliente);
+    // -----------------------------
+    // Preparar y enviar el código de confirmación por correo (sin mostrarlo en la vista)
+    // -----------------------------
+    // Recolectar datos desde la reserva de forma defensiva
+    String emailParaEnvio = null;
+    String nombreCliente = null;
+    String nombrePaquete = null;
+    LocalDateTime fechaReserva = null;
+    BigDecimal montoTotal = pago.getMonto() != null ? pago.getMonto() : BigDecimal.ZERO;
+    String destino = null;
 
-    redirect.addFlashAttribute("msg", "Pago registrado ✅. Código de confirmación enviado a: "
-            + emailCliente + " (Código: " + codigo.getCodigo() + ")");
+    if (reserva != null) {
+        if (reserva.getCliente() != null && reserva.getCliente().getUsuario() != null) {
+            emailParaEnvio = reserva.getCliente().getUsuario().getEmail();
+            nombreCliente = (reserva.getCliente().getUsuario().getName() != null && !reserva.getCliente().getUsuario().getName().isBlank())
+                    ? reserva.getCliente().getUsuario().getName()
+                    : emailParaEnvio;
+        }
+
+        if (reserva.getPaquete() != null) {
+            nombrePaquete = reserva.getPaquete().getNombre();
+            // destino: intenta desde paquete -> destino -> nombre
+            if (reserva.getPaquete().getDestino() != null && reserva.getPaquete().getDestino().getNombre() != null) {
+                destino = reserva.getPaquete().getDestino().getNombre();
+            }
+        }
+
+        // Fecha: si tu entidad tiene fecha, úsala; si no, usa now()
+        try {
+            fechaReserva = reserva.getFechaReserva();
+        } catch (Exception ex) {
+            fechaReserva = LocalDateTime.now();
+        }
+    }
+
+    // Si no hay email válido, avisamos y redirigimos sin intentar enviar correo
+    if (emailParaEnvio == null || emailParaEnvio.isBlank()) {
+        redirect.addFlashAttribute("msg",
+                "Pago registrado ✅. No se pudo enviar el correo porque no existe una dirección de correo válida para la reserva.");
+        return "redirect:/codigo";
+    }
+
+    // Llamada al servicio que crea el código, guarda en BD y envía el correo con plantilla.
+    // Uso casteo a la implementación concreta para invocar crearCodigoYEnviarEmail si no quieres tocar la interfaz ahora.
+    try {
+        if (codigoConfirmacionService instanceof CodigoConfirmacionServiceImpl) {
+            ((CodigoConfirmacionServiceImpl) codigoConfirmacionService).crearCodigoYEnviarEmail(
+                    emailParaEnvio,
+                    nombreCliente,
+                    nombrePaquete,
+                    fechaReserva,
+                    montoTotal,
+                    destino
+            );
+        } else {
+            // fallback: si la implementación actual no es la esperada, utilizamos el método básico
+            codigoConfirmacionService.crearCodigo(emailParaEnvio);
+        }
+    } catch (Exception ex) {
+        // loguear si tienes logger o simplemente pasar el mensaje al flash para notificar al usuario
+        redirect.addFlashAttribute("msg",
+                "Pago registrado ✅. Ocurrió un problema al intentar enviar el correo de confirmación. " +
+                        "El código fue generado y guardado en la base de datos.");
+        return "redirect:/codigo";
+    }
+
+    redirect.addFlashAttribute("msg",
+        "Pago registrado ✅. Hemos enviado un código de confirmación al correo: "
+        + emailParaEnvio + ". Revisa tu bandeja de entrada o el correo no deseado.");
     return "redirect:/codigo";
 }
     // -----------------------------
@@ -333,5 +416,14 @@ public String saveNuevo(@ModelAttribute Pago pago, BindingResult result, Model m
         pagoService.crearOeditar(pago);
         redirect.addFlashAttribute("msg", "Pago actualizado correctamente");
         return "redirect:/pagos/index";
+    }
+
+    // -----------------------------
+    // Utilidades internas
+    // -----------------------------
+    private BigDecimal calcularIva(BigDecimal montoBase) {
+        if (montoBase == null) return BigDecimal.ZERO;
+        if (taxRate == null) taxRate = BigDecimal.valueOf(0.13);
+        return montoBase.multiply(taxRate).setScale(2, RoundingMode.HALF_UP);
     }
 }
