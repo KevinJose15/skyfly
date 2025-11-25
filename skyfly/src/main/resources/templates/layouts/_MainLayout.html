@@ -44,9 +44,10 @@
       <div class="sidebar" data-background-color="dark">
         <div class="sidebar-logo">
           <div class="logo-header" data-background-color="dark">
-            <a th:href="@{/bienvenida}" class="logo">
-              <img th:src="@{/assets/img/kaiadmin/logo_light.svg}" alt="navbar brand" class="navbar-brand" height="20"/>
-            </a>
+       <a th:href="@{/bienvenida}" class="logo d-flex align-items-center">
+    <img th:src="@{/assets/images/SkyFly_logo.png}" alt="SkyFly Logo" class="navbar-brand me-2" height="40"/>
+    <span class="text-white fw-bold" style="font-size: 1.2rem;">SKYFLY</span>
+</a>
             <div class="nav-toggle">
               <button class="btn btn-toggle toggle-sidebar"><i class="gg-menu-right"></i></button>
               <button class="btn btn-toggle sidenav-toggler"><i class="gg-menu-left"></i></button>
@@ -175,7 +176,7 @@
                 <li class="nav-item topbar-user dropdown hidden-caret" sec:authorize="isAuthenticated()">
                   <a class="dropdown-toggle profile-pic" data-bs-toggle="dropdown" href="#" aria-expanded="false">
                     <div class="avatar-sm">
-                      <img th:src="@{/assets/img/profile.jpg}" alt="..." class="avatar-img rounded-circle"/>
+                      <img th:src="@{/assets/images/icono_logo.png}" alt="..." class="avatar-img rounded-circle"/>
                     </div>
                     <span class="profile-username">
                       <span class="op-7">Hola,</span>
@@ -187,7 +188,7 @@
                       <li>
                         <div class="user-box">
                           <div class="avatar-lg">
-                            <img th:src="@{/assets/img/profile.jpg}" alt="image profile" class="avatar-img rounded"/>
+                            <img th:src="@{/assets/images/icono_logo.png}"alt="image profile" class="avatar-img rounded"/>
                           </div>
                           <div class="u-text">
                             <h4 sec:authentication="principal.username">user@example.com</h4>
@@ -242,16 +243,15 @@
           <div class="container-fluid d-flex justify-content-between">
             <nav class="pull-left">
               <ul class="nav">
-                <li class="nav-item"><a class="nav-link" href="http://www.themekita.com">ThemeKita</a></li>
-                <li class="nav-item"><a class="nav-link" href="#">Help</a></li>
-                <li class="nav-item"><a class="nav-link" href="#">Licenses</a></li>
+                <li class="nav-item"><a class="nav-link" href="http://www.DevLab.com">DevLab</a></li>
+             
               </ul>
             </nav>
             <div class="copyright">
-              2024, made with <i class="fa fa-heart heart text-danger"></i> by
-              <a href="http://www.themekita.com">ThemeKita</a>
+              2024, Derechos reservados <i class="fa fa-heart heart text-danger"></i> by
+              <a href="http://www.SkyFly.com">SkyFly</a>
             </div>
-            <div>Distributed by <a target="_blank" href="https://themewagon.com/">ThemeWagon</a>.</div>
+            <div>Distributed by <a target="_blank" href="https://DevLab.com/">DevLab</a>.</div>
           </div>
         </footer>
       </div>
