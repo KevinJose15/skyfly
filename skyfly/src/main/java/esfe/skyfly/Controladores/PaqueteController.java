@@ -5,6 +5,7 @@ import esfe.skyfly.Modelos.Paquete;
 import esfe.skyfly.Servicios.Interfaces.IPaqueteService;
 import esfe.skyfly.Servicios.Interfaces.IDestinoService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -124,9 +125,19 @@ public class PaqueteController {
 
     // ----------- PROCESAR ELIMINAR --------------
     @PostMapping("/delete")
-    public String deletePaquete(@ModelAttribute Paquete paquete, RedirectAttributes redirect) {
+public String deletePaquete(@ModelAttribute Paquete paquete, RedirectAttributes redirect) {
+    try {
         paqueteService.eliminarPorId(paquete.getPaqueteId());
         redirect.addFlashAttribute("msg", "Paquete eliminado correctamente");
-        return "redirect:/paquetes";
+
+    } catch (DataIntegrityViolationException e) {
+        redirect.addFlashAttribute("error", "No se puede eliminar este paquete porque está siendo usado en reservas");
+
+    } catch (Exception e) {
+        redirect.addFlashAttribute("error", "Ocurrió un error al eliminar el paquete");
     }
+
+    return "redirect:/paquetes";
+}
+
 }

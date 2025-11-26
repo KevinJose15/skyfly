@@ -167,9 +167,9 @@
         </div>
 
         <div class="actions">
-          <a th:href="@{/pagos}" class="btn btn-secondary">Cancelar</a>
+          <a th:href="@{/cliente/reservas}" class="btn btn-secondary">Cancelar</a>
           <button type="submit"
-                  th:text="${action == 'create' ? 'Guardar' : 'Actualizar'}"
+                  th:text="${action == 'create' ? 'Confirmar Pago' : 'Actualizar'}"
                   th:classappend="${action == 'create' ? ' btn-primary' : ' btn-warning'}"
                   class="btn">
           </button>

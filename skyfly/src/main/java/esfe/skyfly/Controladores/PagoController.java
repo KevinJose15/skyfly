@@ -72,26 +72,23 @@ public String index(Authentication authentication, Model model) {
     return "pagos/index";
 }
 
+// -----------------------------
+// OBTENER MONTO BASE (SIN IVA)
+// -----------------------------
+@GetMapping("/reserva/monto/{reservaId}")
+@ResponseBody
+public String obtenerMontoReserva(@PathVariable Integer reservaId) {
+    Reservas reserva = reservaService.buscarPorId(reservaId)
+            .orElseThrow(() -> new IllegalArgumentException("Reserva no encontrada"));
 
-    // -----------------------------
-    // OBTENER MONTO DE RESERVA (AHORA INCLUYE IVA)
-    // -----------------------------
-    @GetMapping("/reserva/monto/{reservaId}")
-    @ResponseBody
-    public String obtenerMontoReserva(@PathVariable Integer reservaId) {
-        Reservas reserva = reservaService.buscarPorId(reservaId)
-                .orElseThrow(() -> new IllegalArgumentException("Reserva no encontrada"));
+    BigDecimal montoBase = (reserva.getPaquete() != null && reserva.getPaquete().getPrecio() != null)
+            ? reserva.getPaquete().getPrecio()
+            : BigDecimal.ZERO;
 
-        BigDecimal montoBase = (reserva.getPaquete() != null && reserva.getPaquete().getPrecio() != null)
-                ? reserva.getPaquete().getPrecio()
-                : BigDecimal.ZERO;
+    NumberFormat formatoDolar = NumberFormat.getCurrencyInstance(Locale.US);
+    return formatoDolar.format(montoBase); 
+}
 
-        BigDecimal iva = calcularIva(montoBase);
-        BigDecimal total = montoBase.add(iva).setScale(2, RoundingMode.HALF_UP);
-
-        NumberFormat formatoDolar = NumberFormat.getCurrencyInstance(Locale.US);
-        return formatoDolar.format(total);
-    }
 
     // -----------------------------
     // FORMULARIO NUEVO PAGO

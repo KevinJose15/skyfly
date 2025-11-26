@@ -22,4 +22,6 @@ public interface IUsuarioService {
     List<Usuario> findByRol(Rol rol);
 
     String encodePassword(String passwordHash);
+    Optional<Usuario> buscarPorEmail(String email);
+    boolean emailExiste(String email);
 }

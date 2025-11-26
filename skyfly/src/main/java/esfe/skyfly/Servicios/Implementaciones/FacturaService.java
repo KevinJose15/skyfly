@@ -32,24 +32,33 @@ public class FacturaService implements IFacturaService {
         this.pdfFacturaUtil = pdfFacturaUtil;
     }
 
-    @Override
-    @Transactional
-    public Factura crearDesdePago(Pago pago) {
-        if (pago == null) throw new IllegalArgumentException("Pago nulo.");
-        if (pago.getMonto() == null) throw new IllegalArgumentException("El pago no tiene monto.");
-        if (pago.getReserva() == null) throw new IllegalArgumentException("El pago no tiene reserva.");
+ @Override
+@Transactional
+public Factura crearDesdePago(Pago pago) {
 
-        BigDecimal monto = pago.getMonto();
-        BigDecimal impuestos = monto.multiply(iva).setScale(2, RoundingMode.HALF_UP);
+    if (pago == null) throw new IllegalArgumentException("Pago nulo.");
+    if (pago.getReserva() == null) throw new IllegalArgumentException("El pago no tiene reserva.");
+    if (pago.getReserva().getPaquete() == null) throw new IllegalArgumentException("La reserva no tiene paquete.");
+    if (pago.getReserva().getPaquete().getPrecio() == null) throw new IllegalArgumentException("El paquete no tiene precio.");
 
-        Factura f = new Factura();
-        f.setFechaEmision(LocalDate.now());
-        f.setReserva(pago.getReserva());      // tipo Reservas
-        f.setMontoTotal(monto);               // almacenamos monto base
-        f.setImpuestos(impuestos);            // impuestos calculados
+    // ✅ MONTO BASE
+    BigDecimal base = pago.getReserva().getPaquete().getPrecio();
 
-        return facturaRepository.save(f);
-    }
+    // ✅ IVA
+    BigDecimal impuestos = base.multiply(iva)
+            .setScale(2, RoundingMode.HALF_UP);
+
+    Factura f = new Factura();
+    f.setFechaEmision(LocalDate.now());
+    f.setReserva(pago.getReserva());
+
+    // ✅ GUARDAMOS CORRECTAMENTE
+    f.setMontoTotal(base);        // Base SIN IVA
+    f.setImpuestos(impuestos);    // IVA
+
+    // ✅ NO GUARDES EL TOTAL (se calcula solo en getTotalAPagar())
+    return facturaRepository.save(f);
+}
 
     @Override
     public Optional<Factura> buscarPorId(Integer id) {

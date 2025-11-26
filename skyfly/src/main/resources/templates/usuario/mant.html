@@ -3,37 +3,52 @@
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layouts/_mainLayout}">
 <head>
+    <meta charset="utf-8"/>
     <title layout:fragment="title">Usuario</title>
 </head>
 <body>
 <section layout:fragment="content">
+
+    <!-- ALERTAS (flash messages) -->
+    <div th:if="${msg}" class="alert alert-success alert-dismissible fade show" role="alert" id="flash-success">
+        <strong>Éxito:</strong> <span th:text="${msg}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <div th:if="${err}" class="alert alert-danger alert-dismissible fade show" role="alert" id="flash-error">
+        <strong>Atención:</strong> <span th:text="${err}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
 
     <h2 th:text="'Usuario - ' + ${#strings.capitalize(action)}"></h2>
 
     <!-- CREAR / EDITAR -->
     <form th:if="${action == 'create' or action == 'edit'}"
           th:action="@{'/usuarios/' + ${action}}"
-          th:object="${usuario}" method="post">
+          th:object="${usuario}" method="post" novalidate>
 
         <input type="hidden" th:field="*{id}"/>
 
         <div class="mb-3">
             <label for="name" class="form-label">Nombre</label>
             <input type="text" id="name" th:field="*{name}" class="form-control" required>
+            <div th:if="${#fields.hasErrors('name')}" class="invalid-feedback d-block" th:errors="*{name}"></div>
         </div>
 
         <div class="mb-3">
             <label for="email" class="form-label">Email</label>
             <input type="email" id="email" th:field="*{email}" class="form-control" required>
+            <div th:if="${#fields.hasErrors('email')}" class="invalid-feedback d-block" th:errors="*{email}"></div>
         </div>
 
         <div class="mb-3">
             <label for="rol" class="form-label">Rol</label>
             <select id="rol" th:field="*{rol}" class="form-select">
-                <option value="Administrador">Administrador</option>
-                <option value="Agente">Agente</option>
-                <option value="Cliente">Cliente</option>
+                <option value="Administrador" th:selected="${usuario.rol == 'Administrador'}">Administrador</option>
+                <option value="Agente" th:selected="${usuario.rol == 'Agente'}">Agente</option>
+                <option value="Cliente" th:selected="${usuario.rol == 'Cliente'}">Cliente</option>
             </select>
+            <div th:if="${#fields.hasErrors('rol')}" class="invalid-feedback d-block" th:errors="*{rol}"></div>
         </div>
 
         <!-- Contraseña -->
@@ -44,19 +59,24 @@
                    th:placeholder="${action == 'create' ? 'Ingrese contraseña' : 'Contraseña actual'}"
                    class="form-control"
                    th:required="${action == 'create'}"/>
+            <div th:if="${#fields.hasErrors('passwordHash')}" class="invalid-feedback d-block"
+                 th:errors="*{passwordHash}"></div>
         </div>
 
         <div class="mb-3">
             <label for="status" class="form-label">Estado</label>
             <select id="status" th:field="*{status}" class="form-select" required>
-                <option value="1">Activo</option>
-                <option value="0">Inactivo</option>
+                <option value="1" th:selected="${usuario.status == 1}">Activo</option>
+                <option value="0" th:selected="${usuario.status == 0}">Inactivo</option>
             </select>
+            <div th:if="${#fields.hasErrors('status')}" class="invalid-feedback d-block" th:errors="*{status}"></div>
         </div>
 
-        <button type="submit" th:text="${action == 'create' ? 'Guardar' : 'Actualizar'}"
-                th:classappend="${action == 'create' ? 'btn-primary' : 'btn-warning'}"
+        <button type="submit"
+                th:text="${action == 'create' ? 'Guardar' : 'Actualizar'}"
+                th:classappend="${action == 'create' ? ' btn-primary' : ' btn-warning'}"
                 class="btn"></button>
+
         <a th:href="@{/usuarios}" class="btn btn-secondary">Cancelar</a>
     </form>
 
@@ -82,5 +102,25 @@
     </form>
 
 </section>
+
+<!-- Auto-dismiss script para las alertas (Bootstrap 5) -->
+<script th:inline="javascript">
+/*<![CDATA[*/
+  (function(){
+    var delay = 4500; // ms
+    setTimeout(function(){
+      var s = document.getElementById('flash-success');
+      if (s) {
+        try { bootstrap.Alert.getOrCreateInstance(s).close(); } catch(e) { s.style.display = 'none'; }
+      }
+      var e = document.getElementById('flash-error');
+      if (e) {
+        try { bootstrap.Alert.getOrCreateInstance(e).close(); } catch(e) { e.style.display = 'none'; }
+      }
+    }, delay);
+  })();
+/*]]>*/
+</script>
+
 </body>
 </html>

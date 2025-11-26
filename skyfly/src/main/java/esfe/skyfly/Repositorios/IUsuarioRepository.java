@@ -9,4 +9,6 @@ import java.util.Optional;
 public interface IUsuarioRepository extends JpaRepository<Usuario, Integer> {
     Optional<Usuario> findByEmail(String email);
     List<Usuario> findByRol(Rol rol); // 👈 así debe estar
+    Optional<Usuario> findByEmailIgnoreCase(String email);
+boolean existsByEmail(String email);
 }

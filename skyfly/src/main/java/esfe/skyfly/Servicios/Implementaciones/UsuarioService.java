@@ -66,6 +66,15 @@ public class UsuarioService implements IUsuarioService, UserDetailsService {
             }).orElseThrow(() -> new RuntimeException("Usuario no encontrado con ID: " + usuario.getId()));
         }
     }
+     @Override
+    public Optional<Usuario> buscarPorEmail(String email) {
+        if (email == null) return Optional.empty();
+        return usuarioRepository.findByEmailIgnoreCase(email.trim());
+    }
+     @Override
+    public boolean emailExiste(String email) {
+        return usuarioRepository.existsByEmail(email);
+    }
 
     @Override
     public void eliminarPorId(Integer id) {

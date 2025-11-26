@@ -84,18 +84,33 @@
 
           <td class="hide-md" th:text="${p.fechaPago != null ? #temporals.format(p.fechaPago, 'yyyy-MM-dd HH:mm') : '—'}">2025-01-01</td>
 
-          <!-- Nueva columna: Factura -->
-          <td class="text-center actions">
-            <a class="btn btn-sm btn-outline-primary" th:if="${fid != null}"
-               th:href="@{|/facturas/${fid}|}">
-              Ver
-            </a>
-            <a class="btn btn-sm btn-primary" th:if="${fid != null}"
-               th:href="@{|/facturas/${fid}/pdf|}">
-              PDF
-            </a>
-            <span th:if="${fid == null}" class="muted">—</span>
-          </td>
+        <td class="text-center actions">
+
+    <!-- Mostrar factura si existe -->
+    <a class="btn btn-sm btn-outline-primary" th:if="${fid != null}"
+       th:href="@{|/facturas/${fid}|}">
+        Ver
+    </a>
+
+    <a class="btn btn-sm btn-primary" th:if="${fid != null}"
+       th:href="@{|/facturas/${fid}/pdf|}">
+        PDF
+    </a>
+
+    <!--  BOTÓN IR A PAGAR si RESERVA está pendiente -->
+   <a class="btn btn-sm btn-warning"
+
+       th:if="${p.reserva != null and p.reserva.estado == T(esfe.skyfly.Modelos.EstadoReserva).PENDIENTE}"
+       th:href="@{|/pagos/create?reservaId=${p.reserva.reservaId}|}">
+        Ir a pagar
+    </a>
+
+    <!-- Si no hay factura ni es pendiente -->
+    <span th:if="${fid == null and p.reserva.estado != T(esfe.skyfly.Modelos.EstadoReserva).PENDIENTE}" class="muted">—</span>
+
+</td>
+
+
         </tr>
       </tbody>
     </table>

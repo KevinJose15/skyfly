@@ -7,30 +7,35 @@
 </head>
 <body>
 <section layout:fragment="content">
-    <div th:if="${msg != null}">
-        <script>
-            swal({
-                title: "Confirmación",
-                text: '[[ ${msg} ]]',
-                icon: "success"
-            });
-        </script>
-    </div>
-    <div th:if="${error != null}">
-        <script>
-            swal({
-                title: "Error",
-                text: '[[ ${error} ]]',
-                icon: "error"
-            });
-        </script>
-    </div>
+    <!-- Mensaje de éxito -->
+<div th:if="${msg != null}">
+    <script>
+        swal({
+            title: "Confirmación",
+            text: '[[ ${msg} ]]',
+            icon: "success"
+        });
+    </script>
+</div>
+
+<!-- Mensaje de error -->
+<div th:if="${error != null}">
+    <script>
+        swal({
+            title: "Error",
+            text: '[[ ${error} ]]',
+            icon: "error"
+        });
+    </script>
+</div>
+
 
     <h2>Listado de Usuarios</h2>
 
     <div class="mb-3">
         <a th:href="@{/usuarios/create}" class="btn btn-success">Nuevo Usuario</a>
     </div>
+  
 
     <table class="table table-bordered">
         <thead>

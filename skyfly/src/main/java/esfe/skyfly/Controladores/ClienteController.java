@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -153,11 +154,16 @@ public String saveEditado(@ModelAttribute Cliente cliente, BindingResult result,
     redirect.addFlashAttribute("msg", "Cliente actualizado correctamente");
     return "redirect:/clientes";
 }
-    @PostMapping("/delete")
-    public String deleteCliente(@ModelAttribute Cliente cliente, RedirectAttributes redirect) {
-        clienteService.eliminarPorId(cliente.getClienteId()); // 👈 usar clienteId
+@PostMapping("/delete")
+public String deleteCliente(@ModelAttribute Cliente cliente, RedirectAttributes redirect) {
+    try {
+        clienteService.eliminarPorId(cliente.getClienteId()); // intenta eliminar
         redirect.addFlashAttribute("msg", "Cliente eliminado correctamente");
-        return "redirect:/clientes";
+    } catch (Exception ex) {
+        redirect.addFlashAttribute("error", "No se puede eliminar: el cliente está siendo usado");
     }
+
+    return "redirect:/clientes";
+}
 
 }

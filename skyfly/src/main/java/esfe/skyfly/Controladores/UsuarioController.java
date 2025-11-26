@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -63,12 +64,23 @@ public class UsuarioController {
         return "usuario/mant";
     }
 
-// ----------------- CREAR -----------------
 @PostMapping("/create")
 public String saveNuevo(@ModelAttribute Usuario usuario, BindingResult result,
                         RedirectAttributes redirect, Model model) {
+
     if (usuario.getPasswordHash() == null || usuario.getPasswordHash().isBlank()) {
         result.rejectValue("passwordHash", "error.usuario", "La contraseña es obligatoria");
+    }
+
+    // Validación: email duplicado usando el nuevo método del servicio
+    if (usuario.getEmail() != null && !usuario.getEmail().isBlank()) {
+        Optional<Usuario> existente = usuarioService.buscarPorEmail(usuario.getEmail());
+        if (existente.isPresent()) {
+            // si es creación (id null) -> duplicado; si es edición -> duplicado solo si id distinto
+            if (usuario.getId() == null || !usuario.getId().equals(existente.get().getId())) {
+                result.rejectValue("email", "error.usuario", "Ya existe un usuario con ese correo");
+            }
+        }
     }
 
     if (result.hasErrors()) {
@@ -76,10 +88,22 @@ public String saveNuevo(@ModelAttribute Usuario usuario, BindingResult result,
         return "usuario/mant";
     }
 
-    usuarioService.crearOeditar(usuario);
-    redirect.addFlashAttribute("msg", "Usuario creado correctamente");
+    try {
+        usuarioService.crearOeditar(usuario);
+        redirect.addFlashAttribute("msg", "Usuario creado correctamente");
+    } catch (org.springframework.dao.DataIntegrityViolationException ex) {
+        // log.error("Error creando usuario", ex);
+        redirect.addFlashAttribute("err", "No se pudo crear el usuario: conflicto de datos (email duplicado u otro).");
+        return "redirect:/usuarios";
+    } catch (Exception ex) {
+        // log.error("Error creando usuario", ex);
+        redirect.addFlashAttribute("err", "Error al crear usuario: " + ex.getMessage());
+        return "redirect:/usuarios";
+    }
+
     return "redirect:/usuarios";
 }
+
     // ----------------- EDITAR -----------------
     @GetMapping("/edit/{id}")
     public String edit(@PathVariable Integer id, Model model) {
@@ -131,10 +155,26 @@ public String saveEditado(@ModelAttribute Usuario usuario, BindingResult result,
         return "usuario/mant";
     }
 
-    @PostMapping("/delete")
-    public String deleteUsuario(@ModelAttribute Usuario usuario, RedirectAttributes redirect) {
+   @PostMapping("/delete")
+public String deleteUsuario(@ModelAttribute Usuario usuario, RedirectAttributes redirect) {
+
+    try {
         usuarioService.eliminarPorId(usuario.getId());
         redirect.addFlashAttribute("msg", "Usuario eliminado correctamente");
-        return "redirect:/usuarios";
+
+    } catch (DataIntegrityViolationException ex) {
+
+        // Este es el caso de clave foránea (usuario usado en cliente)
+        redirect.addFlashAttribute("error", "No se puede eliminar el usuario porque está asociado a un cliente.");
+
+    } catch (Exception ex) {
+
+        // Error inesperado
+        redirect.addFlashAttribute("err", "Error inesperado al eliminar el usuario.");
+
     }
+
+    return "redirect:/usuarios";
+}
+
 }

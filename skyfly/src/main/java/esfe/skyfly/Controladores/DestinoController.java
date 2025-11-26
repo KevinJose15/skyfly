@@ -4,6 +4,7 @@ import esfe.skyfly.Modelos.Destino;
 import esfe.skyfly.Repositorios.IDestinoRepository;
 import esfe.skyfly.Servicios.Interfaces.IDestinoService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -173,12 +174,20 @@ public class DestinoController {
     }
 
     // ------------------ ELIMINAR ------------------
-    @PostMapping("/delete")
-    public String deleteDestino(@ModelAttribute Destino destino, RedirectAttributes redirect) {
-        destinoService.eliminarPorId(destino.getDestinoId());
+  @PostMapping("/delete")
+public String eliminarDestino(@RequestParam Integer destinoId, RedirectAttributes redirect) {
+    try {
+        destinoService.eliminarPorId(destinoId);
         redirect.addFlashAttribute("msg", "Destino eliminado correctamente");
-        return "redirect:/destinos";
+    } catch (DataIntegrityViolationException e) {
+        redirect.addFlashAttribute("error", "No se puede eliminar el destino porque está siendo usado en paquetes o reservas.");
+    } catch (Exception e) {
+        redirect.addFlashAttribute("error", "Ocurrió un error inesperado al eliminar el destino.");
     }
+
+    return "redirect:/destinos";
+}
+
 
     // ------------------ SERVIR IMAGEN ------------------
     @GetMapping("/imagen/{id}")

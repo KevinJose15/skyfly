@@ -3,6 +3,7 @@ package esfe.skyfly.Controladores;
 import esfe.skyfly.Modelos.MetodoPago;
 import esfe.skyfly.Servicios.Interfaces.IMetodoPagoService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -114,9 +115,22 @@ public class MetodoPagoController {
 
 
     @PostMapping("/delete")
-    public String deleteMetodoPago(@ModelAttribute MetodoPago metodoPago, RedirectAttributes redirect) {
+public String deleteMetodoPago(@ModelAttribute MetodoPago metodoPago, RedirectAttributes redirect) {
+    try {
         metodoPagoService.eliminarPorId(metodoPago.getMetodoPagoId());
-        redirect.addFlashAttribute("msg", "Método de Pago eliminado correctamente");
-        return "redirect:/metodopago";
+
+        redirect.addFlashAttribute("msg", "Método de pago eliminado correctamente");
+
+    } catch (DataIntegrityViolationException e) {
+
+        redirect.addFlashAttribute("error", "No se puede eliminar el método de pago porque está siendo utilizado en pagos.");
+
+    } catch (Exception e) {
+
+        redirect.addFlashAttribute("error", "Ocurrió un error inesperado al eliminar el método de pago.");
     }
+
+    return "redirect:/metodopago";
+}
+
 }
