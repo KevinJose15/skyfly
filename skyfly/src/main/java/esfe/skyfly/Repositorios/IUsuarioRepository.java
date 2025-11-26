@@ -11,4 +11,5 @@ public interface IUsuarioRepository extends JpaRepository<Usuario, Integer> {
     List<Usuario> findByRol(Rol rol); // 👈 así debe estar
     Optional<Usuario> findByEmailIgnoreCase(String email);
 boolean existsByEmail(String email);
+
 }

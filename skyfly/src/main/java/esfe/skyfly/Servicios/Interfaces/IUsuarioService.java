@@ -24,4 +24,5 @@ public interface IUsuarioService {
     String encodePassword(String passwordHash);
     Optional<Usuario> buscarPorEmail(String email);
     boolean emailExiste(String email);
+    
 }

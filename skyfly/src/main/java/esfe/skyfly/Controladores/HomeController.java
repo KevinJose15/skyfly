@@ -1,5 +1,6 @@
 package esfe.skyfly.Controladores;
-
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import esfe.skyfly.Modelos.Cliente;
 import esfe.skyfly.Modelos.Usuario;
 import esfe.skyfly.Modelos.Rol;
@@ -40,17 +41,34 @@ public String main() {
         model.addAttribute("cliente", new Cliente());
         return "Home/registro";
     }
+@PostMapping("/registro")
+public String registrarCuenta(@ModelAttribute("usuario") Usuario usuario,
+                              BindingResult result,
+                              @ModelAttribute("cliente") Cliente cliente,
+                              Model model) {
 
-    @PostMapping("/registro")
-    public String registrarCuenta(@ModelAttribute Usuario usuario,
-                                  @ModelAttribute Cliente cliente) {
-        usuario.setRol(Rol.Cliente);
-        usuario.setStatus(true);
-        Usuario usuarioGuardado = usuarioService.crearOeditar(usuario);
-
-        cliente.setUsuario(usuarioGuardado);
-        clienteService.crearOeditar(cliente);
-
-        return "redirect:/login?registroExitoso=true";
+    // ✅ Validar correo duplicado
+    if (usuarioService.emailExiste(usuario.getEmail())) {
+        result.rejectValue("email", "error.usuario", "Ya existe un usuario con ese correo");
     }
+
+    // Si hay errores, regresar al formulario de registro
+    if (result.hasErrors()) {
+        // volvemos a poner los mismos atributos que en el GET
+        model.addAttribute("usuario", usuario);
+        model.addAttribute("cliente", cliente);
+        return "Home/registro";
+    }
+
+    // Si todo bien, guardamos
+    usuario.setRol(Rol.Cliente);
+    usuario.setStatus(true);
+    Usuario usuarioGuardado = usuarioService.crearOeditar(usuario);
+
+    cliente.setUsuario(usuarioGuardado);
+    clienteService.crearOeditar(cliente);
+
+    return "redirect:/login?registroExitoso=true";
+}
+
 }

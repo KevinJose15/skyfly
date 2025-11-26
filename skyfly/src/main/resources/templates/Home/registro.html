@@ -110,21 +110,61 @@
 
     <!-- Derecha: Formulario + botones -->
     <div class="form-section">
-      <form id="registerForm" th:action="@{/registro}" method="post" th:object="${usuario}" class="form-container">
-        <!-- Estos SÍ existen en tu objeto 'usuario' -->
-        <input type="text" th:field="*{name}" class="form-control" placeholder="Nombre completo" required>
-        <input type="email" th:field="*{email}" class="form-control" placeholder="Correo electrónico" required>
-        <input type="password" th:field="*{passwordHash}" class="form-control" placeholder="Contraseña" required>
+      <form id="registerForm"
+      th:action="@{/registro}"
+      method="post"
+      th:object="${usuario}"
+      class="form-container">
 
-        <!-- Estos NO dependen del objeto 'usuario' -->
-        <input type="text" name="telefono" class="form-control" placeholder="Teléfono" required>
-        <input type="text" name="direccion" class="form-control" placeholder="Dirección" required>
+    <!-- NOMBRE -->
+    <input type="text"
+           th:field="*{name}"
+           class="form-control"
+           placeholder="Nombre completo"
+           required />
 
-        <div class="buttons-container">
-          <button type="submit" class="btn-register">Registrarse</button>
-          <a th:href="@{/login}" class="btn-login">Volver al login</a>
-        </div>
-      </form>
+    <!-- EMAIL -->
+    <input type="email"
+           th:field="*{email}"
+           class="form-control"
+           placeholder="Correo electrónico"
+           required />
+
+    <!--  mensaje de error si hay problemas con el email -->
+    <div style="color:#ff6b6b; font-size: 0.8rem; margin-top: 4px;"
+         th:if="${#fields.hasErrors('email')}"
+         th:errors="*{email}">
+        <!-- Aquí Thymeleaf pondrá: Ya existe un usuario con ese correo -->
+    </div>
+
+    <!-- PASSWORD -->
+    <input type="password"
+           th:field="*{passwordHash}"
+           class="form-control"
+           placeholder="Contraseña"
+           required />
+
+    <!-- CAMPOS DEL CLIENTE (NO del usuario) -->
+    <input type="text"
+           name="telefono"
+           th:value="${cliente.telefono}"
+           class="form-control"
+           placeholder="Teléfono"
+           required />
+
+    <input type="text"
+           name="direccion"
+           th:value="${cliente.direccion}"
+           class="form-control"
+           placeholder="Dirección"
+           required />
+
+    <div class="buttons-container">
+        <button type="submit" class="btn-register">Registrarse</button>
+        <a th:href="@{/login}" class="btn-login">Volver al login</a>
+    </div>
+</form>
+
     </div>
   </div>
 
