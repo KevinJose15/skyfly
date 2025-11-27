@@ -6,30 +6,71 @@
 
 <head>
   <title layout:fragment="title">Mis pagos</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <style>
-    :root{--line:#e6ebf2;--text:#1c2a3a;--muted:#7b8696;--bg:#ff0000;--chip:#f4f7ff}
-    .wrap{max-width:980px;margin:0 auto}
+    :root{
+      --line:#e6ebf2;
+      --text:#1c2a3a;
+      --muted:#7b8696;
+      --chip:#f4f7ff;
+      --bg:#ffffff;
+      --success:#16a34a;
+      --warning:#f59e0b;
+      --danger:#ef4444;
+      --dark:#0f1724;
+      --radius:12px;
+      --gap:12px;
+    }
+
+    body{font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; margin:0; color:var(--text); background:transparent}
+    .wrap{max-width:980px;margin:20px auto;padding:0 12px}
     .head{display:flex;justify-content:space-between;align-items:end;gap:12px;margin-bottom:12px}
     h2{margin:0;color:var(--text);font-weight:800}
     .muted{color:var(--muted);font-size:.92rem}
-    .card{border:1px solid var(--line);border-radius:12px;background:#fff}
+    .card{border:1px solid var(--line);border-radius:12px;background:var(--bg);overflow:hidden}
     .list{width:100%;border-collapse:collapse}
-    .list thead th{font-weight:700;color:#2c3b4c;text-align:left;border-bottom:1px solid var(--line);padding:12px}
-    .list tbody td{border-bottom:1px solid var(--line);padding:10px 12px;vertical-align:middle}
-    .badge{display:inline-block;padding:4px 8px;border-radius:999px;background:var(--chip);font-weight:700 }
+    .list thead th{font-weight:700;color:#2c3b4c;text-align:left;border-bottom:1px solid var(--line);padding:12px 14px;font-size:0.95rem}
+    .list tbody td{border-bottom:1px solid var(--line);padding:10px 14px;vertical-align:middle;font-size:0.95rem}
+    .badge{display:inline-block;padding:4px 8px;border-radius:999px;background:var(--chip);font-weight:700}
     .right{text-align:right}
-    .total{margin-top:10px;display:flex;justify-content:flex-end;gap:8px}
+    .total{margin-top:10px;display:flex;justify-content:flex-end;gap:8px;padding:12px}
     .pill{display:inline-flex;gap:6px;align-items:center;padding:6px 10px;border:1px solid var(--line);border-radius:999px;background:#fff}
     .empty{border:1px dashed var(--line);border-radius:12px;padding:20px;text-align:center;color:var(--muted)}
-    .actions a{margin-right:6px}
-    @media(max-width:720px){
-      .hide-md{display:none}
-      .list tbody td, .list thead th{padding:10px}
+    .actions a{margin-right:6px;text-decoration:none;display:inline-block;padding:6px 8px;border-radius:6px;font-weight:700;font-size:0.9rem}
+    .btn-outline-primary{border:1px solid #1d4ed8;color:#1d4ed8;background:transparent}
+    .btn-primary{background:#1d4ed8;color:#fff;border:0}
+    .btn-warning{background:#f59e0b;color:#0b0b0b;border:0}
+    .muted{color:var(--muted)}
+
+    /* Estados (clases usadas por el JS) */
+    .text-success{color:var(--success);font-weight:700}
+    .text-warning{color:var(--warning);font-weight:700}
+    .text-danger{color:var(--danger);font-weight:700}
+    .text-dark{color:var(--dark);font-weight:700}
+
+    /* ==== RESPONSIVE: table -> cards on small screens ==== */
+    .table-responsive{width:100%;overflow:auto}
+    @media (max-width:720px){
+      /* hide the header, show rows as cards */
+      .list thead{display:none}
+      .list tbody tr{display:block;margin:10px 12px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff; box-shadow: 0 6px 18px rgba(12,24,48,0.04)}
+      .list tbody td{display:flex;justify-content:space-between;padding:10px 12px;border-bottom:1px solid var(--line)}
+      .list tbody td:last-child{border-bottom:0}
+      /* label before value using data-label attr (script sets it) */
+      .list tbody td::before{content: attr(data-label);display:block;font-weight:700;color:var(--muted);margin-right:8px;max-width:55%}
+      .list tbody td > .cell-value{max-width:55%;text-align:right;overflow-wrap:anywhere}
+      .right{ text-align:right }
+      .actions a{margin:0 6px 0 0;padding:6px 8px;font-size:0.85rem}
+      .total{padding:12px}
     }
 
-    /* ==== NUEVO: Colores para estado ==== */
-    .estado-confirmada { color: green; }
-    .estado-pendiente { color: red; }
+    /* Desktop spacing tweaks */
+    @media (min-width:721px){
+      .list thead th.hide-md, .list tbody td.hide-md { display:table-cell }
+    }
+
+    /* Utility para columnas pequeñas */
+    .text-center{ text-align:center }
   </style>
 </head>
 
@@ -44,101 +85,127 @@
     <a th:href="@{/cliente/destinos}" class="pill">Explorar destinos</a>
   </div>
 
-  <div th:if="${#lists.isEmpty(pagos)}" class="empty">
+  <div th:if="${#lists.isEmpty(pagos)}" class="empty" role="status" aria-live="polite">
     Aún no tienes pagos registrados. Empieza reservando un paquete ✈️
   </div>
 
   <div th:if="${!#lists.isEmpty(pagos)}" class="card">
-    <table class="list">
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Reserva</th>
-          <th class="hide-md">Paquete</th>
-          <th>Método</th>
-          <th>Monto</th>
-          <th class="hide-md">Últimos 4</th>
-          <th>Estado</th>
-          <th class="hide-md">Fecha</th>
-          <th>Factura</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr th:each="p : ${pagos}"
-            th:with="fid=${(facturaPorReservaId != null and p.reserva != null) ? facturaPorReservaId[p.reserva.reservaId] : null}">
-          <td th:text="${p.pagoId}">1</td>
-          <td th:text="${p.reserva != null ? p.reserva.reservaId : '—'}">R</td>
-          <td class="hide-md" th:text="${p.reserva != null && p.reserva.paquete != null ? p.reserva.paquete.nombre : '—'}">Paquete</td>
-          <td th:text="${p.metodoPago != null ? p.metodoPago.nombreMetodo : '—'}">Tarjeta</td>
-          <td class="right">$<span th:text="${#numbers.formatDecimal(p.monto,1,2)}">0.00</span></td>
-          <td class="hide-md" th:text="${p.ultimos4Tarjeta != null ? p.ultimos4Tarjeta : '—'}">1234</td>
+    <div class="table-responsive" role="region" aria-label="Tabla de pagos">
+      <table class="list" role="table" aria-label="Lista de pagos">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Reserva</th>
+            <th class="hide-md">Paquete</th>
+            <th>Método</th>
+            <th>Monto</th>
+            <th class="hide-md">Últimos 4</th>
+            <th>Estado</th>
+            <th class="hide-md">Fecha</th>
+            <th>Factura</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr th:each="p : ${pagos}"
+              th:with="fid=${(facturaPorReservaId != null and p.reserva != null) ? facturaPorReservaId[p.reserva.reservaId] : null}">
+            <td th:text="${p.pagoId}">1</td>
 
-          <!-- ==== MODIFICADO: Estado con color ==== -->
-         <td>
-  <span class="badge js-estado"
-        th:text="${p.estadoPago}"
-        th:attr="data-status=${p.estadoPago}">
-    PENDIENTE
-  </span>
-</td>
+            <td th:text="${p.reserva != null ? p.reserva.reservaId : '—'}">R</td>
 
-          <td class="hide-md" th:text="${p.fechaPago != null ? #temporals.format(p.fechaPago, 'yyyy-MM-dd HH:mm') : '—'}">2025-01-01</td>
+            <td class="hide-md" th:text="${p.reserva != null && p.reserva.paquete != null ? p.reserva.paquete.nombre : '—'}">Paquete</td>
 
-        <td class="text-center actions">
+            <td th:text="${p.metodoPago != null ? p.metodoPago.nombreMetodo : '—'}">Tarjeta</td>
 
-    <!-- Mostrar factura si existe -->
-    <a class="btn btn-sm btn-outline-primary" th:if="${fid != null}"
-       th:href="@{|/facturas/${fid}|}">
-        Ver
-    </a>
+            <td class="right"><span class="cell-value">$<span th:text="${#numbers.formatDecimal(p.monto,1,2)}">0.00</span></span></td>
 
-    <a class="btn btn-sm btn-primary" th:if="${fid != null}"
-       th:href="@{|/facturas/${fid}/pdf|}">
-        PDF
-    </a>
+            <td class="hide-md" th:text="${p.ultimos4Tarjeta != null ? p.ultimos4Tarjeta : '—'}">1234</td>
 
-    <!--  BOTÓN IR A PAGAR si RESERVA está pendiente -->
-   <a class="btn btn-sm btn-warning"
+            <!-- Estado con badge -->
+            <td>
+              <span class="badge js-estado"
+                    th:text="${p.estadoPago}"
+                    th:attr="data-status=${p.estadoPago}">
+                PENDIENTE
+              </span>
+            </td>
 
-       th:if="${p.reserva != null and p.reserva.estado == T(esfe.skyfly.Modelos.EstadoReserva).PENDIENTE}"
-       th:href="@{|/pagos/create?reservaId=${p.reserva.reservaId}|}">
-        Ir a pagar
-    </a>
+            <td class="hide-md" th:text="${p.fechaPago != null ? #temporals.format(p.fechaPago, 'yyyy-MM-dd HH:mm') : '—'}">2025-01-01</td>
 
-    <!-- Si no hay factura ni es pendiente -->
-    <span th:if="${fid == null and p.reserva.estado != T(esfe.skyfly.Modelos.EstadoReserva).PENDIENTE}" class="muted">—</span>
+            <td class="text-center actions">
+              <!-- Mostrar factura si existe -->
+              <a class="btn-outline-primary" th:if="${fid != null}"
+                 th:href="@{|/facturas/${fid}|}">
+                  Ver
+              </a>
 
-</td>
+              <a class="btn-primary" th:if="${fid != null}"
+                 th:href="@{|/facturas/${fid}/pdf|}">
+                  PDF
+              </a>
 
+              <!-- BOTÓN IR A PAGAR si RESERVA está pendiente -->
+              <a class="btn-warning"
+                 th:if="${p.reserva != null and p.reserva.estado == T(esfe.skyfly.Modelos.EstadoReserva).PENDIENTE}"
+                 th:href="@{|/pagos/create?reservaId=${p.reserva.reservaId}|}">
+                  Ir a pagar
+              </a>
 
-        </tr>
-      </tbody>
-    </table>
+              <!-- Si no hay factura ni es pendiente -->
+              <span th:if="${fid == null and p.reserva != null and p.reserva.estado != T(esfe.skyfly.Modelos.EstadoReserva).PENDIENTE}" class="muted">—</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
     <div class="total">
       <div class="muted">Total</div>
       <div class="pill">$<span th:text="${#numbers.formatDecimal(total,1,2)}">0.00</span></div>
     </div>
   </div>
+
   <script>
-document.addEventListener('DOMContentLoaded', function () {
-  document.querySelectorAll('.js-estado').forEach(function (el) {
-    const status = (el.dataset.status || el.textContent || '')
-      .trim().toUpperCase();
+    // Al cargar mapeamos los encabezados a cada celda para mostrar etiquetas en móvil.
+    document.addEventListener('DOMContentLoaded', function () {
+      const table = document.querySelector('.list');
+      if (!table) return;
 
-    el.classList.remove('text-success','text-warning','text-danger','text-dark');
+      // Obtener headers de la tabla (texto limpio)
+      const headers = Array.from(table.querySelectorAll('thead th')).map(th => th.textContent.trim());
 
-    if (status === 'CONFIRMADA') {
-      el.classList.add('text-success');
-    } else if (status === 'PENDIENTE') {
-      el.classList.add('text-warning','text-dark'); // warning es amarillo: mejor con texto oscuro
-    } else if (status === 'CANCELADA') {
-      el.classList.add('text-danger');
-    }
-  });
-});
-</script>
+      // Para cada fila, asignar data-label a cada td (en orden)
+      table.querySelectorAll('tbody tr').forEach(tr => {
+        Array.from(tr.querySelectorAll('td')).forEach((td, idx) => {
+          const label = headers[idx] || '';
+          td.setAttribute('data-label', label);
+          // Encapsular valor en span.cell-value para estilos en móvil (ya usado en monto)
+          if (!td.querySelector('.cell-value')) {
+            const value = td.innerHTML;
+            td.innerHTML = '<span class="cell-value">'+ value +'</span>';
+          }
+        });
+      });
 
+      // Aplicar clases de color según estado (CONFIRMADA, PENDIENTE, CANCELADA u otros)
+      document.querySelectorAll('.js-estado').forEach(function (el) {
+        const status = (el.dataset.status || el.textContent || '').trim().toUpperCase();
+        el.classList.remove('text-success','text-warning','text-danger','text-dark');
+
+        if (status === 'CONFIRMADA' || status === 'PAGADA' || status === 'COMPLETADO') {
+          el.classList.add('text-success');
+        } else if (status === 'PENDIENTE' || status === 'POR PAGAR') {
+          el.classList.add('text-warning','text-dark'); // amarillo con texto oscuro
+        } else if (status === 'CANCELADA' || status === 'RECHAZADA') {
+          el.classList.add('text-danger');
+        } else {
+          el.classList.add('text-dark');
+        }
+      });
+
+      // Mejorar accesibilidad: que los botones dentro de actions sean focusables y tenga separación
+      document.querySelectorAll('.actions a').forEach(a => a.setAttribute('tabindex', '0'));
+    });
+  </script>
 
 </section>
 </body>

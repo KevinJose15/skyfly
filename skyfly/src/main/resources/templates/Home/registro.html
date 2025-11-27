@@ -1,195 +1,286 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Registro de Usuario</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #f0f4f8;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
+<meta charset="UTF-8">
+<title>Registro - SkyFly</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
 
-    .card-container {
-      width: 900px;
-      background-color: #2c2c2c;
-      border-radius: 20px;
-      padding: 30px;
-      box-shadow: 0 8px 25px rgba(0,0,0,0.25);
-      display: flex;
-      flex-direction: row;
-      gap: 30px;
-      min-height: 550px;
-    }
+<style>
+:root{
+  --blue-1:#1a73e8; --blue-2:#0056b3; --blue-3:#003f7f;
+  --bg:#f0f4f8; --panel-dark:#2c2c2c; --input-bg:#1e1e1e;
+  --muted:#cfcfcf; --radius:12px; --shadow:0 8px 25px rgba(2,8,23,.18);
+  --max-width:1100px;
+}
 
-    .info-container {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      color: white;
-      padding: 20px;
-    }
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
 
-    .logo {
-      font-size: 100px;
-      margin-bottom: 15px;
-      background: linear-gradient(to right, #1a73e8, #0056b3);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
+body{
+  font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+  background:var(--bg);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  min-height:100vh;
+  color:#fff;
+}
 
-    .info-container h2 { margin-bottom: 10px; }
-    .info-container p { font-size: 0.95rem; color: #ccc; max-width: 90%; }
+.card-container{
+  width:100%;
+  max-width:var(--max-width);
+  background:var(--panel-dark);
+  border-radius:20px;
+  overflow:hidden;
+  display:flex;
+  box-shadow:var(--shadow);
+  min-height:600px;
+}
 
-    .form-section {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      gap: 15px;
-      padding: 20px;
-    }
+/* IZQUIERDA */
+.left-panel{
+  width:45%;
+  min-width:320px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  padding:40px;
+  text-align:center;
+  gap:10px;
+}
 
-    .form-container { display: flex; flex-direction: column; gap: 12px; width: 100%; }
+.logo{
+  font-size:64px;
+  background:linear-gradient(to right,var(--blue-1),var(--blue-2));
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
 
-    .form-control {
-      width: 100%;
-      padding: 10px;
-      border-radius: 6px;
-      border: 1px solid #555;
-      background: #1e1e1e;
-      color: #fff;
-      font-size: 0.9rem;
-    }
+.left-panel h2{margin:6px 0}
+.left-panel p{color:var(--muted);margin:0}
 
-    .buttons-container {
-      display: flex; flex-direction: column; gap: 12px; margin-top: 15px; width: 100%;
-    }
+form{
+  width:100%;
+  max-width:360px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  margin-top:10px;
+}
 
-    .btn-register {
-      padding: 12px 20px; border: none; border-radius: 6px;
-      background: linear-gradient(to right, #1a73e8, #0056b3);
-      color: white; font-weight: bold; cursor: pointer; transition: 0.3s ease; text-align: center;
-    }
-    .btn-register:hover { background: linear-gradient(to right, #0056b3, #003f7f); }
+label{text-align:left;font-size:.85rem;color:var(--muted)}
 
-    .btn-login {
-      padding: 12px 20px; border: 2px solid #1a73e8; background: transparent;
-      color: #1a73e8; border-radius: 6px; cursor: pointer; font-weight: bold;
-      text-decoration: none; text-align: center; transition: 0.3s ease;
-    }
-    .btn-login:hover { background: #1a73e8; color: white; }
+.form-control{
+  width:100%;
+  padding:12px 14px;
+  border-radius:8px;
+  border:1px solid rgba(255,255,255,.06);
+  background:var(--input-bg);
+  color:#fff;
+}
 
-    .notification {
-      position: fixed; bottom: 30px; right: 30px; background: #1a73e8; color: white;
-      padding: 15px 20px; border-radius: 10px; font-weight: bold; display: flex; align-items: center;
-      gap: 10px; box-shadow: 0 6px 18px rgba(0,0,0,0.3); opacity: 0; pointer-events: none;
-      transform: translateY(20px); transition: all 0.4s ease;
-    }
-    .notification.show { opacity: 1; pointer-events: auto; transform: translateY(0); }
-    .notification span { font-size: 22px; }
-  </style>
+.form-control:focus{
+  outline:3px solid rgba(26,115,232,.12);
+  border-color:rgba(26,115,232,.22)
+}
+
+.btn-register{
+  margin-top:10px;
+  padding:12px;
+  border:none;
+  border-radius:10px;
+  background:linear-gradient(90deg,var(--blue-1),var(--blue-2));
+  color:#fff;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.btn-login{
+  border:2px solid var(--blue-1);
+  background:transparent;
+  color:var(--blue-1);
+  padding:10px;
+  border-radius:8px;
+  text-decoration:none;
+  font-weight:700;
+  display:block;
+  margin-top:8px;
+}
+
+.btn-login:hover{background:var(--blue-1);color:#fff}
+
+/* PANEL DERECHO */
+.right-panel{
+  width:55%;
+  background:linear-gradient(135deg,var(--blue-1),var(--blue-2),var(--blue-3));
+  display:flex;
+  flex-direction:column;
+  justify-content:flex-start;
+  padding:48px;
+}
+
+.right-panel h3{margin:0}
+.right-panel p{font-size:.95rem;line-height:1.5}
+
+.info{z-index:2}
+
+/* AVIÓN CENTRADO */
+.gif-container{
+  flex:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.gif-container img{
+  width:300px;
+  max-width:100%;
+  border-radius:12px;
+  box-shadow:0 10px 25px rgba(0,0,0,.35)
+}
+
+/* error */
+.error{color:#ff6b6b;font-size:.8rem}
+
+/* ✔ ALERTA */
+.notification{
+  position:fixed;
+  bottom:30px;
+  right:30px;
+  background:var(--blue-1);
+  color:white;
+  padding:14px 20px;
+  border-radius:10px;
+  font-weight:bold;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  box-shadow:0 6px 18px rgba(0,0,0,.3);
+  opacity:0;
+  pointer-events:none;
+  transform:translateY(20px);
+  transition:.4s ease;
+  z-index:999;
+}
+.notification.show{
+  opacity:1;
+  pointer-events:auto;
+  transform:translateY(0);
+}
+
+@media(max-width:920px){
+  .card-container{flex-direction:column}
+  .left-panel,.right-panel{width:100%;padding:28px}
+  .left-panel{order:2}
+  .right-panel{order:1}
+  .gif-container img{width:220px}
+  .logo{font-size:54px}
+}
+@media(max-width:480px){
+  .left-panel{padding:20px}
+  .gif-container img{width:160px}
+  .logo{font-size:48px}
+}
+</style>
 </head>
+
 <body>
-  <div class="card-container">
-    <!-- Izquierda: Logo + info -->
-    <div class="info-container">
-      <div class="logo">✈</div>
-      <h2>Crear nueva cuenta</h2>
-      <p>Ingresa tus datos para registrarte y ser parte de SkyFly.</p>
-      <p>Crea tu cuenta para descubrir destinos únicos y aventuras inolvidables.
-         Seguridad, comodidad y experiencias memorables te esperan.</p>
-    </div>
 
-    <!-- Derecha: Formulario + botones -->
-    <div class="form-section">
-      <form id="registerForm"
-      th:action="@{/registro}"
-      method="post"
-      th:object="${usuario}"
-      class="form-container">
+<div class="card-container">
 
-    <!-- NOMBRE -->
-    <input type="text"
-           th:field="*{name}"
-           class="form-control"
-           placeholder="Nombre completo"
-           required />
+<!-- PANEL DERECHO -->
+<aside class="right-panel">
 
-    <!-- EMAIL -->
-    <input type="email"
-           th:field="*{email}"
-           class="form-control"
-           placeholder="Correo electrónico"
-           required />
+  <div class="info">
+    <h3>Únete a SkyFly</h3>
+    <p>Regístrate y descubre experiencias únicas, promociones exclusivas y destinos increíbles.</p>
+  </div>
 
-    <!--  mensaje de error si hay problemas con el email -->
-    <div style="color:#ff6b6b; font-size: 0.8rem; margin-top: 4px;"
-         th:if="${#fields.hasErrors('email')}"
-         th:errors="*{email}">
-        <!-- Aquí Thymeleaf pondrá: Ya existe un usuario con ese correo -->
-    </div>
+  <div class="gif-container">
+    <img src="https://i.pinimg.com/originals/1d/fc/17/1dfc177f30cc05e61cd8179aca600ce6.gif" alt="Avión">
+  </div>
 
-    <!-- PASSWORD -->
-    <input type="password"
-           th:field="*{passwordHash}"
-           class="form-control"
-           placeholder="Contraseña"
-           required />
+</aside>
 
-    <!-- CAMPOS DEL CLIENTE (NO del usuario) -->
-    <input type="text"
-           name="telefono"
-           th:value="${cliente.telefono}"
-           class="form-control"
-           placeholder="Teléfono"
-           required />
+<!-- PANEL IZQUIERDO -->
+<main class="left-panel">
 
-    <input type="text"
-           name="direccion"
-           th:value="${cliente.direccion}"
-           class="form-control"
-           placeholder="Dirección"
-           required />
+<div>
+  <div class="logo">✈</div>
+  <h2>Crear cuenta</h2>
+  <p>Completa tu información para comenzar</p>
+</div>
 
-    <div class="buttons-container">
-        <button type="submit" class="btn-register">Registrarse</button>
-        <a th:href="@{/login}" class="btn-login">Volver al login</a>
-    </div>
+<form id="registerForm" th:action="@{/registro}" method="post" th:object="${usuario}">
+
+<label>Nombre completo</label>
+<input type="text" th:field="*{name}" class="form-control" required>
+
+<label>Email</label>
+<input type="email" th:field="*{email}" class="form-control" required>
+<div class="error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></div>
+
+<label>Contraseña</label>
+<div style="display:flex; gap:6px;">
+  <input id="password" type="password" th:field="*{passwordHash}" class="form-control" required>
+  <button type="button" id="showPass" style="background:transparent;border:1px solid rgba(255,255,255,.1);color:#cfcfcf;padding:0 14px;border-radius:8px;cursor:pointer">Mostrar</button>
+</div>
+
+<label>Teléfono</label>
+<input type="text" name="telefono" th:value="${cliente.telefono}" class="form-control" required>
+
+<label>Dirección</label>
+<input type="text" name="direccion" th:value="${cliente.direccion}" class="form-control" required>
+
+<button class="btn-register">Registrarse</button>
+<a th:href="@{/login}" class="btn-login">Volver al login</a>
+
 </form>
 
-    </div>
-  </div>
+</main>
+</div>
 
-  <!-- Notificación -->
-  <div id="notification" class="notification">
-    <span>✈</span> Listo, ahora puedes iniciar sesión
-  </div>
+<!-- ALERTA -->
+<div id="notification" class="notification">
+  ✈ Registro exitoso, ahora puedes iniciar sesión
+</div>
 
-  <script>
-    const form = document.getElementById("registerForm");
-    const notification = document.getElementById("notification");
+<script>
+(function(){
+/* mostrar / ocultar contraseña */
+const pass = document.getElementById("password");
+const btn = document.getElementById("showPass");
 
-    form.addEventListener("submit", function(event) {
-      const inputs = form.querySelectorAll("input[required]");
-      let valid = true;
-      inputs.forEach(input => { if (!input.value.trim()) valid = false; });
+if (pass && btn){
+  btn.addEventListener("click", function(){
+    pass.type = pass.type === "password" ? "text" : "password";
+    btn.textContent = pass.type === "text" ? "Ocultar" : "Mostrar";
+  });
+}
 
-      if (!valid) {
-        event.preventDefault();
-        alert("Por favor completa todos los campos");
-      } else {
-        notification.classList.add("show");
-        setTimeout(() => { notification.classList.remove("show"); }, 3000);
-      }
-    });
-  </script>
+/* ALERTA */
+const form = document.getElementById("registerForm");
+const notification = document.getElementById("notification");
+
+form.addEventListener("submit", function(e){
+  const inputs = form.querySelectorAll("input[required]");
+  let ok = true;
+  inputs.forEach(i=>{
+    if(!i.value.trim()) ok = false;
+  });
+
+  if(!ok){
+    e.preventDefault();
+    alert("Por favor completa todos los campos.");
+  }else{
+    notification.classList.add("show");
+    setTimeout(()=>notification.classList.remove("show"),3000);
+  }
+});
+})();
+</script>
+
 </body>
 </html>
